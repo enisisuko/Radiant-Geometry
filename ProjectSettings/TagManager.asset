@@ -1,0 +1,67 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!78 &1
+TagManager:
+  serializedVersion: 3
+  tags:
+  - Player
+  - Enemy
+  - Layer
+  layers:
+  - Default
+  - TransparentFX
+  - Ignore Raycast
+  - Ground
+  - Water
+  - UI
+  - Torch
+  - Enemy
+  - Laser
+  - Mirror
+  - Player
+  - warm
+  - EnemyGhost
+  - MenuItem
+  - Bullet
+  - CutMask
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  m_SortingLayers:
+  - name: Default
+    uniqueID: 0
+    locked: 0
+  - name: Player
+    uniqueID: 3025079679
+    locked: 0
+  - name: Air
+    uniqueID: 4135451615
+    locked: 0
+  - name: Effect
+    uniqueID: 2287296941
+    locked: 0
+  - name: Ground
+    uniqueID: 1508602927
+    locked: 0
+  - name: UI
+    uniqueID: 2636012669
+    locked: 0
+  - name: UI2
+    uniqueID: 2505928195
+    locked: 0
+  m_RenderingLayers:
+  - Default
+  - light
