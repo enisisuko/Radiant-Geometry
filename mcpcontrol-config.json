@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "MCPControl": {
+      "transport": "sse",
+      "url": "http://localhost:3232/mcp"
+    }
+  }
+}
