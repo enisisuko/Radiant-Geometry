@@ -4094,7 +4094,7 @@ namespace FD.Bosses.C3
                     {
                         if (_conductor.GetOrb(i) == orbTr)
                         {
-                            _conductor.RecallSingle(i, 0.5f);
+                            _conductor.RecallSingle(i, 0.5f, null);
                             break;
                         }
                     }
