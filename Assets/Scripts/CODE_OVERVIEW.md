@@ -194,6 +194,31 @@ public interface IColorState
 
 ## 重要配置参数
 
+### 超华丽三圈七层大阵系统
+
+#### MatrixFormationManager.cs
+**位置**: `Assets/Scripts/d第三章/MatrixFormationManager.cs`
+**功能**: 三圈七层大阵管理器，实现12拍节拍驱动的华丽大阵系统
+**主要接口**:
+- `public void StartMatrix()` - 启动大阵
+- `public void StopMatrix()` - 停止大阵
+- `public void SetBossColor(BossColor color)` - 设置Boss颜色
+- `public void SetPlayerMode(ColorMode mode)` - 设置玩家模式
+- `public int GetCurrentBeat()` - 获取当前节拍
+- `public bool IsMatrixActive()` - 大阵是否激活
+
+#### MatrixVisualEffects.cs
+**位置**: `Assets/Scripts/d第三章/MatrixVisualEffects.cs`
+**功能**: 大阵视觉效果管理器，处理所有视觉渲染和动画
+**主要接口**:
+- `public void UpdateMotherEnergyRing(Transform mother, float healthRatio, BossColor bossColor, float phase)` - 更新母体能量星环
+- `public void UpdatePetalGoldOutline(Transform petal, bool active, float intensity)` - 更新花瓣金丝描边
+- `public void UpdateStarParticleTrail(Transform star, float speed, float intensity)` - 更新星曜粒丝尾
+- `public void UpdateArcChromaticAberration(Transform arc, bool isLockBeat, float intensity)` - 更新拱弧色散效果
+- `public void UpdateOuterTicksFullGlow(Transform[] markers, int currentBeat, float intensity)` - 更新外轮刻整圈走光
+- `public void UpdateGroundGlyphWindLines(Transform glyph, Vector3 dangerDirection, bool showWindLines, float intensity)` - 更新地纹风向线
+- `public void UpdateColorCompatibilityRelief(Transform[] petals, bool isCompatible, float reliefAmount)` - 更新相性解压效果
+
 ### 大阵系统参数
 ```csharp
 [Header("Matrix Configuration")]
@@ -207,7 +232,53 @@ public int outerMarkerCount = 60;                // 外轮刻数量
 [Header("Rhythm System")]
 public float beatDuration = 0.5f;                // 每拍持续时间
 public int totalBeats = 12;                      // 总拍数
+public int[] lockBeatIndices = { 3, 6, 9, 12 }; // 锁扣拍索引
+public int[] attackBeatIndices = { 6, 12 };     // 攻击拍索引
+public int[] warningBeatIndices = { 3, 9 };     // 预警拍索引
+
+[Header("Matrix Visual Effects")]
+public float bloomStrength = 1.2f;               // 发光强度
+public float chromaticAberrationOnLock = 0.1f;   // 锁扣拍色散强度
+public float warningPetalBoost = 0.25f;          // 预警花瓣增强
+public float groundGlyphIntensity = 0.3f;        // 地纹强度
+public float outerTicksContrast = 0.8f;          // 外轮刻对比度
 ```
+
+### 12拍节拍系统设计
+
+#### 节拍时间轴
+| 拍数 | 名称 | 持续时间 | 主要效果 |
+|------|------|----------|----------|
+| 1-2 | 聚气 | 1.0s | 内环母体亮度缓升，外轮刻跳点，地纹风向线 |
+| 3 | 锁扣 | 0.5s | 拱弧阵高亮，异色花瓣预警，母体顿挫 |
+| 4-5 | 花开 | 1.0s | 花瓣三段式动画，星曜开始公转 |
+| 6 | 齐鸣 | 0.5s | 母体吐息放光，发射震爆弹和散弹 |
+| 7-8 | 螺旋 | 1.0s | 全阵相位缓旋，星曜呼吸，拱弧回落 |
+| 9 | 再锁扣 | 0.5s | 外轮刻强闪，花瓣再次预警 |
+| 10-11 | 回波 | 1.0s | 地纹切线流，星曜加速 |
+| 12 | 谢幕 | 0.5s | 整圈走光，复制体再生，重置循环 |
+
+#### 特殊节拍处理
+- **锁扣拍** (3, 6, 9, 12): 母体角速度-20%，拱弧高亮，色散效果
+- **齐鸣拍** (6): 发射震爆弹和5方向星芒散弹
+- **谢幕拍** (12): 生成复制体，整圈走光，重置循环
+
+#### 七层几何结构
+1. **Layer A (内环阵)**: 6个母体轨道单元，半径 R1
+2. **Layer B (花瓣阵)**: 每母体5角花瓣，半径 R2
+3. **Layer C (星曜阵)**: 每花8点星曜，半径 R3
+4. **Layer D (拱弧阵)**: 6叶连弧，半径 R4
+5. **Layer E (外轮刻)**: 60刻度环，半径 R5
+6. **Layer F (远天星)**: 极远处微光颗粒，半径 R6
+7. **Ground Glyph**: 地面几何网格
+
+#### 颜色与相性系统
+- **母体**: 按Boss当前颜色显色，边缘对色描边，能量星环脉动
+- **花瓣**: 交替红绿，异色花瓣危险预警，金丝描边扫过
+- **星曜**: 白-金-薄青金属流光，粒丝尾随速度变化
+- **拱弧**: 常态青金，锁扣拍高亮并产生色散
+- **外轮刻**: 按节拍闪烁，第12拍整圈走光
+- **相性博弈**: 玩家切对色时，花瓣危险度下降25%
 
 ### 能量系统参数
 ```csharp
@@ -289,6 +360,18 @@ public float greenAttackCost = 6f;               // 绿色攻击消耗
 
 ---
 
+## 最近修复记录
+
+### 2024年12月 - BOSS移动修复
+**问题**: BOSS放大招时会往上飞
+**原因**: MovementDirector的ApplyStep和ApplyTeleport方法没有强制保持Z轴为0
+**修复**: 
+- 在ApplyStep方法中添加 `next.z = 0f;` 强制保持Z轴为0
+- 在ApplyTeleport方法中添加 `dst.z = 0f;` 确保传送时Z轴为0
+**影响文件**: `Assets/Scripts/Enemies/3/BossC3_AllInOne.cs`
+
+---
+
 **最后更新**: 2024年12月
 **维护者**: AI Assistant
-**版本**: 1.0
+**版本**: 1.1

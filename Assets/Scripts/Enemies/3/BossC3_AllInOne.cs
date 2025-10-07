@@ -4197,6 +4197,8 @@ namespace FD.Bosses.C3
 
             private void ApplyTeleport(Vector3 dst)
             {
+                // 强制保持Z轴为0，防止BOSS往上飞
+                dst.z = 0f;
                 if (_rb2) _rb2.position = dst;
                 else if (_rb3) _rb3.position = dst;
                 else _tr.position = dst;
@@ -4206,6 +4208,8 @@ namespace FD.Bosses.C3
             private void ApplyStep(Vector3 delta, bool forceStop)
             {
                 Vector3 next = _tr.position + delta + _additiveOffset;
+                // 强制保持Z轴为0，防止BOSS往上飞
+                next.z = 0f;
                 if (_rb2) _rb2.MovePosition(next);
                 else if (_rb3) _rb3.MovePosition(next);
                 else _tr.position = next;
