@@ -362,6 +362,22 @@ public float greenAttackCost = 6f;               // 绿色攻击消耗
 
 ## 最近修复记录
 
+### 2024年12月 - 环绕体击飞系统重写
+**功能**: 重写环绕体被玩家同色击中后的行为
+**新特性**:
+- 环绕体被击中后会被击飞并失去BOSS牵引
+- 掉到地上，2秒后回到BOSS牵引重新部署AI
+- 掉落异色能量（固定20点）
+- 大招期间掉落时间缩短为1秒
+- 添加着地弹跳效果和物理模拟
+**新增参数**:
+- `orbKnockdownForce`: 环绕体被击飞的力度
+- `orbKnockdownDuration`: 环绕体掉到地上的持续时间（秒）
+- `orbBigSkillKnockdownDuration`: 大招期间掉落时间（秒）
+- `orbEnergyDropAmount`: 掉落异色能量数量
+- `orbGroundBounceForce`: 掉到地上时的弹跳力度
+**影响文件**: `Assets/Scripts/Enemies/3/BossC3_AllInOne.cs`
+
 ### 2024年12月 - BOSS移动修复
 **问题**: BOSS放大招时会往上飞
 **原因**: MovementDirector的ApplyStep和ApplyTeleport方法没有强制保持Z轴为0

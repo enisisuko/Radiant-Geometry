@@ -193,6 +193,13 @@ namespace FD.Bosses.C3
         [SerializeField] private float orbGhostAlpha = 0.35f;     // 半透明显示的 alpha
         [SerializeField] private float orbRecallSpeed = 12f;      // 回到Boss身边的速度（世界单位/秒）
         [SerializeField] private float orbStunDuration = 2f;      // 等待时长（禁用AI）
+        
+        [Header("New Orb Knockdown System")]
+        [SerializeField] private float orbKnockdownForce = 15f;    // 环绕体被击飞的力度
+        [SerializeField] private float orbKnockdownDuration = 2f;  // 环绕体掉到地上的持续时间（秒）
+        [SerializeField] private float orbBigSkillKnockdownDuration = 1f; // 大招期间掉落时间（秒）
+        [SerializeField] private int orbEnergyDropAmount = 20;     // 掉落异色能量数量
+        [SerializeField] private float orbGroundBounceForce = 8f;  // 掉到地上时的弹跳力度
 
         [Header("Energy Pickup Prefabs (Opposite Color)")]
         [SerializeField] private GameObject energyPickupPrefab;   // 用你的泛用 EnergyPickup 预制体（脚本会改 energyColor）
@@ -3876,7 +3883,7 @@ namespace FD.Bosses.C3
             _camModified = false;
         }
 
-        // —— 当“玩家以同色命中某个环绕体”时，从 OrbAgent 调用此函数 —— 
+        // —— 当"玩家以同色命中某个环绕体"时，从 OrbAgent 调用此函数 —— 
         public void HandleOrbSameColorHit(Transform orbTr, BossColor orbColor)
         {
             if (!orbTr) return;
@@ -3888,7 +3895,7 @@ namespace FD.Bosses.C3
                 // 可选：Destroy(v, 3f);
             }
 
-            // 2) 掉异色能量（红→掉绿；绿→掉红）
+            // 2) 掉异色能量（红→掉绿；绿→掉红）- 新系统：固定20点
             if (energyPickupPrefab)
             {
                 var drop = Instantiate(energyPickupPrefab, orbTr.position, Quaternion.identity);
@@ -3901,23 +3908,14 @@ namespace FD.Bosses.C3
                     ep.energyColor = (orbColor == BossColor.Red)
                         ? FadedDreams.Player.ColorMode.Green
                         : FadedDreams.Player.ColorMode.Red;
+                    // 设置能量数量为固定值
+                    var amountField = ep.GetType().GetField("amount");
+                    if (amountField != null) amountField.SetValue(ep, orbEnergyDropAmount);
                 }
             }
 
-            // 3) 视觉半透明 + 暂停环绕体AI（仅保留渲染/灯光）
-            var sprite = orbTr.GetComponentInChildren<SpriteRenderer>(true);
-            var light2d = orbTr.GetComponentInChildren<UnityEngine.Rendering.Universal.Light2D>(true);
-            float originalAlpha = 1f; Color c;
-
-            if (sprite) { c = sprite.color; originalAlpha = c.a; c.a = Mathf.Clamp01(orbGhostAlpha); sprite.color = c; }
-            if (light2d) { c = light2d.color; c.a = Mathf.Clamp01(orbGhostAlpha); light2d.color = c; }
-
-            ToggleOrbAI(orbTr, false);
-
-            // 4) 回到Boss身边并“眩晕”orbStunDuration秒，然后恢复
-            var rb2 = orbTr.GetComponent<Rigidbody2D>();
-            var rb3 = orbTr.GetComponent<Rigidbody>();
-            StartCoroutine(Co_OrbRecallAndRecover(orbTr, originalAlpha, rb2, rb3));
+            // 3) 新的击飞系统：环绕体被击飞并失去BOSS牵引
+            StartCoroutine(Co_OrbKnockdownAndRecover(orbTr, orbColor));
         }
 
         // 统一开关：屏蔽环绕体上的大多数脚本（保留渲染/灯光）
@@ -3934,7 +3932,7 @@ namespace FD.Bosses.C3
             }
         }
 
-        // 协程：吸回Boss → 等待 → 恢复
+        // 协程：吸回Boss → 等待 → 恢复（旧系统，保留作为备用）
         private IEnumerator Co_OrbRecallAndRecover(Transform orbTr, float originalAlpha, Rigidbody2D rb2, Rigidbody rb3)
         {
             float nearDist = 0.6f;
@@ -3969,6 +3967,139 @@ namespace FD.Bosses.C3
 
             // 恢复AI
             if (orbTr) ToggleOrbAI(orbTr, true);
+        }
+
+        // 新系统：环绕体被击飞并掉到地上，然后重新部署
+        private IEnumerator Co_OrbKnockdownAndRecover(Transform orbTr, BossColor orbColor)
+        {
+            if (!orbTr) yield break;
+
+            // 获取环绕体的刚体组件
+            var rb2 = orbTr.GetComponent<Rigidbody2D>();
+            var rb3 = orbTr.GetComponent<Rigidbody>();
+            
+            // 禁用环绕体AI，失去BOSS牵引
+            ToggleOrbAI(orbTr, false);
+            
+            // 设置视觉半透明效果
+            var sprite = orbTr.GetComponentInChildren<SpriteRenderer>(true);
+            var light2d = orbTr.GetComponentInChildren<UnityEngine.Rendering.Universal.Light2D>(true);
+            float originalAlpha = 1f;
+            if (sprite) { var c = sprite.color; originalAlpha = c.a; c.a = Mathf.Clamp01(orbGhostAlpha); sprite.color = c; }
+            if (light2d) { var c = light2d.color; c.a = Mathf.Clamp01(orbGhostAlpha); light2d.color = c; }
+
+            // 计算击飞方向（远离BOSS）
+            Vector3 bossPos = transform.position;
+            Vector3 knockDirection = (orbTr.position - bossPos).normalized;
+            if (knockDirection.sqrMagnitude < 0.1f) knockDirection = Vector3.right; // 兜底方向
+
+            // 应用击飞力
+            Vector3 knockForce = knockDirection * orbKnockdownForce;
+            if (rb2) 
+            {
+                rb2.bodyType = RigidbodyType2D.Dynamic; // 临时改为动态
+                rb2.gravityScale = 1f; // 启用重力
+                rb2.AddForce(knockForce, ForceMode2D.Impulse);
+            }
+            else if (rb3) 
+            {
+                rb3.isKinematic = false; // 临时改为非运动学
+                rb3.useGravity = true; // 启用重力
+                rb3.AddForce(knockForce, ForceMode.Impulse);
+            }
+
+            // 等待环绕体掉到地上
+            float groundCheckRadius = 0.5f;
+            float groundCheckDistance = 2f;
+            bool isGrounded = false;
+            float groundTime = 0f;
+            float maxGroundTime = 3f; // 最大等待时间，防止卡住
+
+            while (orbTr && groundTime < maxGroundTime)
+            {
+                // 检查是否着地
+                Vector3 checkPos = orbTr.position + Vector3.down * groundCheckRadius;
+                bool hitGround = use2DPhysics 
+                    ? Physics2D.OverlapCircle(checkPos, groundCheckRadius, groundMask)
+                    : Physics.CheckSphere(checkPos, groundCheckRadius, groundMask);
+
+                if (hitGround && !isGrounded)
+                {
+                    isGrounded = true;
+                    // 着地时添加小弹跳
+                    Vector3 bounceForce = Vector3.up * orbGroundBounceForce;
+                    if (rb2) rb2.AddForce(bounceForce, ForceMode2D.Impulse);
+                    else if (rb3) rb3.AddForce(bounceForce, ForceMode.Impulse);
+                }
+
+                if (isGrounded)
+                {
+                    // 停止水平移动，只保留重力
+                    if (rb2) 
+                    {
+                        Vector2 vel = rb2.linearVelocity;
+                        vel.x *= 0.8f; // 逐渐减速
+                        rb2.linearVelocity = vel;
+                    }
+                    else if (rb3) 
+                    {
+                        Vector3 vel = rb3.linearVelocity;
+                        vel.x *= 0.8f; // 逐渐减速
+                        vel.z *= 0.8f;
+                        rb3.linearVelocity = vel;
+                    }
+                }
+
+                groundTime += Time.deltaTime;
+                yield return null;
+            }
+
+            // 确定掉落持续时间（大招期间缩短）
+            float knockdownDuration = _inBigSkill ? orbBigSkillKnockdownDuration : orbKnockdownDuration;
+            
+            // 等待掉落时间
+            yield return new WaitForSeconds(knockdownDuration);
+
+            // 重新部署：回到BOSS牵引
+            if (orbTr)
+            {
+                // 恢复刚体设置
+                if (rb2) 
+                {
+                    rb2.bodyType = RigidbodyType2D.Kinematic;
+                    rb2.gravityScale = 0f;
+                    rb2.linearVelocity = Vector2.zero;
+                    rb2.angularVelocity = 0f;
+                }
+                else if (rb3) 
+                {
+                    rb3.isKinematic = true;
+                    rb3.useGravity = false;
+                    rb3.linearVelocity = Vector3.zero;
+                    rb3.angularVelocity = Vector3.zero;
+                }
+
+                // 恢复视觉
+                if (sprite) { var c = sprite.color; c.a = originalAlpha; sprite.color = c; }
+                if (light2d) { var c = light2d.color; c.a = originalAlpha; light2d.color = c; }
+
+                // 恢复AI
+                ToggleOrbAI(orbTr, true);
+
+                // 通知环绕体系统重新部署
+                if (_conductor != null)
+                {
+                    // 找到环绕体在系统中的索引
+                    for (int i = 0; i < _conductor.OrbCount; i++)
+                    {
+                        if (_conductor.GetOrb(i) == orbTr)
+                        {
+                            _conductor.RecallSingle(i, 0.5f);
+                            break;
+                        }
+                    }
+                }
+            }
         }
 
 
