@@ -20,6 +20,7 @@
 - **协议**: MCP (Model Context Protocol)
 - **传输**: stdio
 - **包**: com.coplaydev.unity-mcp
+- **状态**: 已移除旧的jp.shiranui-isuzu.unity-mcp包，仅使用CoplayDev版本
 
 ## 核心系统架构
 
