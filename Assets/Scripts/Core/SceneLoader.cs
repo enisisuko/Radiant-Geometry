@@ -1,26 +1,27 @@
+ï»¿// Assets/Scripts/Core/SceneLoader.cs
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using System.Linq;
 
 namespace FadedDreams.Core
 {
+    // åœºæ™¯åŠ è½½ä¸æ£€æŸ¥ç‚¹é‡ç”Ÿçš„ç»Ÿä¸€å…¥å£
     public static class SceneLoader
     {
+        /// <summary>
+        /// åŠ è½½æŒ‡å®šåœºæ™¯ï¼›è‹¥æä¾› checkpointIdï¼Œåˆ™åœ¨åœºæ™¯åŠ è½½å®ŒæˆåæŠŠç©å®¶æ”¾åˆ°è¯¥æ£€æŸ¥ç‚¹ã€‚
+        /// ä»…å½“ checkpointId éç©ºæ—¶æ‰å†™å…¥å­˜æ¡£ï¼Œé¿å…æŠŠç©ºä¸²è¦†ç›–æ‰ lastCheckpointã€‚
+        /// </summary>
         public static void LoadScene(string sceneName, string checkpointId = "")
         {
-            // ¼ÇÂ¼µ½´æµµ£¬±ãÓÚ¡°¼ÌĞøÓÎÏ·¡±Óë±ÀÀ£»Ö¸´
             SaveSystem.Instance.SaveLastScene(sceneName);
-            SaveSystem.Instance.SaveCheckpoint(checkpointId);
+            if (!string.IsNullOrEmpty(checkpointId))
+                SaveSystem.Instance.SaveCheckpoint(checkpointId); // åªæœ‰éç©ºæ‰å†™
 
-            // ÓÃ¾Ö²¿·½·¨¶©ÔÄ£¬ÀàĞÍÊÇ Unity µÄÊÂ¼şÇ©Ãû£¨ÎŞĞè System.Action£©
             void OnSceneLoaded(Scene scene, LoadSceneMode mode)
             {
-                // Ö»Ö´ĞĞÒ»´Î£º½øÀ´¾ÍÍË¶©£¬±ÜÃâºóĞøÖØ¸´´¥·¢
                 SceneManager.sceneLoaded -= OnSceneLoaded;
 
-                // ÕÒµ½Ä¿±ê Checkpoint£º
-                // 1) ÓÅÏÈÊ¹ÓÃ´«ÈëµÄ checkpointId
-                // 2) ÈôÎª¿Õ£¬ÔòÕÒ¼¤»îÆğµã£¨Èç¹ûÄãµÄ Checkpoint ÓĞ public bool activateOnStart ×Ö¶Î£©
                 var cps = Object.FindObjectsByType<Checkpoint>(FindObjectsSortMode.None);
 
                 Checkpoint target = null;
@@ -30,34 +31,33 @@ namespace FadedDreams.Core
                 }
                 else
                 {
-                    // ³¢ÊÔÕÒ¡°ÆğÊ¼¼ì²éµã¡±
+                    // è‹¥æœªæŒ‡å®š cpï¼Œä¼˜å…ˆæ‰¾æ‰“äº†â€œèµ·å§‹æ£€æŸ¥ç‚¹â€çš„
                     foreach (var c in cps)
                     {
-                        var t = c.GetType();
-                        var f = t.GetField("activateOnStart");
-                        if (f != null && f.FieldType == typeof(bool) && (bool)f.GetValue(c))
-                        {
-                            target = c;
-                            break;
-                        }
+                        if (c.activateOnStart) { target = c; break; }
                     }
+                    // å…œåº•ï¼šéƒ½æ²¡æœ‰æ—¶ï¼Œç”¨åœºæ™¯ä¸­çš„ç¬¬ä¸€ä¸ªæ£€æŸ¥ç‚¹ï¼ˆè‹¥å­˜åœ¨ï¼‰
+                    if (target == null && cps.Length > 0)
+                        target = cps[0];
                 }
 
                 if (target != null)
-                {
                     target.SpawnPlayerHere();
-                }
-                // Èô target ÈÔÈ»Îª¿Õ£¬¾Í±£³ÖÄ¬ÈÏ³öÉúµã£¨²»±¨´í£¬·½±ã¹Ø¿¨¿ª·¢£©
+                // è‹¥ä»ä¸º nullï¼Œåˆ™ä¿æŒé»˜è®¤å‡ºç”Ÿç‚¹
             }
 
-            SceneManager.sceneLoaded += OnSceneLoaded; // ÕıÈ·µÄÊÂ¼şÇ©Ãû
+            SceneManager.sceneLoaded += OnSceneLoaded;
             SceneManager.LoadScene(sceneName);
         }
 
+        /// <summary>
+        /// ä»å­˜æ¡£è¯»å–â€œæœ€ååœºæ™¯+æœ€åæ£€æŸ¥ç‚¹â€å¹¶é‡è½½ã€‚
+        /// </summary>
         public static void ReloadAtLastCheckpoint()
         {
             var lastScene = SaveSystem.Instance.LoadLastScene();
             var cp = SaveSystem.Instance.LoadCheckpoint();
+
             if (string.IsNullOrEmpty(lastScene))
                 lastScene = SceneManager.GetActiveScene().name;
 

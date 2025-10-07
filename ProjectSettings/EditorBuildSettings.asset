@@ -9,20 +9,20 @@ EditorBuildSettings:
     path: Assets/Scenes/SampleScene.unity
     guid: 8c9cfa26abfee488c85f1582747f6a02
   - enabled: 1
+    path: "Assets/Re\uFF1ADream/Scenes/MainMenu.unity"
+    guid: e9afa69abe69b1f4ca3641990f8db507
+  - enabled: 1
     path: "Assets/Re\uFF1ADream/Scenes/Chapter1.unity"
     guid: 96b05ed0b0c9e574eb6ae60b9b0cb8b7
   - enabled: 1
     path: "Assets/Re\uFF1ADream/Scenes/Chapter2.unity"
-    guid: 4e7d8e2a0bc44a9488b63ab9bd4d5253
+    guid: cb593dd3d64620348a1375d6b9b0bec8
   - enabled: 1
     path: "Assets/Re\uFF1ADream/Scenes/Chapter3.unity"
-    guid: f8c0307d9311baa47960a3dec0bef16f
+    guid: 21d15a7e294066d48ac059c1ed1b5d27
   - enabled: 1
     path: "Assets/Re\uFF1ADream/Scenes/Chapter4.unity"
     guid: 25daade61d2106547a4295a7166b303c
-  - enabled: 1
-    path: "Assets/Re\uFF1ADream/Scenes/MainMenu.unity"
-    guid: e9afa69abe69b1f4ca3641990f8db507
   - enabled: 1
     path: "Assets/Re\uFF1ADream/Scenes/STORY1.unity"
     guid: 6dc794b6f8f670e4b9455293433ef1c5

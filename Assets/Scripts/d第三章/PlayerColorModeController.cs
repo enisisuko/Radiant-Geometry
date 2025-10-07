@@ -1,15 +1,19 @@
+// ğŸ“‹ ä»£ç æ€»è§ˆ: è¯·å…ˆé˜…è¯» Assets/Scripts/CODE_OVERVIEW.md äº†è§£å®Œæ•´é¡¹ç›®ç»“æ„
+// ğŸš€ å¼€å‘æŒ‡å—: å‚è€ƒ Assets/Scripts/DEVELOPMENT_GUIDE.md è¿›è¡Œå¼€å‘
+
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.Rendering.Universal;
+using FD.Bosses.C3; // ç›´æ¥ä½¿ç”¨ BossColor / BossC3_AllInOne
 
 namespace FadedDreams.Player
 {
     public enum ColorMode { Red, Green }
 
     /// <summary>
-    /// Ä£Ê½ÇĞ»»¡¢ÄÜÁ¿¹ÜÀí¡¢ÊÂ¼ş¹ã²¥£¨UI/ÌØĞ§£©¡£
+    /// æ¨¡å¼åˆ‡æ¢æ§åˆ¶å™¨ï¼šåŒèƒ½é‡æ¡ + äº‹ä»¶å¹¿æ’­ + UI/ç‰¹æ•ˆé€šçŸ¥
     /// </summary>
-    public class PlayerColorModeController : MonoBehaviour
+    public class PlayerColorModeController : MonoBehaviour, BossC3_AllInOne.IColorState
     {
         [Header("Energies")]
         [SerializeField] private float redMax = 100f;
@@ -29,14 +33,14 @@ namespace FadedDreams.Player
         private float _lastSwitchTime = -99f;
 
         [Header("Auto Behaviors")]
-        public bool autoSwitchOnDeplete = true;       // µ±Ç°Ä£Ê½¼ûµ× ¡ú ×Ô¶¯ÇĞµ½ÁíÒ»É«
-        public bool autoRespawnOnBothEmpty = true;    // Á½É«¶¼¿Õ ¡ú ÖØÉú
-        public float respawnDelay = 0.2f;             // ÖØÉúÇ°µÄ»º³å
+        public bool autoSwitchOnDeplete = true;       // å½“å‰æ¨¡å¼è€—å°½ â†’ è‡ªåŠ¨åˆ‡åˆ°å¦ä¸€è‰²
+        public bool autoRespawnOnBothEmpty = true;    // ä¸¤è‰²è€—å°½ â†’ é‡ç”Ÿ
+        public float respawnDelay = 0.2f;             // é‡ç”Ÿå‰çš„ç¼“å†²
         public UnityEvent OnBothEnergiesEmpty = new UnityEvent();
 
-        [Tooltip("SendMessage µÄÄ¿±ê£¨¿ÉÎª¿Õ£¬Áô¿ÕÔòÏò×ÔÉí¼°¸¸¼¶¹ã²¥£©¡£")]
+        [Tooltip("SendMessage ç›®æ ‡ï¼ˆä¸ºç©ºåˆ™å‘è‡ªå·±å‘é€ï¼Œç”¨äºå…³å¡ç³»ç»Ÿæ¥æ”¶é‡ç”Ÿå¹¿æ’­ï¼‰")]
         [SerializeField] private GameObject respawnTarget;
-        [Tooltip("SendMessage µÄ·½·¨Ãû£¨ÄãµÄ¹Ø¿¨¹ÜÀíÆ÷ÊµÏÖÒ»¸öÍ¬Ãû public ·½·¨¼´¿É£©¡£")]
+        [Tooltip("SendMessage çš„æ–¹æ³•åï¼Œå…³å¡ç³»ç»Ÿéœ€è¦å®ç°ä¸€ä¸ªåŒå public æ–¹æ³•å³å¯")]
         [SerializeField] private string respawnMessage = "RespawnAtNearestTeleport";
 
         [Header("Optional Visual")]
@@ -53,6 +57,12 @@ namespace FadedDreams.Player
 
         private bool _pendingRespawn;
 
+        // === IColorState å®ç°ï¼šä¾› BossC3 è·å–ç©å®¶å½“å‰é¢œè‰² ===
+        public BossColor GetColorMode()
+        {
+            return (Mode == ColorMode.Red) ? BossColor.Red : BossColor.Green;
+        }
+
         private void Start()
         {
             PushEnergyEvent();
@@ -61,11 +71,11 @@ namespace FadedDreams.Player
 
         private void Update()
         {
-            // ÊÖ¶¯ÇĞ»»
+            // æ‰‹åŠ¨åˆ‡æ¢ï¼šå³é”®åˆ‡æ¢
             if (Input.GetMouseButtonDown(1))
                 TrySwitchMode();
 
-            // ¶µµ×£ºÈç¹ûÓĞÈË´ÓÍâ²¿°ÑÄÜÁ¿¸Ä³É <=0£¬Ò²ÄÜ´¥·¢×Ô¶¯Âß¼­
+            // æ£€æŸ¥ï¼šå³ä½¿å¤–éƒ¨è°ƒç”¨å¯¼è‡´æŸè‰² <=0ï¼Œä¹Ÿèƒ½è§¦å‘è‡ªåŠ¨é€»è¾‘
             CheckAutoSwitchAndRespawn();
         }
 
@@ -74,16 +84,17 @@ namespace FadedDreams.Player
             if (Time.unscaledTime - _lastSwitchTime < switchCooldown) return false;
             if (target == Mode) return false;
 
-            bool targetHasEnergy = (target == ColorMode.Red) ? red > minOtherEnergyToSwitch : green > minOtherEnergyToSwitch;
+            bool targetHasEnergy = (target == ColorMode.Red) ? red > minOtherEnergyToSwitch
+                                                             : green > minOtherEnergyToSwitch;
             if (!targetHasEnergy) return false;
 
-            // ÊÖ¶¯ÇĞ»»ĞèÒª»¨¡°µ±Ç°Ä£Ê½¡±µÄ´ú¼Û
+            // æ‰‹åŠ¨åˆ‡æ¢éœ€è¦æ¶ˆè€—å½“å‰æ¨¡å¼çš„èƒ½é‡
             return HasEnergy(Mode, switchCost);
         }
 
         public bool TrySwitchMode()
         {
-            ColorMode target = Mode == ColorMode.Red ? ColorMode.Green : ColorMode.Red;
+            ColorMode target = (Mode == ColorMode.Red) ? ColorMode.Green : ColorMode.Red;
             if (!CanSwitchTo(target)) return false;
 
             SpendEnergy(Mode, switchCost);
@@ -96,13 +107,42 @@ namespace FadedDreams.Player
 
         public bool SpendEnergy(ColorMode m, float amount)
         {
+            // å¦‚æœå½“å‰æ¨¡å¼èƒ½é‡ä¸è¶³ï¼Œå…ˆæ¸…é›¶å½“å‰èƒ½é‡ï¼Œç„¶ååˆ‡æ¢åˆ°å¦ä¸€èƒ½é‡æ¡
             if (!HasEnergy(m, amount))
             {
-                // µ±Ç°Ä£Ê½²»¹»£ºÈôÔÊĞí×Ô¶¯ÇĞ»»£¬³¢ÊÔÇĞµ½ÁíÒ»É«
-                if (autoSwitchOnDeplete) TryAutoSwitchIfEmpty();
-                return false;
+                // å…ˆæ¸…é›¶å½“å‰èƒ½é‡
+                if (m == ColorMode.Red) red = 0f; else green = 0f;
+                ClampEnergies();
+                PushEnergyEvent();
+                
+                // åˆ‡æ¢åˆ°å¦ä¸€èƒ½é‡æ¡ç»§ç»­æ‰£é™¤
+                ColorMode otherMode = (m == ColorMode.Red) ? ColorMode.Green : ColorMode.Red;
+                float remainingAmount = amount - ((m == ColorMode.Red) ? red : green);
+                
+                if (remainingAmount > 0f)
+                {
+                    // åˆ‡æ¢åˆ°å¦ä¸€æ¨¡å¼
+                    if (autoSwitchOnDeplete) ForceSwitch(otherMode);
+                    
+                    // ä»å¦ä¸€èƒ½é‡æ¡æ‰£é™¤å‰©ä½™é‡
+                    if (otherMode == ColorMode.Red) 
+                    {
+                        red = Mathf.Max(0f, red - remainingAmount);
+                    }
+                    else 
+                    {
+                        green = Mathf.Max(0f, green - remainingAmount);
+                    }
+                    
+                    ClampEnergies();
+                    PushEnergyEvent();
+                }
+                
+                CheckAutoSwitchAndRespawn();
+                return true; // æ€»æ˜¯è¿”å›trueï¼Œå› ä¸ºå·²ç»å¤„ç†äº†èƒ½é‡æ‰£é™¤
             }
 
+            // æ­£å¸¸æ‰£é™¤å½“å‰æ¨¡å¼èƒ½é‡
             if (m == ColorMode.Red) red -= amount; else green -= amount;
             ClampEnergies();
             PushEnergyEvent();
@@ -120,7 +160,7 @@ namespace FadedDreams.Player
 
         public bool TrySpendAttackCost()
         {
-            float c = Mode == ColorMode.Red ? redAttackCost : greenAttackCost;
+            float c = (Mode == ColorMode.Red) ? redAttackCost : greenAttackCost;
             return SpendEnergy(Mode, c);
         }
 
@@ -136,8 +176,8 @@ namespace FadedDreams.Player
         private void ApplyAuraColor()
         {
             if (!playerAuraLight) return;
-            playerAuraLight.color = Mode == ColorMode.Red ? redLightColor : greenLightColor;
-            playerAuraLight.intensity = Mathf.Lerp(0.6f, 1.2f, Mode == ColorMode.Red ? Red01 : Green01);
+            playerAuraLight.color = (Mode == ColorMode.Red) ? redLightColor : greenLightColor;
+            playerAuraLight.intensity = Mathf.Lerp(0.6f, 1.2f, (Mode == ColorMode.Red) ? Red01 : Green01);
         }
 
         private void ForceSwitch(ColorMode target)

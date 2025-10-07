@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+using System.Collections;
 using UnityEngine;
 #if UNITY_RENDERING_UNIVERSAL
 using UnityEngine.Rendering.Universal; // Light2D
@@ -12,41 +12,86 @@ namespace FadedDreams.World
     public class LightIrradianceSensor : MonoBehaviour
     {
         [Header("Sampling Area")]
-        [Tooltip("²ÉÑù°ë¾¶£¨ÊÀ½çµ¥Î»£©£¬´«¸ĞÆ÷´Ó´Ë°ë¾¶ÄÚµÄ¹âÔ´/Light2D ÀÛ¼Æ¹âÕÕ")]
+        [Tooltip("é‡‡æ ·åŠå¾„ï¼ˆä¸–ç•Œå•ä½ï¼‰ï¼Œä¼ æ„Ÿå™¨ä»æ­¤åŠå¾„å†…çš„å…‰æº/Light2D ç´¯è®¡å…‰ç…§")]
         public float radius = 2.5f;
-        [Tooltip("ÓÃÓÚ Physics2D.OverlapCircle µÄ LayerMask£¨Áô¿Õ=È«²¿£©")]
+        [Tooltip("ç”¨äº Physics2D.OverlapCircle çš„ LayerMaskï¼ˆç•™ç©º=å…¨éƒ¨ï¼‰")]
         public LayerMask sampleMask = ~0;
 
         [Header("Normalization")]
-        [Tooltip("ÈÏÎª¡°Âú¸ñ¡±ËùĞèµÄÔ­Ê¼Ç¿¶È¡£Ô½´óÔòÔ½²»ÈİÒ×Âú¸ñ¡£")]
+        [Tooltip("è®¤ä¸ºâ€œæ»¡æ ¼â€æ‰€éœ€çš„åŸå§‹å¼ºåº¦ã€‚è¶Šå¤§åˆ™è¶Šä¸å®¹æ˜“æ»¡æ ¼ã€‚")]
         public float fullIntensity = 5f;
-        [Tooltip("Ã¿Ãë×ÔÈ»Ë¥¼õ£¨·ÀÖ¹¶¶¶¯£©£¬0=²»Ë¥¼õ")]
+        [Tooltip("æ¯ç§’è‡ªç„¶è¡°å‡ï¼ˆé˜²æ­¢æŠ–åŠ¨ï¼‰ï¼Œ0=ä¸è¡°å‡")]
         public float decayPerSecond = 0f;
 
         [Header("Hysteresis")]
-        [Tooltip("´ïµ½´Ë±ÈÀı£¨0..1£©ÅĞ¶¨ÎªÒÑÂú¸ñ")]
+        [Tooltip("è¾¾åˆ°æ­¤æ¯”ä¾‹ï¼ˆ0..1ï¼‰åˆ¤å®šä¸ºå·²æ»¡æ ¼")]
         [Range(0f, 1f)] public float saturateThreshold01 = 1f;
-        [Tooltip("µøÆÆ´Ë±ÈÀı£¨0..1£©ÅĞ¶¨Îª²»Âú¸ñ£¨³ÙÖÍ·À¶¶£©")]
+        [Tooltip("è·Œç ´æ­¤æ¯”ä¾‹ï¼ˆ0..1ï¼‰åˆ¤å®šä¸ºä¸æ»¡æ ¼ï¼ˆè¿Ÿæ»é˜²æŠ–ï¼‰")]
         [Range(0f, 1f)] public float desaturateThreshold01 = 0.9f;
+
+        [Header("Darkness Fallback (Smooth Return)")]
+        [Tooltip("å½“ç¯å¢ƒäº®åº¦ä½äºé˜ˆå€¼å¹¶æŒç»­ä¸€æ®µæ—¶é—´ï¼Œå¼€å§‹â€œç¼“æ…¢å›åˆ°èµ·ç‚¹â€")]
+        public bool returnToOriginOnDark = true;
+        [Tooltip("æŠŠ Irradiance01 â‰¤ æ­¤é˜ˆå€¼è§†ä¸ºâ€œæ— å…‰â€ï¼ˆ0..1ï¼‰")]
+        [Range(0f, 1f)] public float darknessThreshold01 = 0.01f;
+        [Tooltip("éœ€è¦è¿ç»­â€œæ— å…‰â€çš„æ—¶é—´ï¼ˆç§’ï¼‰ï¼Œç”¨æ¥é˜²æŠ–")]
+        public float darkHoldSeconds = 0.5f;
+
+        [Tooltip("è¿”å›ä½ç§»çš„ç›®æ ‡é€Ÿåº¦ï¼ˆå•ä½/ç§’ï¼‰")]
+        public float returnTargetSpeed = 4f;
+        [Tooltip("è¿”å›ä½ç§»çš„åŠ é€Ÿåº¦ï¼ˆå•ä½/ç§’Â²ï¼‰")]
+        public float returnAcceleration = 20f;
+        [Tooltip("æ¥è¿‘ç›®æ ‡è·ç¦»é˜ˆå€¼ï¼ˆå•ä½ï¼‰ï¼Œå°äºæ­¤å³è®¤ä¸ºåˆ°è¾¾å¹¶å¯¹é½åˆ°ç›®æ ‡ç‚¹")]
+        public float arriveEpsilon = 0.03f;
+
+        [Tooltip("è¿”å›è¿‡ç¨‹ä¸­å¦‚æœé‡æ–°æ£€æµ‹åˆ°â€œå˜äº®â€ï¼Œæ˜¯å¦å–æ¶ˆè¿”å›")]
+        public bool cancelReturnWhenBright = true;
+        [Tooltip("è®¤ä¸ºâ€œå˜äº®â€çš„é˜ˆå€¼ï¼ˆ0..1ï¼‰ï¼Œå¤§äºæ­¤å€¼åˆ™å¯å–æ¶ˆè¿”å›")]
+        [Range(0f, 1f)] public float cancelBrightThreshold01 = 0.05f;
+
+        [Tooltip("å¯é€‰ï¼šè¦†å†™â€œèµ·ç‚¹â€ã€‚è‹¥ä¸ºç©ºåˆ™ä»¥ Awake æ—¶çš„ä½ç½®ä¸ºèµ·ç‚¹")]
+        public Transform originOverride;
 
         [Header("Debug")]
         public bool drawGizmo = true;
         public Color gizmoColor = new Color(1, 1, 0, 0.2f);
 
-        // Êä³ö£ºÔ­Ê¼Ç¿¶ÈÓë0..1 ¹éÒ»
+        // è¾“å‡ºï¼šåŸå§‹å¼ºåº¦ä¸0..1 å½’ä¸€
         public float IrradianceRaw { get; private set; }
         public float Irradiance01 => fullIntensity <= 0f ? 0f : Mathf.Clamp01(IrradianceRaw / fullIntensity);
         public bool IsSaturated { get; private set; }
 
-        // »º´æ£¬±ÜÃâ GC
+        // ç¼“å­˜ï¼Œé¿å… GC
         readonly Collider2D[] _hits = new Collider2D[32];
+
+        // â€”â€” å›åˆ°æœ€åˆä½ç½®ï¼šå†…éƒ¨çŠ¶æ€ â€”â€”
+        Vector3 _originPos;
+        float _darkTimer;
+        Rigidbody2D _rb2;
+
+        // å¹³æ»‘è¿”å›çŠ¶æ€
+        bool _isReturning;
+        Vector3 _returnVel;    // é€Ÿåº¦å‘é‡ï¼ˆç”±åŠ é€Ÿåº¦å¹³æ»‘é€¼è¿‘ï¼‰
+
+        void Awake()
+        {
+            _originPos = originOverride ? originOverride.position : transform.position;
+            _rb2 = GetComponent<Rigidbody2D>();
+        }
+
+        /// <summary>è¿è¡Œæ—¶æ›´æ–°â€œèµ·å§‹ä½ç½®â€ä¸ºå½“å‰ç‚¹ï¼ˆä¾‹å¦‚å…³å¡ä¸­é€”åˆ·æ–°é”šç‚¹å¯è°ƒç”¨ï¼‰</summary>
+        public void ResetOriginToHere()
+        {
+            _originPos = transform.position;
+        }
 
         void Update()
         {
             float raw = SampleIrradiance();
+
+            // å¹³æ»‘è¡°å‡è¯»æ•°ï¼ˆå¯é€‰ï¼‰
             if (decayPerSecond > 0f)
             {
-                // ÈÃ¶ÁÊı¸üÎÈ¶¨£ºÖ»ÔÚ±äÇ¿Ê±Á¢¿ÌÌ§Éı£¬±äÈõÊ±°´ÃëË¥¼õ
                 if (raw >= IrradianceRaw) IrradianceRaw = raw;
                 else IrradianceRaw = Mathf.Max(0f, IrradianceRaw - decayPerSecond * Time.deltaTime);
             }
@@ -55,7 +100,7 @@ namespace FadedDreams.World
                 IrradianceRaw = raw;
             }
 
-            // ³ÙÖÍÅĞ¶Ï
+            // è¿Ÿæ»åˆ¤æ–­ï¼ˆæ»¡æ ¼/ä¸æ»¡æ ¼ï¼‰
             float k = Irradiance01;
             if (IsSaturated)
             {
@@ -65,6 +110,86 @@ namespace FadedDreams.World
             {
                 if (k >= saturateThreshold01) IsSaturated = true;
             }
+
+            // â€”â€” æ— å…‰å›ä½åˆ¤å®šï¼ˆä»…è´Ÿè´£åˆ‡æ¢â€œæ˜¯å¦å¼€å§‹è¿”å›â€ï¼Œå…·ä½“è¿åŠ¨æ”¾åˆ° FixedUpdateï¼‰â€”â€”
+            if (returnToOriginOnDark)
+            {
+                bool isDark = k <= darknessThreshold01;
+
+                if (!_isReturning)
+                {
+                    // ç»Ÿè®¡â€œæ— å…‰â€æ—¶é—´
+                    _darkTimer = isDark ? (_darkTimer + Time.deltaTime) : 0f;
+                    if (_darkTimer >= darkHoldSeconds)
+                    {
+                        _darkTimer = 0f;
+                        BeginSmoothReturn();
+                    }
+                }
+                else
+                {
+                    // æ­£åœ¨è¿”å›ï¼šå¦‚æœâ€œå˜äº®â€åˆ™å¯å–æ¶ˆè¿”å›ï¼ˆå¯é€‰ï¼‰
+                    if (cancelReturnWhenBright && k > cancelBrightThreshold01)
+                    {
+                        _isReturning = false;
+                        _returnVel = Vector3.zero;
+                    }
+                }
+            }
+        }
+
+        void FixedUpdate()
+        {
+            if (!_isReturning) return;
+
+            Vector3 target = originOverride ? originOverride.position : _originPos;
+            Vector3 pos = transform.position;
+            Vector3 to = target - pos;
+            float dist = to.magnitude;
+
+            // åˆ°è¾¾ï¼šå¯¹é½å¹¶åœæ­¢
+            if (dist <= arriveEpsilon)
+            {
+                if (_rb2) _rb2.MovePosition(target);
+                else transform.position = target;
+                _isReturning = false;
+                _returnVel = Vector3.zero;
+                return;
+            }
+
+            // æœŸæœ›é€Ÿåº¦ï¼šæœå‘ç›®æ ‡çš„ returnTargetSpeed
+            Vector3 desiredVel = (to / Mathf.Max(dist, 1e-6f)) * Mathf.Max(0f, returnTargetSpeed);
+            // åŠ é€Ÿåº¦é™åˆ¶
+            _returnVel = Vector3.MoveTowards(_returnVel, desiredVel, Mathf.Max(0f, returnAcceleration) * Time.fixedDeltaTime);
+
+            // ä½ç§»
+            Vector3 next = pos + _returnVel * Time.fixedDeltaTime;
+            if (_rb2)
+            {
+                // æ¸…ç†è§’é€Ÿåº¦ï¼ˆé¿å…æ¼‚ç§»ï¼‰
+                _rb2.angularVelocity = 0f;
+                _rb2.MovePosition(next);
+            }
+            else
+            {
+                transform.position = next;
+            }
+        }
+
+        void BeginSmoothReturn()
+        {
+            _isReturning = true;
+            // å›ä½å‰æ¸…é›¶åˆšä½“çº¿é€Ÿåº¦ï¼Œé¿å…å›ä½æ—¶è¢«æ—§é€Ÿåº¦æ‹–æ‹½
+            if (_rb2)
+            {
+#if UNITY_6000_0_OR_NEWER
+                _rb2.linearVelocity = Vector2.zero;
+#else
+                _rb2.velocity = Vector2.zero;
+#endif
+                _rb2.angularVelocity = 0f;
+            }
+            _returnVel = Vector3.zero;
         }
 
         float SampleIrradiance()
@@ -77,11 +202,10 @@ namespace FadedDreams.World
                 var col = _hits[i];
                 if (!col) continue;
 
-                // 1) ³¡¾°¾²Ì¬¹âÔ´£¨×Ô´øÇ¿¶È/·´ÉäÉèÖÃ£©
+                // 1) åœºæ™¯é™æ€å…‰æºï¼ˆè‡ªå¸¦å¼ºåº¦/åå°„è®¾ç½®ï¼‰
                 var src = col.GetComponent<LightSource2D>();
                 if (src != null)
                 {
-                    // Í¨¹ı·´ÉäÄÃ intensity£¨LightSource2D ÄÚ²¿Ò²ÓÃ·´Éä¶µµ×£©
                     var comp = src.light2DAny;
 #if UNITY_RENDERING_UNIVERSAL
                     if (src.light2D) sum += Mathf.Max(0f, src.light2D.intensity);
@@ -92,14 +216,13 @@ namespace FadedDreams.World
                     continue;
                 }
 
-                // 2) URP Light2D Ö±½Ó²ÉÑù
+                // 2) URP Light2D ç›´æ¥é‡‡æ ·
 #if UNITY_RENDERING_UNIVERSAL
                 var l2d = col.GetComponent<UnityEngine.Rendering.Universal.Light2D>();
                 if (l2d) { sum += Mathf.Max(0f, l2d.intensity); continue; }
 #endif
 
-                // 3) Íæ¼Ò±¾Ìå·¢¹â£¨È¡×î½ü Light2D µÄ intensity£©
-                //    ÕâÀïÖ»´¦Àí¡°Íæ¼Ò¡±Åö×²Ìå£ºTag=Player
+                // 3) ç©å®¶æœ¬ä½“å‘å…‰ï¼ˆå–æœ€è¿‘ Light2D çš„ intensityï¼‰
                 if (col.CompareTag("Player"))
                 {
                     sum += EstimatePlayerLight(col.transform);
@@ -111,8 +234,6 @@ namespace FadedDreams.World
 
         float EstimatePlayerLight(Transform player)
         {
-            // ²ÎÕÕ ReadingStateController µÄ×ö·¨£ºÑ°ÕÒÍæ¼Ò×Ó²ã¼¶×î½üµÄ Light2D ×÷Îª»ù×¼ÁÁ¶È
-            // £¨µÚ1ÕÂÃ»ÓĞ¼¤¹âÊäÈë£¬µ«Íæ¼Ò×ÔÉí Light2D ÈÔ»á¸ù¾İÄÜÁ¿Ó³ÉäÇ¿¶È£©¯Ë
             float best = 0f;
 #if UNITY_RENDERING_UNIVERSAL
             var lights = player.GetComponentsInChildren<UnityEngine.Rendering.Universal.Light2D>(true);
@@ -123,7 +244,6 @@ namespace FadedDreams.World
                 if (d < bestDist) { bestDist = d; best = Mathf.Max(best, l.intensity); }
             }
 #else
-            // Î´ÆôÓÃ URP ¶¨ÒåÊ±£¬³¢ÊÔÔÚ×ÓÎïÌåÉÏ·´ÉäÄÃ intensity ×Ö¶Î/ÊôĞÔÃûÎª "Light2D"
             var comps = player.GetComponentsInChildren<Component>(true);
             float bestDist = float.MaxValue;
             foreach (var c in comps)

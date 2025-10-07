@@ -138,5 +138,20 @@ namespace FadedDreams.Player
 
         // 仍保留模式切换占位（若其他系统用到）
         void UpdateMode(LightMode m) { mode = m; onModeChanged?.Invoke(); }
+
+        // 对外能量接口 —— 供激光/道具等调用
+        public void AddEnergy(float delta)
+        {
+            currentEnergy = Mathf.Clamp(currentEnergy + delta, 0f, maxEnergy);
+            onEnergyChanged?.Invoke();
+            if (currentEnergy <= 0f) { onDeath?.Invoke(); FadedDreams.Core.GameManager.Instance.OnPlayerDeath(); }
+        }
+
+        // 语义化别名：消耗能量（正数表示要扣多少）
+        public void ConsumeEnergy(float amount) => AddEnergy(-Mathf.Abs(amount));
+
+        // 兼容名：与部分旧代码一致
+        public void ChangeEnergy(float delta) => AddEnergy(delta);
+
     }
 }

@@ -8,6 +8,7 @@ using FadedDreams.Player; // RedLightController
 namespace FadedDreams.World.Light
 {
     [DisallowMultipleComponent]
+    [RequireComponent(typeof(RedLightController))]
     public class Torch : MonoBehaviour
     {
         // ========= 可视与音效 =========
@@ -62,7 +63,7 @@ namespace FadedDreams.World.Light
         [Tooltip("激光命中允许点燃的判定区域（不填=任意命中火把即可点燃）")]
         public Collider2D igniteArea;                      // 只用于 OverlapPoint
         [Tooltip("是否必须命中 igniteArea 内才能点燃")]
-        public bool requireIgniteArea = true;
+        public bool requireIgniteArea = false;
 
         // ========= 规则开关 =========
         [Header("Rules")]
@@ -119,6 +120,15 @@ namespace FadedDreams.World.Light
             else
             {
                 Debug.LogWarning($"[Torch] {name}: RegenArea 未指定，回能范围不会生效。");
+            }
+
+            // IgniteArea optional trigger forwarding: ignite when laserLayers overlap.
+            if (igniteArea)
+            {
+                igniteArea.isTrigger = true;
+                var ign = igniteArea.GetComponent<TorchIgniteForwarder>();
+                if (!ign) ign = igniteArea.gameObject.AddComponent<TorchIgniteForwarder>();
+                ign.owner = this;
             }
         }
 
@@ -230,6 +240,15 @@ namespace FadedDreams.World.Light
             StartIgniteFlash();
         }
 
+        /// <summary>
+        /// 点燃（用于 igniteArea 的触发重叠），不需要精确命中点。
+        /// </summary>
+        internal void IgniteByOverlap()
+        {
+            TryIgniteByLaser(default, false, 100f);
+        }
+
+
         private void StartIgniteFlash()
         {
             if (_flashCo != null) StopCoroutine(_flashCo);
@@ -307,6 +326,29 @@ namespace FadedDreams.World.Light
     /// <summary>
     /// 安装在“RegenArea 所在的 GameObject”上的事件转发器，把 Trigger 事件转给父上的 Torch。
     /// </summary>
+
+    [AddComponentMenu("")]
+    public class TorchIgniteForwarder : MonoBehaviour
+    {
+        public Torch owner;
+
+        private void OnTriggerEnter2D(Collider2D other)
+        {
+            if (!owner) return;
+            int l = other.gameObject.layer;
+            if ((owner.laserLayers.value & (1 << l)) != 0)
+                owner.IgniteByOverlap();
+        }
+
+        private void OnTriggerStay2D(Collider2D other)
+        {
+            if (!owner) return;
+            int l = other.gameObject.layer;
+            if ((owner.laserLayers.value & (1 << l)) != 0)
+                owner.IgniteByOverlap();
+        }
+    }
+
     [AddComponentMenu("")]
     public class TorchAreaForwarder : MonoBehaviour
     {

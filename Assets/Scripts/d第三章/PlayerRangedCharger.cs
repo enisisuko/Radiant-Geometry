@@ -1,506 +1,1068 @@
+ï»¿
 using System.Collections;
-using System.Linq;
+using System.Collections.Generic;
+using System.Reflection;
 using UnityEngine;
-using UnityEngine.Rendering.Universal; // Light2D
 
 namespace FadedDreams.Player
 {
+    /// <summary>
+    /// è¿œç¨‹ï¼ˆç»¿è‰²å½¢æ€ï¼‰å››æ®µï¼š
+    /// â‘  å•å‘å‰‘å…‰ï¼›â‘¡ ç¯å½¢æŠ¤åˆƒï¼ˆæŒç»­æŒ¡/åå¼¹å­å¼¹ï¼‰ï¼›â‘¢ å‰‘å…‰è›‹ï¼ˆç¢°æ’çˆ†ç‚¸ï¼ŒAOEï¼‰ï¼›â‘£ è¶…å¤§æ–©ï¼ˆå¤šæ®µåˆ¤å®š+æ®‹åƒï¼‰
+    /// æ‰‹æ„Ÿè¦ç‚¹ï¼šè¾“å…¥ç¼“å†²ã€è¿æ®µçª—å£ã€æ–¹å‘å¹³æ»‘ã€å‡ºæ‰‹å‰çŸ­é¢„è§ˆã€NonAlloc æ£€æµ‹ã€‚
+    /// </summary>
     [RequireComponent(typeof(LineRenderer))]
     public class PlayerRangedCharger : MonoBehaviour
     {
-        [Header("Targeting")]
-        public LayerMask enemyMask;          // µĞÈË²ã£¨ÓÃÓÚÕÒ×î½üÄ¿±ê & ±¬Õ¨½áËã£©
-        public LayerMask raycastMask;        // ¹âÊøµÄÉäÏß¼ì²â£¨µØĞÎ/µĞÈËµÈ£©
+        // ================= Refs =================
+        [Header("Anchors")]
+        public Transform bladeOrigin;
+        public CompanionBlade companion;
 
-        [Header("Charge & Beam")]
-        public float maxChargeTime = 1.0f;   // ĞîÁ¦ÉÏÏŞÊ±¼ä
-        public float widthMin = 0.1f;
-        public float widthMax = 0.5f;
-        public float baseDamage = 15f;
-        public float damageAtMax = 45f;
-        public float extraEnergyCostAtMax = 10f; // ¶îÍâÄÜÁ¿ÏûºÄ£¨»ù´¡ÏûºÄÔÚ¿ØÖÆÆ÷Àï£©
-        public float selfKnockbackForce = 8f;
-        public float maxBeamDistance = 50f;
+        [Header("Layers")]
+        public LayerMask enemyMask;
+        public LayerMask obstacleMask;
+        [Tooltip("ç”¨äºâ‘¡æŠ¤åˆƒæ‹¦æˆª/åå¼¹çš„æ•Œæ–¹å­å¼¹å±‚")]
+        public LayerMask bulletMask;
 
-        [Header("VFX: Gameplay Explosion")]
-        public GameObject explosionPrefab;
-        public float explosionRadius = 2.2f;
-        public float explosionDamage = 35f;
+        [Header("Aim / Input")]
+        public float aimSmooth = 16f;              // é¼ æ ‡æ–¹å‘å¹³æ»‘
+        public KeyCode inputKey = KeyCode.Mouse0;  // æ”»å‡»é”®
+        public float comboWindow = 1.0f;           // æ®µä¸æ®µæœ€å¤§è¡”æ¥çª—å£
+        public float inputBuffer = 0.2f;           // è¾“å…¥ç¼“å†²
 
-        [Header("Preview Line")]
-        public LineRenderer previewLR;       // Ô¤ÀÀÏß£¨½¨Òé Unlit/Additive ²ÄÖÊ¿ªÆô Bloom£©
-        public float previewWidth = 0.06f;
-        public Color previewColorFrom = new Color(0.4f, 1f, 0.4f, 0.55f);
-        public Color previewColorTo = new Color(0.9f, 1f, 0.6f, 0.95f);
+        [Header("Soft Lock")]
+        public float softLockAngle = 25f;
+        public float softLockRadius = 16f;
+        public float softLockMaxCorrection = 8f;
 
-        // ====== ĞÂÔö£ºìÅ¿áÌØĞ§£¨ÎŞ×ÊÔ´£© ======
-        [Header("FX: Charge Beam Layers")]
-        public bool enableChargeFX = true;
-        [Tooltip("ºËĞÄÉ«£¨HDR ÍÆ¼ö£©")] public Color coreColor = new Color(0.7f, 1.0f, 0.8f, 1f);
-        [Tooltip("»Ô¹âÉ«£¨HDR ÍÆ¼ö£©")] public Color glowColor = new Color(0.2f, 1.0f, 0.6f, 0.9f);
-        [Tooltip("ĞîÁ¦Âö³åÆµÂÊ£¨Hz£©")] public float pulseFreq = 4.2f;
-        [Tooltip("Ä©¶Î²ü¶¯Ç¿¶È£¨½Ó½üÂúĞîÁ¦Ê±¶¶¶¯¸üÃ÷ÏÔ£©")] public float endJitterStrength = 0.05f;
-        [Tooltip("²ü¶¯²ÉÑùÆµÂÊ")] public float jitterFrequency = 36f;
+        // ====== Stage 1ï¼šå•å‘ ======
+        [Header("Stage â‘  å•å‘ãƒ»å‰æ–©")]
+        public float s1_preflashFrames = 4f;
+        public float s1_speed = 22f;
+        public float s1_range = 14f;
+        public float s1_hitRadius = 0.54f;
+        public int s1_pierceCount = 2;
+        public float s1_damage = 22f;
+        public float s1_recover = 0.35f;
 
-        [Header("FX: Lights")]
-        public bool use2DLights = true;
-        public float baseLightMaxIntensity = 2.8f;
-        public float tipLightMaxIntensity = 4.5f;
-        public float baseLightOuterRadius = 1.7f;
-        public float tipLightOuterRadius = 2.6f;
+        // ====== Stage 2ï¼šæŠ¤åˆƒï¼ˆå¯æŒ¡å­å¼¹ï¼‰ ======
+        [Header("Stage â‘¡ ç¯å½¢æŠ¤åˆƒï¼ˆå¯æŒ¡å­å¼¹ï¼‰")]
+        public float s2_spinTime = 0.20f;             // æ¿€æ´»å‰çŸ­é¢„è§ˆ
+        public float s2_shieldDuration = 2.20f;       // æŒç»­æ—¶é—´
+        public float s2_shieldOuter = 1.90f;
+        public float s2_shieldThickness = 0.90f;
+        public float s2_shieldSpinDegPerSec = 120f;   // æ—‹è½¬
+        public float s2_pulseAmp = 0.12f;             // å‘¼å¸è„‰åŠ¨
+        public bool s2_reflectProjectiles = true;
+        public float s2_reflectSpeedMul = 1.10f;
+        public float s2_recover = 0.35f;
+        [Tooltip("å…è®¸åœ¨æŠ¤åˆƒæ¿€æ´»ä¸€æ®µæ—¶é—´åæå‰å–æ¶ˆå¹¶è½¬å…¥ä¸‹ä¸€æ®µ")] public bool s2_allowEarlyCancel = true;
+        [Tooltip("æŠ¤åˆƒæœ€çŸ­ä¿æŒæ—¶é—´ï¼ˆç§’ï¼‰ï¼Œè¶…è¿‡åè‹¥æ£€æµ‹åˆ°ä¸‹ä¸€æ¬¡è¾“å…¥åˆ™æå‰ç»“æŸæœ¬æ®µ")] public float s2_minActiveBeforeCancel = 0.40f;
 
-        [Header("FX: On Fire")]
-        public bool releaseFlash = true;               // ·¢ÉäË²¼ä±¬ÉÁ
-        public float releaseFlashIntensity = 8f;
-        public float releaseFlashFade = 0.18f;
-        public bool addAfterimage = true;              // ²ĞÓ°
-        public int afterimageCount = 3;
-        public float afterimageSpacing = 0.015f;
-        public float afterimageFade = 0.18f;
-        public bool cameraNudge = true;                // ÇáÎ¢ÕğÆÁ£¨ÈôÄãÓĞ CameraShake2D Ò²»á³¢ÊÔµ÷ÓÃ£©
-        public float cameraNudgeStrength = 0.15f;
+        // ====== Stage 3ï¼šå‰‘å…‰è›‹ ======
+        [Header("Stage â‘¢ å‰‘å…‰è›‹ï¼ˆç¢°æ’çˆ†ç‚¸ï¼‰")]
+        public float s3_preflashFrames = 5f;
+        public float s3_eggSpeed = 18f;
+        public float s3_eggMaxRange = 11f;     // <=0 å¿½ç•¥
+        public float s3_eggLifeSeconds = 0.8f; // <=0 å¿½ç•¥
+        public float s3_eggHitRadius = 0.45f;
+        public float s3_eggDirectHitDamage = 18f;
+        public float s3_explosionRadius = 3.2f;
+        public float s3_explosionDamage = 50f;     // çˆ†å¿ƒä¼¤å®³ï¼ˆå¤–åœˆæŒ‰å¹‚è¡°å‡ï¼‰
+        [Range(0.5f, 3f)] public float s3_explosionFalloffPow = 1.6f;
+        public float s3_explosionPushSmall = 2.5f;
+        public float s3_explosionPushLarge = 1.0f;
+        public float s3_largeMassThreshold = 3.5f;
+        public float s3_recover = 0.40f;
 
-        // =========================================================
+        // ====== Stage 4ï¼šè¶…å¤§æ–© ======
+        [Header("Stage â‘£ è¶…çº§å¤§æ–©")]
+        public float s4_preflashFrames = 6f;
+        public float s4_speed = 20f;
+        public float s4_length = 9.0f;
+        public float s4_hitRadius = 1.10f;
+        public float s4_damage = 70f;               // ä¼šæŒ‰å¤šæ®µåˆ†æ‘Š
+        public int s4_multiHitsPerTarget = 3;
+        public float s4_tickInterval = 0.05f;
+        public float s4_fadeTail = 0.45f;
+        [Range(100, 240)] public float s4_arcDeg = 160f;
+        public float s4_outer = 2.10f;
+        public float s4_thickness = 1.90f;
+        public float s4_recover = 0.50f;
 
+        // ====== Visuals ======
+        [Header("Visuals (Line Preflash)")]
+        public float lrAlpha = 1f;
+        public AnimationCurve widthByPhase = AnimationCurve.Linear(0, 0.12f, 1, 0.24f);
+        public AnimationCurve swingEase = AnimationCurve.EaseInOut(0, 0, 1, 1);
+
+        [Header("Color (auto by Mode)")]
+        public Color redCore = new Color(1.00f, 0.28f, 0.22f, 1f);
+        public Color redGlow = new Color(1.00f, 0.48f, 0.18f, 0.95f);
+        public Color greenCore = new Color(0.70f, 1.00f, 0.80f, 1f);
+        public Color greenGlow = new Color(0.20f, 1.00f, 0.60f, 0.95f);
+        private Color coreColor, glowColor;
+
+        [Header("Crescent Mesh Defaults")]
+        public Material crescentMaterial;
+        [Range(20, 160)] public float crescentArcDeg = 100f;
+        public float crescentOuter = 1.10f;
+        public float crescentThickness = 0.75f;
+
+        [Header("Sorting")]
+        public int sortingOrderCore = 20;
+        public int sortingOrderGlow1 = 19;
+        public int sortingOrderGlow2 = 18;
+
+
+
+
+        [Header("Hit VFX (Ranged)")]
+        [Tooltip("S1/S4 å‘½ä¸­ä½¿ç”¨çš„å°å‘½ä¸­ç‰¹æ•ˆ")]
+        public GameObject vfxHitSmall;
+        public float vfxHitSmallLife = 1.0f;
+
+        [Tooltip("S3 çˆ†ç‚¸ä½¿ç”¨çš„ç‰¹æ•ˆï¼ˆä¸å°å‘½ä¸­ç‰¹æ•ˆä¸åŒï¼‰")]
+        public GameObject vfxExplosion;
+        public float vfxExplosionLife = 1.2f;
+        
+
+        // ================= Runtime =================
         private PlayerColorModeController _mode;
-        private LineRenderer _shotLR;   // Ö÷¹âÊø£¨·¢ÉäË²¼ä/¼«¶ÌÏÔÊ¾£©
-        private LineRenderer _glow1;    // Íâ²ã»Ô¹â 1
-        private LineRenderer _glow2;    // Íâ²ã»Ô¹â 2£¨¸ü¿í¸üµ­£©
         private Camera _cam;
-        private Light2D _baseLight, _tipLight;
-        private float _seedA, _seedB;
+        private LineRenderer _lrCore, _lrGlow1, _lrGlow2;
+        private Rigidbody2D _rb;
+        private int _comboStep = 0;
+        private float _lastComboTime = -999f;
+        private bool _bufferedInput;
+        private float _bufferUntil;
+        private bool _busy;
+        private Vector2 _smoothedAim = Vector2.right;
+        // S2 runtime handleï¼ˆæŠ¤ç›¾å¯è·¨å‡ºâ‘¡æ®µç»§ç»­å­˜åœ¨ï¼‰
+        private GameObject _s2ActiveRing;
+        private Coroutine _s2Runner;
+
+
+
+        // NonAlloc buffers
+        private static readonly Collider2D[] _buf64 = new Collider2D[64];
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        private void SpawnHitVFX(Vector3 pos, Vector2 dir)
+        {
+            if (!vfxHitSmall) return;
+            var go = Instantiate(vfxHitSmall, pos,
+                Quaternion.Euler(0, 0, Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg));
+            if (vfxHitSmallLife > 0f) Destroy(go, vfxHitSmallLife);
+        }
+
+        private void SpawnExplosionVFX(Vector3 pos)
+        {
+            if (!vfxExplosion) return;
+            var go = Instantiate(vfxExplosion, pos, Quaternion.identity);
+            if (vfxExplosionLife > 0f) Destroy(go, vfxExplosionLife);
+        }
+
+
+
+
+
+
+
+
+        // Optional camera shake (reflection)
+        private static MethodInfo _shakeMI;
+        private static void TryShake(float duration, float strength, float frequency)
+        {
+            if (_shakeMI == null)
+            {
+                var t = System.Type.GetType("CameraShake2D") ?? System.Type.GetType("FadedDreams.CameraFX.CameraShake2D") ?? System.Type.GetType("FadedDreams.Enemies.CameraShake2D");
+                if (t != null) _shakeMI = t.GetMethod("Shake", BindingFlags.Public | BindingFlags.Static);
+            }
+            if (_shakeMI != null)
+            {
+                try { _shakeMI.Invoke(null, new object[] { duration, strength, frequency }); } catch { }
+            }
+        }
 
         private void Awake()
         {
             _mode = GetComponentInParent<PlayerColorModeController>();
-            _shotLR = GetComponent<LineRenderer>();
+            _rb = GetComponentInParent<Rigidbody2D>();
             _cam = Camera.main != null ? Camera.main : FindFirstObjectByType<Camera>();
-            _shotLR.enabled = false;
 
-            // Ô¤ÀÀÏß
-            if (previewLR)
+            _lrCore = GetComponent<LineRenderer>(); SetupLR(_lrCore, sortingOrderCore);
+            _lrGlow1 = CreateChildLR("_Glow1", sortingOrderGlow1);
+            _lrGlow2 = CreateChildLR("_Glow2", sortingOrderGlow2);
+            _lrCore.enabled = _lrGlow1.enabled = _lrGlow2.enabled = false;
+        }
+
+        private void OnEnable()
+        {
+            if (_mode == null) _mode = GetComponentInParent<PlayerColorModeController>();
+            if (_mode != null)
             {
-                previewLR.enabled = false;
-                previewLR.startWidth = previewWidth;
-                previewLR.endWidth = previewWidth;
+                _mode.OnModeChanged.AddListener(OnModeChanged);
+                OnModeChanged(_mode.Mode);
             }
+        }
 
-            // Á½²ã»Ô¹âÏß£¨¹²ÓÃÖ÷²ÄÖÊ¼´¿É£©
-            _glow1 = CreateChildLR("_Glow1");
-            _glow2 = CreateChildLR("_Glow2");
+        private void OnDisable()
+        {
+            if (_mode != null) _mode.OnModeChanged.RemoveListener(OnModeChanged);
+        }
 
-            // 2D µÆ¹â
-            if (use2DLights)
-            {
-                _baseLight = CreateLight("ChargeLight_Base", baseLightMaxIntensity, baseLightOuterRadius);
-                _tipLight = CreateLight("ChargeLight_Tip", tipLightMaxIntensity, tipLightOuterRadius);
-            }
-
-            _seedA = Random.value * 100f;
-            _seedB = Random.value * 200f;
+        private void OnModeChanged(ColorMode m)
+        {
+            if (m == ColorMode.Green) { coreColor = greenCore; glowColor = greenGlow; }
+            else { coreColor = redCore; glowColor = redGlow; }
         }
 
         private void Update()
         {
-            if (_mode.Mode != ColorMode.Green) return;
+            // ä»…ç»¿è‰²å½¢æ€å¯ç”¨
+            if (_mode == null || _mode.Mode != ColorMode.Green) return;
 
-            if (Input.GetMouseButtonDown(0))
+            // å¹³æ»‘æ–¹å‘
+            Vector2 aimNow = AimDir();
+            _smoothedAim = Vector2.Lerp(_smoothedAim, aimNow, 1f - Mathf.Exp(-aimSmooth * Time.deltaTime));
+
+            // è¾“å…¥ç¼“å†²
+            if (Input.GetKeyDown(inputKey))
             {
-                if (_mode.TrySpendAttackCost())
-                    StartCoroutine(CoChargePreviewAndShootAutoLock());
+                _bufferedInput = true;
+                _bufferUntil = Time.unscaledTime + inputBuffer;
+            }
+            if (_busy) return;
+
+            if (_bufferedInput && Time.unscaledTime <= _bufferUntil)
+            {
+                _bufferedInput = false;
+                HandleComboInput();
             }
         }
 
-        private IEnumerator CoChargePreviewAndShootAutoLock()
+        private void HandleComboInput()
         {
-            float charge = 0f;
-            if (previewLR) previewLR.enabled = true;
-            SetLightsActive(true);
+            if (!_mode.TrySpendAttackCost()) return;
 
-            Transform target = null;
+            float now = Time.unscaledTime;
+            bool withinCombo = (now - _lastComboTime) <= comboWindow;
+            if (!withinCombo) _comboStep = 0;
+            _comboStep = Mathf.Clamp(_comboStep + 1, 1, 4);
+            _lastComboTime = now;
 
-            // ========== ĞîÁ¦½×¶Î£º×Ô¶¯Ëø×î½üµĞ£¬Ô¤ÀÀÏß½¥±ä¡¢Âö³å¡¢Ä©¶Î²ü¶¯ ==========
-            while (Input.GetMouseButton(0))
+            if (companion) companion.AttachTo(bladeOrigin ? bladeOrigin : transform);
+
+            switch (_comboStep)
             {
-                charge = Mathf.Min(maxChargeTime, charge + Time.deltaTime);
-                float r = Mathf.Clamp01(charge / maxChargeTime);
+                case 1: StartCoroutine(CoSingleSlash()); break;
+                case 2: StartCoroutine(CoShieldRing()); break;
+                case 3: StartCoroutine(CoEggBomb()); break;
+                case 4: StartCoroutine(CoUltraGiant()); break;
+            }
+        }
 
-                // Ä¿±ê/ÆğÖ¹µã
-                target = FindNearestEnemy();
-                Vector3 start = transform.position;
-                Vector3 end;
+        // ================= â‘  å•å‘ãƒ»å‰‘æ°” =================
+        private IEnumerator CoSingleSlash()
+        {
+            _busy = true;
+            Vector2 dir = SoftLockDir(_smoothedAim, softLockAngle, softLockRadius);
 
-                if (target)
+            EnableBeams(true);
+            int stick = Mathf.Max(1, Mathf.RoundToInt(s1_preflashFrames));
+            for (int i = 0; i < stick; i++)
+            {
+                float u = (i + 1f) / (float)stick;
+                float eased = swingEase.Evaluate(u);
+                var tip = DrawBlade(dir, s1_range * 0.22f, eased);
+                if (companion) companion.FollowTip(tip);
+                yield return null;
+            }
+            EnableBeams(false);
+
+            yield return StartCoroutine(FlyWaveCrescent(
+                BladeOriginPos(), dir, s1_speed, s1_range, s1_hitRadius, s1_damage, s1_pierceCount,
+                crescentArcDeg, crescentOuter, crescentThickness,
+                onFirstHit: () => TryShake(0.08f, 0.12f, 22f)
+            ));
+
+            yield return WaitRecover(s1_recover);
+            EndStep(dir);
+        }
+
+        // ================= â‘¡ ç¯å½¢æŠ¤åˆƒï¼ˆæŒ¡å¼¹ï¼šæŠ¤ç›¾ç‹¬ç«‹æŒç»­ï¼Œä¸æ‹‰é•¿æ‹›å¼ï¼‰ =================
+        private IEnumerator CoShieldRing()
+        {
+            _busy = true;
+            Vector2 baseDir = SoftLockDir(_smoothedAim, softLockAngle, softLockRadius);
+
+            // --- çŸ­é¢„è§ˆï¼ˆæ—‹è½¬çº¿ï¼‰ ---
+            EnableBeams(true);
+            float t = 0f;
+            while (t < s2_spinTime)
+            {
+                t += Time.unscaledDeltaTime;
+                float u = Mathf.Clamp01(t / s2_spinTime);
+                float ang = Mathf.Lerp(0f, 360f, swingEase.Evaluate(u));
+                Vector2 dir = Quaternion.Euler(0, 0, ang) * baseDir;
+                var tip = DrawBlade(dir, s2_shieldOuter * 0.6f, u);
+                if (companion) companion.FollowTip(tip);
+                yield return null;
+            }
+            EnableBeams(false);
+
+            // --- ç”ŸæˆæŠ¤åˆƒå¹¶äº¤ç»™ç‹¬ç«‹åç¨‹ç®¡ç†ï¼ˆå¯¿å‘½= s2_shieldDurationï¼‰ ---
+            // å¦‚æœä¸Šä¸€ä¸ªæŠ¤ç›¾è¿˜åœ¨ï¼Œå…ˆæ¸…ç†
+            if (_s2Runner != null) { StopCoroutine(_s2Runner); _s2Runner = null; }
+            if (_s2ActiveRing) { Destroy(_s2ActiveRing); _s2ActiveRing = null; }
+
+            _s2ActiveRing = CreateRing("GreenCrescent_Shield_Persistent");
+            var mf = _s2ActiveRing.GetComponent<MeshFilter>();
+            var mesh = new Mesh();
+            BuildRingMesh(mesh, s2_shieldOuter, s2_shieldThickness, 72);
+            mf.sharedMesh = mesh;
+
+            _s2Runner = StartCoroutine(CoRunShieldRing(_s2ActiveRing, s2_shieldDuration));
+
+            // --- â‘¡æ®µåªå ç”¨â€œæœ€çŸ­ä¿æŒæ—¶é—´ + å¯é€‰æå‰å–æ¶ˆâ€çš„çª—å£ï¼Œç„¶åç«‹å³è¿›å…¥æ¢å¤ ---
+            float gate = Mathf.Max(0f, s2_minActiveBeforeCancel);
+            float elapse = 0f;
+            while (elapse < gate)
+            {
+                elapse += Time.unscaledDeltaTime;
+                // è¿™é‡Œä¸å“åº”æå‰å–æ¶ˆï¼Œç¡®ä¿æœ€çŸ­è¯»ç§’
+                yield return null;
+            }
+
+            // æœ€çŸ­ä¿æŒæ—¶é—´è¾¾æˆåï¼šè‹¥å…è®¸æå‰å–æ¶ˆï¼Œæ£€æµ‹åˆ°è¾“å…¥å°±æ”¶æ‹›ï¼›å¦åˆ™ç›´æ¥æ”¶æ‹›
+            if (s2_allowEarlyCancel)
+            {
+                // è‹¥å·²ç»ç¼“å†²è¾“å…¥æˆ–æ­¤å¸§æŒ‰ä¸‹ï¼Œç«‹å³æ”¶æ‹›ï¼›å¦åˆ™ä¸å†å¼ºåˆ¶ç­‰å¾…æŠ¤ç›¾ç»“æŸ
+                if (!_bufferedInput)
                 {
-                    Vector2 dirToTarget = (target.position - start).normalized;
-                    RaycastHit2D hit = Physics2D.Raycast(start, dirToTarget, maxBeamDistance, raycastMask);
-                    end = hit.collider ? (Vector3)hit.point : start + (Vector3)dirToTarget * maxBeamDistance;
+                    // ç»™ä¸€å°æ®µçª—å£ï¼Œçœ‹ç©å®¶æ˜¯å¦è¦ç«‹åˆ»æ¥â‘¢
+                    float smallWindow = 0.12f;
+                    float acc = 0f;
+                    while (acc < smallWindow && !_bufferedInput && !Input.GetKeyDown(inputKey))
+                    {
+                        acc += Time.unscaledDeltaTime;
+                        yield return null;
+                    }
                 }
-                else
+            }
+
+            // æ”¶æ‹›ï¼ˆæŠ¤ç›¾ç»§ç»­å­˜åœ¨ï¼Œç”± _s2Runner æŒ‰ s2_shieldDuration è‡ªè¡Œæ·¡å‡ºä¸é”€æ¯ï¼‰
+            yield return WaitRecover(s2_recover);
+            EndStep(baseDir);
+        }
+        // æŠ¤åˆƒè¿è¡Œï¼šè‡ªç®¡ç†å¯¿å‘½ä¸é€»è¾‘ï¼ˆæŒç»­æ—‹è½¬ã€æŒ¡/åå¼¹ã€åˆ°æ—¶æ·¡å‡ºé”€æ¯ï¼‰
+        private IEnumerator CoRunShieldRing(GameObject ring, float duration)
+        {
+            if (!ring) yield break;
+
+            float time = 0f;
+            float innerR = Mathf.Max(0.01f, s2_shieldOuter - s2_shieldThickness);
+
+            while (time < duration && ring)
+            {
+                time += Time.unscaledDeltaTime;
+
+                // è·Ÿéšæ‰‹æŸ„ï¼ˆåˆ€æŸ„ï¼‰ä½ç½®
+                Vector3 center = BladeOriginPos();
+                ring.transform.position = center;
+                ring.transform.rotation *= Quaternion.Euler(0, 0, s2_shieldSpinDegPerSec * Time.unscaledDeltaTime);
+
+                // è½»å¾®å‘¼å¸
+                float pulse = 1f + Mathf.Sin(time * 6.0f) * s2_pulseAmp * 0.05f;
+                ring.transform.localScale = new Vector3(pulse, pulse, 1f);
+
+                // æŒ¡/åå¼¹å­å¼¹
+                int n = Physics2D.OverlapCircleNonAlloc(center, s2_shieldOuter + 0.2f, _buf64, bulletMask);
+                for (int i = 0; i < n; i++)
                 {
-                    if (_cam == null) _cam = Camera.main != null ? Camera.main : FindFirstObjectByType<Camera>();
-                    Vector3 sp = _cam.WorldToScreenPoint(start);
-                    Vector3 mouse = _cam.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, sp.z));
-                    Vector2 dirToMouse = (mouse - start).normalized;
+                    var c = _buf64[i];
+                    if (!c) continue;
+                    Vector2 cp = c.bounds.center;
+                    float dist = Vector2.Distance(cp, (Vector2)center);
+                    if (dist < innerR - 0.1f || dist > s2_shieldOuter + 0.2f) continue;
 
-                    RaycastHit2D hit = Physics2D.Raycast(start, dirToMouse, maxBeamDistance, raycastMask);
-                    end = hit.collider ? (Vector3)hit.point : start + (Vector3)dirToMouse * maxBeamDistance;
+                    var rb = c.attachedRigidbody ? c.attachedRigidbody : c.GetComponentInParent<Rigidbody2D>();
+                    if (rb && s2_reflectProjectiles)
+                    {
+#if UNITY_6000_0_OR_NEWER
+                        Vector2 v = rb.linearVelocity;
+#else
+                Vector2 v = rb.velocity;
+#endif
+                        Vector2 normal = (rb.worldCenterOfMass - (Vector2)center).normalized;
+                        Vector2 rv = Vector2.Reflect(v, normal) * s2_reflectSpeedMul;
+#if UNITY_6000_0_OR_NEWER
+                        rb.linearVelocity = rv;
+#else
+                rb.velocity = rv;
+#endif
+                    }
+                    else
+                    {
+                        Destroy(c.gameObject);
+                    }
+                    TryShake(0.05f, 0.10f, 26f);
                 }
-
-                // Ä©¶Î²ü¶¯£¨½öÔ¤ÀÀÏßÄ©¶Ë¶¶¶¯£©
-                Vector2 jitter = Vector2.zero;
-                if (enableChargeFX)
-                {
-                    float amp = endJitterStrength * Mathf.SmoothStep(0, 1, Mathf.Clamp01((r - 0.6f) / 0.4f));
-                    float t = Time.time * jitterFrequency;
-                    jitter = new Vector2(
-                        (Mathf.PerlinNoise(_seedA, t) - 0.5f),
-                        (Mathf.PerlinNoise(_seedB, t * 1.2f) - 0.5f)
-                    ) * amp;
-                }
-                end += (Vector3)jitter;
-
-                // Ô¤ÀÀÏß£ºÑÕÉ«/Í¸Ã÷¶È/¿í¶ÈËæ r ÔöÇ¿ + Âö³åºôÎü
-                if (previewLR)
-                {
-                    previewLR.positionCount = 2;
-                    previewLR.SetPosition(0, start);
-                    previewLR.SetPosition(1, end);
-
-                    float pulse = 1f + 0.22f * Mathf.Sin(Time.time * Mathf.PI * 2f * pulseFreq);
-                    float w = previewWidth * Mathf.Lerp(1f, 2.1f, r) * pulse;
-                    previewLR.startWidth = w;
-                    previewLR.endWidth = w * 0.92f;
-
-                    Color c = Color.Lerp(previewColorFrom, previewColorTo, r);
-                    var g = new Gradient();
-                    g.SetKeys(
-                        new GradientColorKey[] { new GradientColorKey(c, 0f), new GradientColorKey(c, 1f) },
-                        new GradientAlphaKey[] { new GradientAlphaKey(Mathf.Lerp(0.35f, 0.95f, r), 0f), new GradientAlphaKey(Mathf.Lerp(0.25f, 0.8f, r), 1f) }
-                    );
-                    previewLR.colorGradient = g;
-                }
-
-                // »Ô¹â²ã£º¸úËæÔ¤ÀÀÏß¹¹ĞÍ£¬ÌáÇ°¡°µãÁÁ¡±¸Ğ¾õ
-                if (enableChargeFX)
-                {
-                    ApplyGlowBeams(start, end, r);
-                    if (_tipLight) _tipLight.transform.position = end;
-                }
-
-                // µÆ¹âÇ¿¶ÈËæ r ÔöÇ¿
-                UpdateChargeLights(r);
 
                 yield return null;
             }
 
-            if (previewLR) previewLR.enabled = false;
-            SetGlowActive(false);
-            SetLightsActive(false);
-
-            // ========== ·¢Éä£º¼ÆËã¿í¶È/ÉËº¦/ÄÜÁ¿£»Ë²¼äÖ÷¹âÊø + ²ĞÓ° + ±¬ÉÁ ==========
-            float ratio = Mathf.Clamp01(charge / maxChargeTime);
-            float width = Mathf.Lerp(widthMin, widthMax, ratio);
-            float dmg = Mathf.Lerp(baseDamage, damageAtMax, ratio);
-
-            float extra = ratio * extraEnergyCostAtMax;
-            if (!_mode.SpendEnergy(ColorMode.Green, extra))
+            // ç»“æŸï¼šæ·¡å‡ºå¹¶é”€æ¯
+            if (ring)
             {
-                ratio *= 0.6f; width = Mathf.Lerp(widthMin, widthMax, ratio);
-                dmg = Mathf.Lerp(baseDamage, damageAtMax, ratio);
+                yield return FadeAndKillMesh(ring, 0.25f);
+                Destroy(ring);
             }
-
-            // ·¢Éä·½Ïò£ºÓĞµĞÈË¡úÏòµĞ£»ÎŞµĞÈË¡úÏòÊó±ê
-            Vector3 S = transform.position;
-            Vector2 D;
-            var tgt = FindNearestEnemy();
-            if (tgt) D = ((Vector3)tgt.position - S).normalized;
-            else
-            {
-                if (_cam == null) _cam = Camera.main != null ? Camera.main : FindFirstObjectByType<Camera>();
-                Vector3 sp = _cam.WorldToScreenPoint(S);
-                Vector3 mouse = _cam.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, sp.z));
-                D = (mouse - S).normalized;
-            }
-            RaycastHit2D H = Physics2D.Raycast(S, D, maxBeamDistance, raycastMask);
-            Vector3 E = H.collider ? (Vector3)H.point : S + (Vector3)D * maxBeamDistance;
-
-            // ±¬ÉÁ
-            if (releaseFlash && use2DLights) StartCoroutine(CoReleaseFlash(E));
-
-            // ²ĞÓ°
-            if (addAfterimage) StartCoroutine(CoBeamAfterimages(S, E, width));
-
-            // ÏÔÊ¾Ò»Ö¡Ö÷¹âÊø
-            yield return StartCoroutine(FlashBeamOnce(S, E, width));
-
-            // ÃüÖĞ/±¬Õ¨/»÷ÍË/¾µÍ·
-            DoHitAndExplosion(E, dmg);
-            if (width > 0.2f)
-            {
-                var rb = GetComponentInParent<Rigidbody2D>();
-                if (rb) rb.AddForce(-D * selfKnockbackForce, ForceMode2D.Impulse);
-            }
-            if (cameraNudge) TryCameraShake();
+            if (_s2ActiveRing == ring) _s2ActiveRing = null;
+            _s2Runner = null;
         }
 
-        private Transform FindNearestEnemy()
+
+        // ================= â‘¢ å‰‘å…‰è›‹ï¼ˆç¢°æ’å³çˆ† / èŒƒå›´ä¼¤å®³ï¼‰ =================
+        // ================= â‘¢ å‰‘å…‰è›‹ï¼ˆç¢°æ’å³çˆ† / èŒƒå›´ä¼¤å®³ï¼‰ =================
+        private IEnumerator CoEggBomb()
         {
-            float radius = 30f;
-            var cols = Physics2D.OverlapCircleAll(transform.position, radius, enemyMask);
-            if (cols == null || cols.Length == 0) return null;
+            _busy = true;
 
-            float best = float.MaxValue; Transform pick = null;
-            foreach (var c in cols)
+            // æ–¹å‘ï¼ˆå«è½¯é”ï¼‰
+            Vector2 aim = SoftLockDir(_smoothedAim, softLockAngle, softLockRadius);
+
+            // â€”â€” ç®€çŸ­é¢„è§ˆï¼ˆç”¨ä¸‰æ ¹ LineRenderer ç”»ä¸€é“â€œé¢„å¤‡çº¿â€ï¼‰â€”â€”
+            EnableBeams(true);
+            int stick = Mathf.Max(1, Mathf.RoundToInt(s3_preflashFrames));
+            for (int i = 0; i < stick; i++)
             {
-                float d = Vector2.SqrMagnitude(c.transform.position - transform.position);
-                if (d < best) { best = d; pick = c.transform; }
+                float u = (i + 1f) / (float)stick;
+                float eased = swingEase.Evaluate(u);
+                var tip = DrawBlade(aim, s3_eggMaxRange > 0 ? Mathf.Min(s3_eggMaxRange, 4.5f) : 4.5f, eased);
+                if (companion) companion.FollowTip(tip);
+                yield return null;
             }
-            return pick;
+            EnableBeams(false);
+
+            // â€”â€” ç”Ÿæˆâ€œè›‹â€æŠ•å°„ç‰©ï¼ˆæŒ‚åœ¨ä¸€ä¸ª GO ä¸Šçš„å†…åµŒç»„ä»¶ï¼‰â€”â€”
+            var eggGO = new GameObject("SwordEggProjectile");
+            eggGO.transform.position = BladeOriginPos();
+            var egg = eggGO.AddComponent<SwordEggProjectile>();
+
+            // å‚æ•°ä» s3_* å†™å…¥ eggï¼ˆç”¨ä½ è„šæœ¬é‡Œå·²æœ‰çš„å…¬å…±å­—æ®µï¼‰
+            egg.enemyMask = enemyMask;
+            egg.obstacleMask = obstacleMask;
+            egg.speed = s3_eggSpeed;
+            egg.maxRange = Mathf.Max(0f, s3_eggMaxRange);
+            egg.lifeSeconds = Mathf.Max(0f, s3_eggLifeSeconds);
+            egg.hitRadius = s3_eggHitRadius;
+            egg.directHitDamage = s3_eggDirectHitDamage;
+            egg.explosionRadius = s3_explosionRadius;
+            egg.explosionDamage = s3_explosionDamage;
+            egg.explosionFalloffPow = s3_explosionFalloffPow;
+            egg.pushSmall = s3_explosionPushSmall;
+            egg.pushLarge = s3_explosionPushLarge;
+            egg.largeMassThreshold = s3_largeMassThreshold;
+
+            // é¢œè‰²/æè´¨ä½¿ç”¨ä½ åœ¨æœ¬è„šæœ¬é…ç½®çš„â€œåŠæœˆæè´¨â€
+            egg.coreColor = coreColor;
+            egg.useMaterial = crescentMaterial;
+
+            // âœ¨ ä¼ å…¥ç¬¬ä¸‰æ®µä¸“ç”¨çˆ†ç‚¸ç‰¹æ•ˆ
+            egg.explosionVFX = vfxExplosion;
+            egg.explosionVFXLife = vfxExplosionLife;
+
+            // å‘å°„ï¼ˆå†…åµŒç±»çš„ Launch ä¼šè´Ÿè´£ç§»åŠ¨ä¸ç¢°æ’ â†’ Explodeï¼‰
+            egg.Launch(aim, BladeOriginPos(), exploded: () => { TryShake(0.10f, 0.25f, 20f); });
+
+            // æ”¶æ‹›
+            yield return WaitRecover(s3_recover);
+            EndStep(aim);
         }
 
-        private IEnumerator FlashBeamOnce(Vector3 a, Vector3 b, float width)
+
+
+
+        // ================= â‘£ è¶…çº§å¤§æ–© =================
+        private IEnumerator CoUltraGiant()
         {
-            _shotLR.enabled = true;
-            _shotLR.positionCount = 2;
-            _shotLR.SetPosition(0, a);
-            _shotLR.SetPosition(1, b);
+            _busy = true;
+            Vector2 baseDir = SoftLockDir(_smoothedAim, softLockAngle, softLockRadius);
 
-            // Ö÷ÏßÓÃºËĞÄÉ« + ÇáÎ¢ºôÎü
-            float pulse = 1f + 0.15f * Mathf.Sin(Time.time * Mathf.PI * 2f * pulseFreq);
-            float w = width * pulse;
-            _shotLR.startWidth = w;
-            _shotLR.endWidth = w * 0.92f;
-
-            var g = new Gradient();
-            g.SetKeys(
-                new GradientColorKey[] { new GradientColorKey(coreColor, 0f), new GradientColorKey(coreColor, 1f) },
-                new GradientAlphaKey[] { new GradientAlphaKey(1f, 0f), new GradientAlphaKey(0.9f, 1f) }
-            );
-            _shotLR.colorGradient = g;
-
-            yield return null; // ±£³Ö1Ö¡
-            _shotLR.enabled = false;
-        }
-
-        private void DoHitAndExplosion(Vector3 center, float directDamage)
-        {
-            // Ö±ÉË
-            var hitCols = Physics2D.OverlapCircleAll(center, 0.15f, enemyMask);
-            foreach (var c in hitCols)
+            // çŸ­é¢„å¤‡
+            EnableBeams(true);
+            int stick = Mathf.Max(1, Mathf.RoundToInt(s4_preflashFrames));
+            for (int i = 0; i < stick; i++)
             {
-                var d = c.GetComponentInParent<FadedDreams.Enemies.IDamageable>();
-                if (d != null && !d.IsDead) d.TakeDamage(directDamage);
+                float u = (i + 1f) / (float)stick;
+                float eased = swingEase.Evaluate(u);
+                Vector2 dir = Quaternion.Euler(0, 0, Mathf.Lerp(-10f, 10f, eased)) * baseDir;
+                var tip = DrawBlade(dir, s4_length * 0.30f, eased, s4_length * 0.30f);
+                if (companion) companion.FollowTip(tip);
+                yield return null;
             }
+            EnableBeams(false);
 
-            // AoE
-            if (explosionPrefab) { var fx = Object.Instantiate(explosionPrefab, center, Quaternion.identity); Object.Destroy(fx, 3f); }
+            bool shook = false;
+            yield return StartCoroutine(FlyGiantCrescent(
+                BladeOriginPos(), baseDir, s4_speed, s4_length,
+                s4_arcDeg, s4_outer, s4_thickness,
+                s4_hitRadius, s4_damage, s4_multiHitsPerTarget, s4_tickInterval,
+                afterImgInterval: 0.040f, afterImgFade: 0.28f, fadeTail: s4_fadeTail,
+                onRelease: () => { if (!shook) { TryShake(0.14f, 0.35f, 16f); shook = true; } }
+            ));
 
-            var cols = Physics2D.OverlapCircleAll(center, explosionRadius, enemyMask);
-            foreach (var c in cols)
-            {
-                var d = c.GetComponentInParent<FadedDreams.Enemies.IDamageable>();
-                if (d != null && !d.IsDead) d.TakeDamage(explosionDamage);
-                var rb = c.attachedRigidbody;
-                if (rb) rb.AddForce((rb.worldCenterOfMass - (Vector2)center).normalized * 8f, ForceMode2D.Impulse);
-            }
+            yield return WaitRecover(s4_recover);
+            EndStep(baseDir);
         }
 
-        // ========= ìÅ¿á²ã£ºÁ½Ìõ»Ô¹âÏß£¨ËæĞîÁ¦½ø¶È¶ø±ä»¯£© =========
-        private void ApplyGlowBeams(Vector3 a, Vector3 b, float r)
+        // --------- åŠæœˆå½¢é£è¡Œï¼ˆæ™®é€šï¼‰ ---------
+        private IEnumerator FlyWaveCrescent(
+           Vector3 start, Vector2 dir, float speed, float range, float hitRadius,
+           float damage, int pierce, float arcDeg, float outerR, float thickness, System.Action onFirstHit)
         {
-            if (!enableChargeFX) { SetGlowActive(false); return; }
-            SetGlowActive(true);
+            GameObject cres = CreateCrescent("GreenCrescent_S1S3");
+            var mf = cres.GetComponent<MeshFilter>();
+            var mesh = new Mesh();
+            BuildCrescentMesh(mesh, arcDeg, outerR, thickness, 28);
+            mf.sharedMesh = mesh;
 
-            float pulse = 1f + 0.22f * Mathf.Sin(Time.time * Mathf.PI * 2f * pulseFreq);
-            float coreW = Mathf.Lerp(0.08f, 0.18f, r) * pulse;
+            Vector3 pos = start + (Vector3)dir.normalized * 0.6f;
+            float travelled = 0f;
+            int pierced = 0;
+            var hitSet = new HashSet<FadedDreams.Enemies.IDamageable>();
+            bool firstHitDone = false;
 
-            // Glow1
-            _glow1.positionCount = 2;
-            _glow1.SetPosition(0, a);
-            _glow1.SetPosition(1, b);
-            _glow1.startWidth = coreW * 2.1f;
-            _glow1.endWidth = _glow1.startWidth * 0.95f;
-            SetLRColor(_glow1, Color.Lerp(coreColor, glowColor, 0.6f), Mathf.Lerp(0.45f, 0.85f, r));
+            while (travelled < range)
+            {
+                float step = speed * Time.unscaledDeltaTime;
+                travelled += step;
+                pos += (Vector3)dir * step;
 
-            // Glow2£¨¸ü¿í¸üµ­£©
-            _glow2.positionCount = 2;
-            _glow2.SetPosition(0, a);
-            _glow2.SetPosition(1, b);
-            _glow2.startWidth = coreW * 3.1f;
-            _glow2.endWidth = _glow2.startWidth * 0.95f;
-            SetLRColor(_glow2, Color.Lerp(coreColor, glowColor, 0.85f), Mathf.Lerp(0.25f, 0.65f, r));
+                int n = Physics2D.OverlapCircleNonAlloc(pos, hitRadius, _buf64, enemyMask);
+                for (int i = 0; i < n; i++)
+                {
+                    var c = _buf64[i];
+                    var d = c ? c.GetComponentInParent<FadedDreams.Enemies.IDamageable>() : null;
+                    if (d != null && !d.IsDead && !hitSet.Contains(d))
+                    {
+                        hitSet.Add(d);
+                        d.TakeDamage(damage);
+
+                        // æ’­æ”¾å°å‘½ä¸­ç‰¹æ•ˆï¼ˆå‘½ä¸­ç‚¹æœå‘æŒ‰é£è¡Œæ–¹å‘ï¼‰
+                        if (vfxHitSmall)
+                        {
+                            Vector3 hpos = c.bounds.ClosestPoint(pos);
+                            var go = Instantiate(vfxHitSmall, hpos,
+                                Quaternion.Euler(0, 0, Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg));
+                            if (vfxHitSmallLife > 0f) Destroy(go, vfxHitSmallLife);
+                        }
+
+                        if (!firstHitDone) { onFirstHit?.Invoke(); firstHitDone = true; }
+                        pierced++;
+                        if (pierced > pierce) { travelled = range + 1f; break; }
+                    }
+                }
+
+                cres.transform.position = pos;
+                float ang = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
+                cres.transform.rotation = Quaternion.Euler(0, 0, ang);
+
+                if (Physics2D.OverlapCircle(pos, hitRadius * 0.8f, obstacleMask)) break;
+                yield return null;
+            }
+
+            yield return FadeAndKillMesh(cres, 0.16f);
         }
 
-        private void SetLRColor(LineRenderer lr, Color c, float alpha)
+        // --------- åŠæœˆå½¢é£è¡Œï¼ˆå·¨å‹ + æ®‹åƒ + å¤šæ®µä¼¤å®³ï¼‰ ---------
+        private IEnumerator FlyGiantCrescent(
+           Vector3 start, Vector2 dir, float speed, float length,
+           float arcDeg, float outerR, float thickness,
+           float hitRadius, float damage, int multiHitsPerTarget, float tickInterval,
+           float afterImgInterval, float afterImgFade, float fadeTail,
+           System.Action onRelease)
+        {
+            onRelease?.Invoke();
+
+            GameObject head = CreateCrescent("GreenCrescent_S4_Head");
+            var mf = head.GetComponent<MeshFilter>();
+            var mesh = new Mesh();
+            BuildCrescentMesh(mesh, arcDeg, outerR, thickness, 36);
+            mf.sharedMesh = mesh;
+
+            Vector3 pos = start + (Vector3)dir.normalized * 0.6f;
+            float travelled = 0f;
+            float tickAcc = 0f, imgAcc = 0f;
+            var hitTicks = new Dictionary<FadedDreams.Enemies.IDamageable, int>();
+
+            while (travelled < length)
+            {
+                float step = speed * Time.unscaledDeltaTime;
+                travelled += step;
+                pos += (Vector3)dir * step;
+
+                head.transform.position = pos;
+                float ang = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
+                head.transform.rotation = Quaternion.Euler(0, 0, ang);
+
+                // æ®‹åƒ
+                imgAcc += Time.unscaledDeltaTime;
+                if (imgAcc >= afterImgInterval)
+                {
+                    imgAcc = 0f;
+                    var ghost = new GameObject("CrescentGhost");
+                    var gmf = ghost.AddComponent<MeshFilter>(); gmf.sharedMesh = mesh;
+                    var gmr = ghost.AddComponent<MeshRenderer>(); gmr.sharedMaterial = head.GetComponent<MeshRenderer>().sharedMaterial;
+                    ghost.transform.SetPositionAndRotation(pos, head.transform.rotation);
+                    StartCoroutine(FadeAndKillMesh(ghost, afterImgFade));
+                }
+
+                // å‘¨æœŸæ€§ä¼¤å®³ tick
+                tickAcc += Time.unscaledDeltaTime;
+                if (tickAcc >= tickInterval)
+                {
+                    tickAcc = 0f;
+                    int samples = 6;
+                    for (int i = 0; i < samples; i++)
+                    {
+                        Vector3 p = pos + (Vector3)dir.normalized * (i - samples / 2f) * 0.12f;
+                        int n = Physics2D.OverlapCircleNonAlloc(p, hitRadius, _buf64, enemyMask);
+                        for (int j = 0; j < n; j++)
+                        {
+                            var dcol = _buf64[j];
+                            var d = dcol ? dcol.GetComponentInParent<FadedDreams.Enemies.IDamageable>() : null;
+                            if (d != null && !d.IsDead)
+                            {
+                                int count = 0; hitTicks.TryGetValue(d, out count);
+                                if (count < multiHitsPerTarget)
+                                {
+                                    d.TakeDamage(damage / Mathf.Max(1, multiHitsPerTarget));
+                                    hitTicks[d] = count + 1;
+
+                                    // æ’­æ”¾å°å‘½ä¸­ç‰¹æ•ˆï¼ˆæŒ‰å½“å‰æ®µè½å‘½ä¸­ç‚¹ï¼‰
+                                    if (vfxHitSmall)
+                                    {
+                                        Vector3 hpos = dcol.bounds.ClosestPoint(p);
+                                        var go = Instantiate(vfxHitSmall, hpos,
+                                            Quaternion.Euler(0, 0, Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg));
+                                        if (vfxHitSmallLife > 0f) Destroy(go, vfxHitSmallLife);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (Physics2D.OverlapCircle(pos, hitRadius * 0.8f, obstacleMask)) break;
+                yield return null;
+            }
+
+            yield return FadeAndKillMesh(head, fadeTail);
+        }
+
+
+        // ============== Helpers ==============
+        private void EndStep(Vector2 lastDir)
+        {
+            _busy = false;
+            _lastComboTime = Time.unscaledTime;
+            if (_comboStep >= 4) _comboStep = 0;
+            if (companion)
+            {
+                companion.ReturnToOrbitDelayed(comboWindow);
+                companion.TransitionFlourish(lastDir);
+            }
+        }
+
+        private Vector3 BladeOriginPos() => bladeOrigin ? bladeOrigin.position : transform.position;
+
+        private Vector2 AimDir()
+        {
+            if (_cam == null) _cam = Camera.main != null ? Camera.main : FindFirstObjectByType<Camera>();
+            Vector3 mp = Input.mousePosition;
+            float depth = Mathf.Abs((_cam ? _cam.transform.position.z : 0f) - BladeOriginPos().z);
+            mp.z = depth <= 0.001f ? 10f : depth;
+            Vector3 world = _cam ? _cam.ScreenToWorldPoint(mp) : (Vector3)transform.right + BladeOriginPos();
+            world.z = BladeOriginPos().z;
+            return (world - BladeOriginPos()).normalized;
+        }
+
+        private Vector2 SoftLockDir(Vector2 aimDir, float maxAngle, float radius)
+        {
+            Collider2D best = null;
+            float bestSqr = float.MaxValue;
+            int n = Physics2D.OverlapCircleNonAlloc(BladeOriginPos(), radius, _buf64, enemyMask);
+            for (int i = 0; i < n; i++)
+            {
+                var c = _buf64[i];
+                Vector2 d = (Vector2)c.bounds.center - (Vector2)BladeOriginPos();
+                float ang = Vector2.Angle(aimDir, d);
+                if (ang <= maxAngle)
+                {
+                    float s = d.sqrMagnitude;
+                    if (s < bestSqr) { bestSqr = s; best = c; }
+                }
+            }
+            if (!best) return aimDir;
+            Vector2 to = ((Vector2)best.bounds.center - (Vector2)BladeOriginPos()).normalized;
+            float delta = Vector2.SignedAngle(aimDir, to);
+            float clamp = Mathf.Clamp(delta, -softLockMaxCorrection, softLockMaxCorrection);
+            float rad = clamp * Mathf.Deg2Rad;
+            float ca = Mathf.Cos(rad), sa = Mathf.Sin(rad);
+            return new Vector2(ca * aimDir.x - sa * aimDir.y, sa * aimDir.x + ca * aimDir.y).normalized;
+        }
+
+        private void EnableBeams(bool on)
+        {
+            _lrCore.enabled = on;
+            _lrGlow1.enabled = on;
+            _lrGlow2.enabled = on;
+        }
+
+        private Vector3 DrawBlade(Vector2 dir, float len, float phase01, float lineLengthOverride = -1f)
+        {
+            Vector3 p0 = BladeOriginPos();
+            Vector3 p1 = p0 + (Vector3)(dir.normalized * (lineLengthOverride > 0f ? lineLengthOverride : len));
+
+            _lrCore.positionCount = 2; _lrCore.SetPosition(0, p0); _lrCore.SetPosition(1, p1);
+            float w = widthByPhase.Evaluate(phase01);
+            _lrCore.startWidth = w; _lrCore.endWidth = w * 0.92f;
+            _lrCore.colorGradient = MakeGradient(coreColor, lrAlpha);
+
+            _lrGlow1.positionCount = 2; _lrGlow1.SetPosition(0, p0); _lrGlow1.SetPosition(1, p1);
+            _lrGlow1.startWidth = w * 1.6f; _lrGlow1.endWidth = w * 1.5f;
+            _lrGlow1.colorGradient = MakeGradient(Color.Lerp(coreColor, glowColor, 0.6f), Mathf.Lerp(0.55f, 0.85f, phase01));
+
+            _lrGlow2.positionCount = 2; _lrGlow2.SetPosition(0, p0); _lrGlow2.SetPosition(1, p1);
+            _lrGlow2.startWidth = w * 2.3f; _lrGlow2.endWidth = w * 2.2f;
+            _lrGlow2.colorGradient = MakeGradient(Color.Lerp(coreColor, glowColor, 0.8f), Mathf.Lerp(0.35f, 0.65f, phase01));
+            return p1;
+        }
+
+        private Gradient MakeGradient(Color c, float a = 1f)
         {
             var g = new Gradient();
             g.SetKeys(
                 new GradientColorKey[] { new GradientColorKey(c, 0f), new GradientColorKey(c, 1f) },
-                new GradientAlphaKey[] { new GradientAlphaKey(alpha, 0f), new GradientAlphaKey(alpha * 0.85f, 1f) }
+                new GradientAlphaKey[] { new GradientAlphaKey(a, 0f), new GradientAlphaKey(a * 0.9f, 1f) }
             );
-            lr.colorGradient = g;
+            return g;
         }
 
-        private void SetGlowActive(bool on)
+        private void SetupLR(LineRenderer lr, int sortingOrder)
         {
-            if (_glow1) _glow1.enabled = on;
-            if (_glow2) _glow2.enabled = on;
+            lr.useWorldSpace = true;
+            lr.alignment = LineAlignment.View;
+            lr.numCapVertices = 8; lr.numCornerVertices = 4;
+            lr.textureMode = LineTextureMode.Stretch;
+            lr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            lr.receiveShadows = false;
+            lr.sortingOrder = sortingOrder;
         }
 
-        // ========= µÆ¹â/±¬ÉÁ =========
-        private Light2D CreateLight(string name, float maxIntensity, float outerRadius)
-        {
-            var go = new GameObject(name);
-            go.transform.SetParent(transform, false);
-            go.transform.localPosition = Vector3.zero;
-            var l = go.AddComponent<Light2D>();
-            l.lightType = Light2D.LightType.Point;
-            l.color = glowColor;
-            l.intensity = 0f;
-            l.pointLightOuterRadius = outerRadius * 0.7f;
-            l.pointLightInnerRadius = outerRadius * 0.28f;
-            l.shadowIntensity = 0f;
-            return l;
-        }
-
-        private void SetLightsActive(bool on)
-        {
-            if (!use2DLights) return;
-            if (_baseLight) _baseLight.enabled = on;
-            if (_tipLight) _tipLight.enabled = on;
-        }
-
-        private void UpdateChargeLights(float r)
-        {
-            if (!use2DLights) return;
-            if (_baseLight)
-            {
-                _baseLight.intensity = Mathf.Lerp(0f, baseLightMaxIntensity, EaseOutCubic(r));
-                _baseLight.pointLightOuterRadius = Mathf.Lerp(baseLightOuterRadius * 0.6f, baseLightOuterRadius, r);
-            }
-            if (_tipLight)
-            {
-                _tipLight.intensity = Mathf.Lerp(0f, tipLightMaxIntensity, EaseOutCubic(r));
-                _tipLight.pointLightOuterRadius = Mathf.Lerp(tipLightOuterRadius * 0.6f, tipLightOuterRadius, r);
-            }
-        }
-
-        private IEnumerator CoReleaseFlash(Vector3 pos)
-        {
-            var go = new GameObject("ReleaseFlashLight");
-            var l = go.AddComponent<Light2D>();
-            l.lightType = Light2D.LightType.Point;
-            l.color = Color.white;
-            l.intensity = releaseFlashIntensity;
-            l.pointLightOuterRadius = Mathf.Max(2f, tipLightOuterRadius);
-            l.pointLightInnerRadius = l.pointLightOuterRadius * 0.25f;
-            go.transform.position = pos;
-
-            float t = 0f;
-            while (t < releaseFlashFade)
-            {
-                t += Time.deltaTime;
-                float u = Mathf.Clamp01(t / releaseFlashFade);
-                l.intensity = Mathf.Lerp(releaseFlashIntensity, 0f, EaseInCubic(u));
-                yield return null;
-            }
-            Destroy(go);
-        }
-
-        // ========= ²ĞÓ° =========
-        private IEnumerator CoBeamAfterimages(Vector3 a, Vector3 b, float width)
-        {
-            for (int i = 0; i < afterimageCount; i++)
-            {
-                var lr = CreateTempLR("BeamAfterimage");
-                lr.positionCount = 2;
-                lr.SetPosition(0, a);
-                lr.SetPosition(1, b);
-                lr.startWidth = width * Mathf.Lerp(1f, 1.8f, i / (float)afterimageCount);
-                lr.endWidth = lr.startWidth * 0.92f;
-                SetLRColor(lr, Color.Lerp(coreColor, glowColor, 0.7f), Mathf.Lerp(0.6f, 0.2f, i / (float)afterimageCount));
-
-                float life = afterimageFade + i * afterimageSpacing;
-                StartCoroutine(FadeAndKill(lr.gameObject, life));
-                yield return new WaitForSeconds(afterimageSpacing);
-            }
-        }
-
-        private IEnumerator FadeAndKill(GameObject go, float life)
-        {
-            var lr = go.GetComponent<LineRenderer>();
-            float t = 0f;
-            Gradient g0 = lr.colorGradient;
-            while (t < life)
-            {
-                t += Time.deltaTime;
-                float u = Mathf.Clamp01(t / life);
-                // ÏßĞÔµ­³ö Alpha
-                var keys = g0.alphaKeys;
-                for (int k = 0; k < keys.Length; k++)
-                {
-                    keys[k].alpha = Mathf.Lerp(keys[k].alpha, 0f, u);
-                }
-                var g = new Gradient();
-                g.SetKeys(g0.colorKeys, keys);
-                lr.colorGradient = g;
-                yield return null;
-            }
-            Destroy(go);
-        }
-
-        private LineRenderer CreateChildLR(string name)
+        private LineRenderer CreateChildLR(string name, int sortingOrder)
         {
             var go = new GameObject(name);
             go.transform.SetParent(transform, false);
             var lr = go.AddComponent<LineRenderer>();
+            SetupLR(lr, sortingOrder);
+            lr.material = _lrCore ? _lrCore.sharedMaterial : null;
             lr.enabled = false;
-            lr.useWorldSpace = true;
-            lr.alignment = LineAlignment.View;
-            lr.numCapVertices = 8;
-            lr.numCornerVertices = 4;
-            lr.textureMode = LineTextureMode.Stretch;
-            lr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-            lr.receiveShadows = false;
-            lr.sortingLayerID = _shotLR.sortingLayerID;
-            lr.sortingOrder = _shotLR.sortingOrder - 1; // ÔÚÖ÷ÏßÖ®ÏÂ
-            lr.material = _shotLR.material;
             return lr;
         }
 
-        private LineRenderer CreateTempLR(string name)
+        private IEnumerator WaitRecover(float sec)
+        {
+            float t = 0f;
+            while (t < sec) { t += Time.unscaledDeltaTime; yield return null; }
+        }
+
+        private GameObject CreateCrescent(string name)
         {
             var go = new GameObject(name);
-            var lr = go.AddComponent<LineRenderer>();
-            lr.useWorldSpace = true;
-            lr.alignment = LineAlignment.View;
-            lr.numCapVertices = 8;
-            lr.numCornerVertices = 4;
-            lr.textureMode = LineTextureMode.Stretch;
-            lr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-            lr.receiveShadows = false;
-            lr.sortingLayerID = _shotLR.sortingLayerID;
-            lr.sortingOrder = _shotLR.sortingOrder - 2; // ²ĞÓ°¸ü¿¿ÏÂ
-            lr.material = _shotLR.material;
-            return lr;
-        }
-
-        private void TryCameraShake()
-        {
-            // Èô³¡¾°ÀïÓĞ CameraShake2D£¨ÎÒÖ®Ç°ÔÚ EnemyHealth Àï¸ø¹ı£©£¬µ÷ÓÃËü
-            var type = System.Type.GetType("FadedDreams.Enemies.CameraShake2D, Assembly-CSharp");
-            if (type != null)
+            var mf = go.AddComponent<MeshFilter>();
+            var mr = go.AddComponent<MeshRenderer>();
+            if (crescentMaterial) mr.sharedMaterial = crescentMaterial;
+            else
             {
-                var m = type.GetMethod("Shake", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
-                if (m != null) { m.Invoke(null, new object[] { 0.12f, 0.4f, 28f }); return; }
+                var sh = Shader.Find("Sprites/Default");
+                var mat = new Material(sh);
+                mat.color = coreColor;
+                mr.sharedMaterial = mat;
             }
-            // Ã»ÓĞµÄ»°×ö¸ö¼«¼ò Nudge
-            if (_cam) _cam.transform.position += (Vector3)(Random.insideUnitCircle * cameraNudgeStrength * 0.5f);
+            return go;
         }
 
-        // Easing
-        private static float EaseOutCubic(float x) => 1f - Mathf.Pow(1f - x, 3f);
-        private static float EaseInCubic(float x) => x * x * x;
+        private GameObject CreateRing(string name)
+        {
+            var go = new GameObject(name);
+            var mf = go.AddComponent<MeshFilter>();
+            var mr = go.AddComponent<MeshRenderer>();
+            if (crescentMaterial) mr.sharedMaterial = crescentMaterial;
+            else
+            {
+                var sh = Shader.Find("Sprites/Default");
+                var mat = new Material(sh);
+                mat.color = coreColor;
+                mr.sharedMaterial = mat;
+            }
+            return go;
+        }
+
+        public static void BuildCrescentMesh(Mesh mesh, float arcDeg, float outerR, float thickness, int seg = 20)
+        {
+            if (mesh == null) mesh = new Mesh();
+            mesh.Clear();
+            float innerR = Mathf.Max(0.01f, outerR - thickness);
+            int vcount = (seg + 1) * 2;
+            var verts = new Vector3[vcount];
+            var tris = new int[seg * 6];
+
+            float start = -arcDeg * 0.5f * Mathf.Deg2Rad;
+            float step = arcDeg * Mathf.Deg2Rad / seg;
+
+            for (int i = 0; i <= seg; i++)
+            {
+                float a = start + i * step;
+                float ca = Mathf.Cos(a); float sa = Mathf.Sin(a);
+                verts[i * 2] = new Vector3(ca * innerR, sa * innerR, 0);
+                verts[i * 2 + 1] = new Vector3(ca * outerR, sa * outerR, 0);
+                if (i < seg)
+                {
+                    int t = i * 6;
+                    int vi = i * 2;
+                    tris[t + 0] = vi;
+                    tris[t + 1] = vi + 1;
+                    tris[t + 2] = vi + 3;
+                    tris[t + 3] = vi;
+                    tris[t + 4] = vi + 3;
+                    tris[t + 5] = vi + 2;
+                }
+            }
+            mesh.vertices = verts;
+            mesh.triangles = tris;
+            mesh.RecalculateBounds();
+            mesh.RecalculateNormals();
+        }
+
+        public static void BuildRingMesh(Mesh mesh, float outerR, float thickness, int seg = 72)
+        {
+            if (mesh == null) mesh = new Mesh();
+            mesh.Clear();
+            float innerR = Mathf.Max(0.01f, outerR - thickness);
+            int vcount = (seg + 1) * 2;
+            var verts = new Vector3[vcount];
+            var tris = new int[seg * 6];
+
+            float start = -Mathf.PI;
+            float step = 2f * Mathf.PI / seg;
+
+            for (int i = 0; i <= seg; i++)
+            {
+                float a = start + i * step;
+                float ca = Mathf.Cos(a); float sa = Mathf.Sin(a);
+                verts[i * 2] = new Vector3(ca * innerR, sa * innerR, 0);
+                verts[i * 2 + 1] = new Vector3(ca * outerR, sa * outerR, 0);
+                if (i < seg)
+                {
+                    int t = i * 6;
+                    int vi = i * 2;
+                    tris[t + 0] = vi;
+                    tris[t + 1] = vi + 1;
+                    tris[t + 2] = vi + 3;
+                    tris[t + 3] = vi;
+                    tris[t + 4] = vi + 3;
+                    tris[t + 5] = vi + 2;
+                }
+            }
+            mesh.vertices = verts;
+            mesh.triangles = tris;
+            mesh.RecalculateBounds();
+            mesh.RecalculateNormals();
+        }
+
+        private IEnumerator FadeAndKillMesh(GameObject go, float fade)
+        {
+            var mr = go.GetComponent<MeshRenderer>();
+            if (!mr) { Destroy(go); yield break; }
+            Color c0 = mr.sharedMaterial ? mr.sharedMaterial.color : Color.white;
+            float t = 0f;
+            while (t < fade)
+            {
+                t += Time.unscaledDeltaTime;
+                float u = Mathf.Clamp01(t / fade);
+                var c = c0; c.a = Mathf.Lerp(c0.a, 0f, u);
+                mr.sharedMaterial.color = c;
+                yield return null;
+            }
+            Destroy(go);
+        }
+
+        // ========== Nested: Egg projectile ==========
+        private class SwordEggProjectile : MonoBehaviour
+        {
+            public LayerMask enemyMask, obstacleMask;
+            public float speed = 18f;
+            public float maxRange = 11f;
+            public float lifeSeconds = 0.8f;
+            public float hitRadius = 0.45f;
+            public float directHitDamage = 18f;
+            public float explosionRadius = 3.2f;
+            public float explosionDamage = 50f;
+            public float explosionFalloffPow = 1.6f;
+            public float pushSmall = 2.5f;
+            public float pushLarge = 1.0f;
+            public float largeMassThreshold = 3.5f;
+            public System.Action onExploded;
+            public Color coreColor = Color.white;
+            public Material useMaterial;
+            public GameObject explosionVFX;
+            public float explosionVFXLife = 1.2f;
+
+            private Vector3 _start;
+            private Vector2 _dir;
+            private float _life;
+            private bool _done;
+            private static readonly Collider2D[] _buf = new Collider2D[64];
+            private GameObject _vis;
+
+            public void Launch(Vector2 dir, Vector3 origin, System.Action exploded)
+            {
+                _dir = dir.normalized;
+                _start = origin + (Vector3)_dir * 0.6f;
+                transform.position = _start;
+                _life = lifeSeconds;
+                onExploded = exploded;
+
+                // simple visualï¼ˆç”¨åŠæœˆç½‘æ ¼è¿‘ä¼¼è›‹å½¢ï¼‰
+                _vis = new GameObject("EggVisual");
+                _vis.transform.SetParent(transform, false);
+                var mf = _vis.AddComponent<MeshFilter>();
+                var mr = _vis.AddComponent<MeshRenderer>();
+                var mesh = new Mesh();
+                BuildCrescentMesh(mesh, 320f, 0.7f, 0.35f, 22);
+                mf.sharedMesh = mesh;
+                if (useMaterial) mr.sharedMaterial = useMaterial;
+                else { var mat = new Material(Shader.Find("Sprites/Default")); mat.color = coreColor; mr.sharedMaterial = mat; }
+                _vis.transform.localScale = new Vector3(1.2f, 0.8f, 1f);
+            }
+
+            private void Update()
+            {
+                if (_done) return;
+                float dt = Time.unscaledDeltaTime;
+
+                Vector3 prev = transform.position;
+                Vector3 next = prev + (Vector3)_dir * speed * dt;
+                transform.position = next;
+                transform.right = _dir;
+
+                // å¯¿å‘½/å°„ç¨‹
+                if (lifeSeconds > 0f) { _life -= dt; if (_life <= 0f) { Explode(prev); return; } }
+                if (maxRange > 0f && (transform.position - _start).magnitude >= maxRange) { Explode(prev); return; }
+
+                // é€æ®µæ¢æµ‹ï¼Œé¿å…ç©¿é€
+                Vector3 move = next - prev;
+                float segLen = move.magnitude + 0.0001f;
+                float step = Mathf.Max(hitRadius * 0.8f, 0.12f);
+                for (float d = 0f; d <= segLen; d += step)
+                {
+                    Vector3 probe = prev + move.normalized * d;
+                    int n = Physics2D.OverlapCircleNonAlloc((Vector2)probe, hitRadius, _buf, enemyMask | obstacleMask);
+                    for (int i = 0; i < n; i++)
+                    {
+                        var c = _buf[i];
+                        if (!c) continue;
+                        // ç›´å‡»ä¼¤å®³ï¼ˆè‹¥æ˜¯æ•Œäººï¼‰
+                        if (((1 << c.gameObject.layer) & enemyMask) != 0)
+                        {
+                            var dmg = c.GetComponentInParent<FadedDreams.Enemies.IDamageable>();
+                            if (dmg != null && !dmg.IsDead) dmg.TakeDamage(directHitDamage);
+                        }
+                        Explode(probe); return;
+                    }
+                }
+            }
+
+            // è¿™æ˜¯ PlayerRangedCharger å†…éƒ¨çš„åµŒå¥—ç±»ï¼šSwordEggProjectile
+            // çˆ†ç‚¸ï¼šæŒ‰åŠå¾„è¡°å‡ä¼¤å®³ + æ¨åŠ› + æ’­æ”¾çˆ†ç‚¸ç‰¹æ•ˆ
+            private void Explode(Vector3 center)
+            {
+                if (_done) return;
+                _done = true;
+
+                int n = Physics2D.OverlapCircleNonAlloc((Vector2)center, explosionRadius, _buf, enemyMask);
+                for (int i = 0; i < n; i++)
+                {
+                    var col = _buf[i];
+                    var dmg = col ? col.GetComponentInParent<FadedDreams.Enemies.IDamageable>() : null;
+                    if (dmg != null && !dmg.IsDead)
+                    {
+                        float dist = Vector2.Distance(center, col.bounds.ClosestPoint(center));
+                        float t = Mathf.Clamp01(dist / Mathf.Max(0.001f, explosionRadius));
+                        float fall = Mathf.Pow(1f - t, Mathf.Max(0.1f, explosionFalloffPow));
+                        float deal = explosionDamage * fall;
+                        dmg.TakeDamage(deal);
+
+                        var rb = col.attachedRigidbody ? col.attachedRigidbody : col.GetComponentInParent<Rigidbody2D>();
+                        if (rb)
+                        {
+                            bool large = rb.mass >= largeMassThreshold;
+                            Vector2 push = ((Vector2)rb.worldCenterOfMass - (Vector2)center).normalized * (large ? pushLarge : pushSmall);
+                            rb.AddForce(push, ForceMode2D.Impulse);
+                        }
+                    }
+                }
+
+                // â€”â€” çˆ†ç‚¸ç‰¹æ•ˆï¼ˆç¬¬ä¸‰æ®µä¸“ç”¨ï¼‰â€”â€”
+                if (explosionVFX)
+                {
+                    var go = Instantiate(explosionVFX, center, Quaternion.identity);
+                    if (explosionVFXLife > 0f) Destroy(go, explosionVFXLife);
+                }
+
+                // å¯è§†æ·¡å‡º
+                if (_vis)
+                {
+                    var mr = _vis.GetComponent<MeshRenderer>();
+                    if (mr) StartCoroutine(CoFadeAndDie(mr, 0.25f));
+                }
+                else Destroy(gameObject);
+
+                onExploded?.Invoke();
+            }
+
+
+
+            private IEnumerator CoFadeAndDie(MeshRenderer mr, float fade)
+            {
+                Color c0 = mr.sharedMaterial ? mr.sharedMaterial.color : Color.white;
+                float t = 0f;
+                while (t < fade)
+                {
+                    t += Time.unscaledDeltaTime;
+                    var c = c0; c.a = Mathf.Lerp(c0.a, 0f, t / fade);
+                    mr.sharedMaterial.color = c;
+                    yield return null;
+                }
+                Destroy(gameObject);
+            }
+        }
     }
 }
