@@ -362,6 +362,19 @@ public float greenAttackCost = 6f;               // 绿色攻击消耗
 
 ## 最近修复记录
 
+### 2024年12月 - 环绕体无颜色击落功能
+**功能**: 环绕体无颜色时能被玩家的任何攻击击落
+**新特性**:
+- 添加 `BossColor.None` 枚举值表示无颜色状态
+- 环绕体默认初始化为无颜色状态
+- 无颜色环绕体被任何攻击击中都会被击落
+- 有颜色环绕体仍需要同色攻击才能击落
+**技术实现**:
+- 修改 `OnHitByPlayerColor` 方法，优先检查无颜色状态
+- 更新 `EnsureAttackableGate` 和 `SetBumperMode` 方法支持无颜色
+- 环绕体默认 `_current = BossColor.None`
+**影响文件**: `Assets/Scripts/Enemies/3/BossC3_AllInOne.cs`
+
 ### 2024年12月 - 环绕体击飞系统重写
 **功能**: 重写环绕体被玩家同色击中后的行为
 **新特性**:

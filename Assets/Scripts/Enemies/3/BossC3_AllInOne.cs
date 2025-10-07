@@ -20,7 +20,7 @@ using UnityEngine.Android;
 namespace FD.Bosses.C3
 {
     public enum Phase { P1, P2 }
-    public enum BossColor { Red, Green }
+    public enum BossColor { Red, Green, None }
     public enum Stage { TELL, WINDUP, ACTIVE, RECOVER }
 
     [DisallowMultipleComponent]
@@ -3196,7 +3196,7 @@ namespace FD.Bosses.C3
             // === Bumper 模式 ===
             bool _isBumper = false;      // 贴身撞击只扣能量
             bool _preferEnergy = true;
-            BossColor _current = BossColor.Red;     // ←← 用命名空间级 BossColor
+            BossColor _current = BossColor.None;    // ←← 默认无颜色，任何攻击都能击落
 
 
 
@@ -3362,8 +3362,15 @@ namespace FD.Bosses.C3
             {
                 _current = bossColor;
 
-                // 关键：红色=猛攻 → 关掉同色闸门；绿色仍走相性
-                _colorGate = !(bossColor == BossColor.Red);
+                // 关键：红色=猛攻 → 关掉同色闸门；绿色仍走相性；无颜色=任何攻击都能击落
+                if (bossColor == BossColor.None)
+                {
+                    _colorGate = false; // 无颜色时关闭颜色闸门，任何攻击都能击落
+                }
+                else
+                {
+                    _colorGate = !(bossColor == BossColor.Red);
+                }
 
                 if (_state != State.Attack) SetState(State.Attack, 1f, 1f);
                 if (enableColliders) EnableColliders(true);
@@ -3378,8 +3385,15 @@ namespace FD.Bosses.C3
                 _preferEnergy = preferEnergy;
                 _current = currentColor;
 
-                // 红色时关闭闸门；绿色保持相性
-                _colorGate = !(currentColor == BossColor.Red);
+                // 红色时关闭闸门；绿色保持相性；无颜色=任何攻击都能击落
+                if (currentColor == BossColor.None)
+                {
+                    _colorGate = false; // 无颜色时关闭颜色闸门，任何攻击都能击落
+                }
+                else
+                {
+                    _colorGate = !(currentColor == BossColor.Red);
+                }
 
                 if (_isBumper) { SetState(State.Attack, 0.5f, 0.8f); EnableColliders(true); }
                 else { SetState(State.Passive, 0f, 1f); EnableColliders(false); }
@@ -3389,14 +3403,22 @@ namespace FD.Bosses.C3
             // 同色被玩家命中 → 击退 + 回收（签名改为 BossColor）
             public void OnHitByPlayerColor(BossColor hitColor, string optionalFx = null)
             {
-                // 只有“同色”才触发这套表现
-                if (hitColor != _current) return;
                 if (_owner == null) return;
+                
+                // 环绕体无颜色时，任何攻击都能击落
+                if (_current == BossColor.None)
+                {
+                    _owner.HandleOrbSameColorHit(transform, _current);
+                    return;
+                }
+                
+                // 有颜色的环绕体只有"同色"才触发这套表现
+                if (hitColor != _current) return;
 
                 // 交给 Boss 顶层做：爆炸VFX + 掉异色能量 + 半透明 + 回收 + 暂停AI
                 _owner.HandleOrbSameColorHit(transform, _current);
 
-                // 旧逻辑（击退/回收/关碰撞）不再执行，避免与上面的“吸回+眩晕”重复
+                // 旧逻辑（击退/回收/关碰撞）不再执行，避免与上面的"吸回+眩晕"重复
             }
 
 

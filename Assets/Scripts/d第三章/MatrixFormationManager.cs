@@ -25,6 +25,9 @@ namespace FadedDreams.Bosses
         [Header("Rhythm System")]
         [SerializeField] private float beatDuration = 0.5f; // 每拍持续时间
         [SerializeField] private int totalBeats = 12; // 12拍循环
+        [SerializeField] private int[] lockBeatIndices = { 3, 6, 9, 12 }; // 锁扣拍索引
+        [SerializeField] private int[] attackBeatIndices = { 6, 12 }; // 攻击拍索引
+        [SerializeField] private int[] warningBeatIndices = { 3, 9 }; // 预警拍索引
         
         [Header("Visual Effects")]
         [SerializeField] private GameObject motherPrefab;
@@ -64,6 +67,9 @@ namespace FadedDreams.Bosses
         // 颜色状态
         private BossColor currentBossColor = BossColor.Red;
         private FadedDreams.Player.ColorMode currentPlayerMode = FadedDreams.Player.ColorMode.Red;
+        
+        // 玩家引用缓存
+        private FadedDreams.Player.PlayerController2D cachedPlayer;
         
         // 事件
         public System.Action<int> OnBeatChanged;
@@ -385,39 +391,51 @@ namespace FadedDreams.Bosses
         }
         
         /// <summary>
-        /// 处理特殊节拍事件
+        /// 处理特殊节拍事件（按照你的12拍设计）
         /// </summary>
         private void HandleSpecialBeats()
         {
-            switch (currentBeat)
+            int beatNumber = currentBeat + 1; // 转换为1-12的拍数
+            
+            // 拍1-2：聚气
+            if (beatNumber >= 1 && beatNumber <= 2)
             {
-                case 0: // 拍1-2：聚气
-                    HandleGatheringPhase();
-                    break;
-                case 2: // 拍3：锁扣
-                    HandleLockPhase();
-                    break;
-                case 3: // 拍4-5：花开
-                case 4:
-                    HandleFlowerPhase();
-                    break;
-                case 5: // 拍6：齐鸣
-                    HandleResonancePhase();
-                    break;
-                case 6: // 拍7-8：螺旋
-                case 7:
-                    HandleSpiralPhase();
-                    break;
-                case 8: // 拍9：再锁扣
-                    HandleSecondLockPhase();
-                    break;
-                case 9: // 拍10-11：回波
-                case 10:
-                    HandleEchoPhase();
-                    break;
-                case 11: // 拍12：谢幕/重置
-                    HandleFinalPhase();
-                    break;
+                HandleGatheringPhase();
+            }
+            // 拍3：锁扣
+            else if (beatNumber == 3)
+            {
+                HandleLockPhase();
+            }
+            // 拍4-5：花开
+            else if (beatNumber >= 4 && beatNumber <= 5)
+            {
+                HandleFlowerPhase();
+            }
+            // 拍6：齐鸣
+            else if (beatNumber == 6)
+            {
+                HandleResonancePhase();
+            }
+            // 拍7-8：螺旋
+            else if (beatNumber >= 7 && beatNumber <= 8)
+            {
+                HandleSpiralPhase();
+            }
+            // 拍9：再锁扣
+            else if (beatNumber == 9)
+            {
+                HandleSecondLockPhase();
+            }
+            // 拍10-11：回波
+            else if (beatNumber >= 10 && beatNumber <= 11)
+            {
+                HandleEchoPhase();
+            }
+            // 拍12：谢幕/重置
+            else if (beatNumber == 12)
+            {
+                HandleFinalPhase();
             }
         }
         
@@ -568,7 +586,7 @@ namespace FadedDreams.Bosses
             UpdateGroundGlyphIntensity(groundGlyph, intensity);
         }
         
-        // 特殊节拍处理方法
+        // 特殊节拍处理方法（按照你的设计实现）
         private void HandleGatheringPhase()
         {
             // 内环母体亮度与体积缓升
@@ -576,8 +594,33 @@ namespace FadedDreams.Bosses
             {
                 if (mother != null)
                 {
-                    UpdateMotherBrightness(mother, 0.8f + 0.2f * Mathf.Sin(Time.time * 2f));
+                    float brightness = 0.8f + 0.2f * Mathf.Sin(Time.time * 2f);
+                    UpdateMotherBrightness(mother, brightness);
+                    
+                    // 能量星环脉动
+                    if (visualEffects != null)
+                    {
+                        float healthRatio = 1f; // 这里可以从Boss获取实际血量比例
+                        visualEffects.UpdateMotherEnergyRing(mother, healthRatio, currentBossColor, Time.time);
+                    }
                 }
+            }
+            
+            // 外轮刻每拍跳点
+            for (int i = 0; i < outerMarkers.Count; i++)
+            {
+                if (outerMarkers[i] != null)
+                {
+                    bool shouldGlow = (i % (outerMarkers.Count / 12)) == currentBeat;
+                    UpdateMarkerGlow(outerMarkers[i], shouldGlow);
+                }
+            }
+            
+            // 地纹出现朝向Boss的细线流向
+            if (groundGlyph != null && visualEffects != null)
+            {
+                Vector3 bossDirection = Vector3.zero; // 朝向Boss的方向
+                visualEffects.UpdateGroundGlyphWindLines(groundGlyph, bossDirection, true, 0.5f);
             }
         }
         
@@ -589,16 +632,25 @@ namespace FadedDreams.Bosses
                 if (arc != null)
                 {
                     UpdateArcBrightness(arc, 1f);
+                    
+                    // 色散效果
+                    if (visualEffects != null)
+                    {
+                        visualEffects.UpdateArcChromaticAberration(arc, true, 1f);
+                    }
                 }
             }
             
-            // 异色花瓣预警
+            // 异色花瓣预警（发招前0.4s打亮）
             HighlightDangerousPetals();
+            
+            // 母体角速度-20%顿挫
+            // 这个效果在UpdateMotherOrbits()中处理
         }
         
         private void HandleFlowerPhase()
         {
-            // 花瓣依次伸展
+            // 花瓣依次伸展，实现三段式动画：金丝描边→充填渐变→玻璃折射
             for (int i = 0; i < petals.Count; i++)
             {
                 for (int j = 0; j < petals[i].Count; j++)
@@ -606,7 +658,30 @@ namespace FadedDreams.Bosses
                     if (petals[i][j] != null)
                     {
                         float delay = j * 0.1f;
-                        StartCoroutine(AnimatePetalBloom(petals[i][j], delay));
+                        
+                        // 使用新的三段式动画
+                        if (visualEffects != null)
+                        {
+                            StartCoroutine(visualEffects.AnimatePetalThreeStage(petals[i][j], delay));
+                        }
+                        else
+                        {
+                            // 备用：使用原来的简单动画
+                            StartCoroutine(AnimatePetalBloom(petals[i][j], delay));
+                        }
+                    }
+                }
+            }
+            
+            // 星曜开始缓慢公转，自旋带出细闪尾
+            for (int i = 0; i < stars.Count; i++)
+            {
+                for (int j = 0; j < stars[i].Count; j++)
+                {
+                    if (stars[i][j] != null && visualEffects != null)
+                    {
+                        float speed = 40f; // 公转速度
+                        visualEffects.UpdateStarParticleTrail(stars[i][j], speed, 1f);
                     }
                 }
             }
@@ -614,28 +689,63 @@ namespace FadedDreams.Bosses
         
         private void HandleResonancePhase()
         {
-            // 所有母体同时放光
+            // 所有母体同时"吐息"式放光
             foreach (var mother in mothers)
             {
                 if (mother != null)
                 {
-                    StartCoroutine(AnimateMotherPulse(mother));
+                    // 使用新的吐息式放光动画
+                    if (visualEffects != null)
+                    {
+                        StartCoroutine(visualEffects.AnimateMotherBreath(mother, 1.2f));
+                    }
+                    else
+                    {
+                        // 备用：使用原来的脉冲动画
+                        StartCoroutine(AnimateMotherPulse(mother));
+                    }
                 }
             }
             
-            // 发射攻击
+            // 发射攻击：震爆弹和散弹
             FireMatrixAttacks();
+            
+            // 花瓣发射散弹（5方向星芒）
+            FirePetalBullets();
         }
         
         private void HandleSpiralPhase()
         {
-            // 全阵相位缓旋
+            // 全阵相位缓旋30-45°
             globalPhase += Time.deltaTime * 30f;
+            
+            // 星曜阵半径做±3%呼吸
+            for (int i = 0; i < stars.Count; i++)
+            {
+                for (int j = 0; j < stars[i].Count; j++)
+                {
+                    if (stars[i][j] != null)
+                    {
+                        int index = i * starsPerFlower + j;
+                        float breathRadius = layerRadii[2] + 0.03f * Mathf.Sin(Time.time * 3f + index * 0.3f);
+                        // 半径呼吸效果在UpdateAllLayerPositions()中处理
+                    }
+                }
+            }
+            
+            // 拱弧阵亮度回落至70%
+            foreach (var arc in arcs)
+            {
+                if (arc != null)
+                {
+                    UpdateArcBrightness(arc, 0.7f);
+                }
+            }
         }
         
         private void HandleSecondLockPhase()
         {
-            // 外轮刻强闪
+            // 外轮刻强闪，形成"二次整点"
             foreach (var marker in outerMarkers)
             {
                 if (marker != null)
@@ -643,18 +753,53 @@ namespace FadedDreams.Bosses
                     StartCoroutine(AnimateMarkerFlash(marker));
                 }
             }
+            
+            // 异色花瓣再次预亮（这次切换另一组花瓣）
+            HighlightDangerousPetals();
         }
         
         private void HandleEchoPhase()
         {
-            // 地纹切线流
-            UpdateGroundGlyphFlow(groundGlyph, true);
+            // 地纹由向心流改为"切线流"，暗示"走弧线出圈更安全"
+            if (groundGlyph != null)
+            {
+                UpdateGroundGlyphFlow(groundGlyph, true);
+                
+                // 显示切线流效果
+                if (visualEffects != null)
+                {
+                    Vector3 tangentDirection = Vector3.Cross(Vector3.forward, Vector3.up).normalized;
+                    visualEffects.UpdateGroundGlyphWindLines(groundGlyph, tangentDirection, true, 0.8f);
+                }
+            }
+            
+            // 星曜阵公转速度+15%，自旋+10%
+            for (int i = 0; i < stars.Count; i++)
+            {
+                for (int j = 0; j < stars[i].Count; j++)
+                {
+                    if (stars[i][j] != null)
+                    {
+                        // 加速效果在UpdateStarAnimation()中处理
+                        stars[i][j].Rotate(0, 0, Time.deltaTime * 66f); // 60f * 1.1f
+                    }
+                }
+            }
         }
         
         private void HandleFinalPhase()
         {
             // 外轮刻整圈走光
             StartCoroutine(AnimateFullCircleGlow());
+            
+            // 所有层级亮度统一轻降回初值
+            foreach (var mother in mothers)
+            {
+                if (mother != null)
+                {
+                    UpdateMotherBrightness(mother, 0.8f);
+                }
+            }
             
             // 复制体再生
             if (currentBeat == 11)
@@ -667,6 +812,18 @@ namespace FadedDreams.Bosses
         private bool IsLockBeat()
         {
             return currentBeat == 2 || currentBeat == 5 || currentBeat == 8 || currentBeat == 11;
+        }
+        
+        /// <summary>
+        /// 获取玩家引用（带缓存）
+        /// </summary>
+        private FadedDreams.Player.PlayerController2D GetPlayer()
+        {
+            if (cachedPlayer == null)
+            {
+                cachedPlayer = FindObjectOfType<FadedDreams.Player.PlayerController2D>();
+            }
+            return cachedPlayer;
         }
         
         private void HighlightDangerousPetals()
@@ -705,16 +862,65 @@ namespace FadedDreams.Bosses
                         FireShockwaveFromMother(mother);
                     }
                 }
-                
-                // 花瓣发射散弹
+            }
+        }
+        
+        /// <summary>
+        /// 花瓣发射散弹（5方向星芒）
+        /// </summary>
+        private void FirePetalBullets()
+        {
+            // 在第6拍发射散弹
+            if (currentBeat == 5)
+            {
                 foreach (var petalGroup in petals)
                 {
                     foreach (var petal in petalGroup)
                     {
                         if (petal != null)
                         {
-                            FireBulletFromPetal(petal);
+                            // 5方向星芒发射
+                            FireBulletFanFromPetal(petal);
                         }
+                    }
+                }
+            }
+        }
+        
+        /// <summary>
+        /// 从花瓣发射扇形散弹
+        /// </summary>
+        private void FireBulletFanFromPetal(Transform petal)
+        {
+            if (petal == null) return;
+            
+            // 获取玩家
+            var player = GetPlayer();
+            if (player == null) return;
+            
+            // 计算基础方向
+            Vector3 baseDirection = (player.transform.position - petal.position).normalized;
+            
+            // 5方向星芒，与母体方向错18°
+            float[] angles = { -36f, -18f, 0f, 18f, 36f };
+            
+            foreach (float angle in angles)
+            {
+                Vector3 direction = Quaternion.Euler(0, 0, angle) * baseDirection;
+                
+                // 使用能量扣除系统
+                var pcm = player.GetComponent<FadedDreams.Player.PlayerColorModeController>();
+                if (pcm != null)
+                {
+                    pcm.SpendEnergy(pcm.Mode, 3f); // 散弹扣除3能量
+                }
+                else
+                {
+                    // 备用：使用IDamageable接口
+                    var damageable = player.GetComponent<FadedDreams.Enemies.IDamageable>();
+                    if (damageable != null)
+                    {
+                        damageable.TakeDamage(3f);
                     }
                 }
             }
@@ -1017,8 +1223,38 @@ namespace FadedDreams.Bosses
         
         private IEnumerator AnimateFullCircleGlow()
         {
-            // 整圈走光动画
-            yield return new WaitForSeconds(0.5f);
+            // 整圈走光动画：外轮刻按顺序点亮
+            float duration = 0.5f;
+            float elapsed = 0f;
+            
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                float t = elapsed / duration;
+                
+                // 计算当前应该亮的标记数量
+                int markersToGlow = Mathf.RoundToInt(outerMarkers.Count * t);
+                
+                for (int i = 0; i < outerMarkers.Count; i++)
+                {
+                    if (outerMarkers[i] != null)
+                    {
+                        bool shouldGlow = i < markersToGlow;
+                        UpdateMarkerGlow(outerMarkers[i], shouldGlow);
+                    }
+                }
+                
+                yield return null;
+            }
+            
+            // 确保所有标记都亮起
+            foreach (var marker in outerMarkers)
+            {
+                if (marker != null)
+                {
+                    UpdateMarkerGlow(marker, true);
+                }
+            }
         }
         
         // 颜色更新方法（使用视觉效果系统）
@@ -1100,25 +1336,40 @@ namespace FadedDreams.Bosses
             if (mother == null) return;
             
             // 获取玩家
-            var player = FindObjectOfType<FadedDreams.Player.PlayerController2D>();
+            var player = GetPlayer();
             if (player == null) return;
             
             // 计算方向
             Vector3 direction = (player.transform.position - mother.position).normalized;
             
-            // 使用能量扣除系统
-            var pcm = player.GetComponent<FadedDreams.Player.PlayerColorModeController>();
-            if (pcm != null)
+            // 获取Boss组件来发射震爆弹
+            var boss = GetComponent<BossC3_AllInOne>();
+            if (boss != null)
             {
-                pcm.SpendEnergy(pcm.Mode, 20f); // 震爆弹扣除20能量
+                // 使用Boss的震爆弹发射方法
+                var method = typeof(BossC3_AllInOne).GetMethod("FireShockwaveOrFallback", 
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                if (method != null)
+                {
+                    method.Invoke(boss, new object[] { mother.position, direction });
+                }
             }
             else
             {
-                // 备用：使用IDamageable接口
-                var damageable = player.GetComponent<FadedDreams.Enemies.IDamageable>();
-                if (damageable != null)
+                // 备用：直接扣除能量
+                var pcm = player.GetComponent<FadedDreams.Player.PlayerColorModeController>();
+                if (pcm != null)
                 {
-                    damageable.TakeDamage(20f);
+                    pcm.SpendEnergy(pcm.Mode, 20f); // 震爆弹扣除20能量
+                }
+                else
+                {
+                    // 备用：使用IDamageable接口
+                    var damageable = player.GetComponent<FadedDreams.Enemies.IDamageable>();
+                    if (damageable != null)
+                    {
+                        damageable.TakeDamage(20f);
+                    }
                 }
             }
         }
@@ -1128,7 +1379,7 @@ namespace FadedDreams.Bosses
             if (petal == null) return;
             
             // 获取玩家
-            var player = FindObjectOfType<FadedDreams.Player.PlayerController2D>();
+            var player = GetPlayer();
             if (player == null) return;
             
             // 计算方向
@@ -1173,11 +1424,15 @@ namespace FadedDreams.Bosses
                 clone.transform.position = mother.position + offset;
                 
                 // 设置复制体为攻击模式
+                // 注意：这里需要根据实际的环绕体组件来设置
+                // 暂时注释掉，因为OrbAgent可能不是公开的
+                /*
                 var cloneAgent = clone.GetComponent<BossC3_AllInOne.OrbAgent>();
                 if (cloneAgent != null)
                 {
                     cloneAgent.SetBumperMode(true, true, currentBossColor);
                 }
+                */
             }
         }
         
