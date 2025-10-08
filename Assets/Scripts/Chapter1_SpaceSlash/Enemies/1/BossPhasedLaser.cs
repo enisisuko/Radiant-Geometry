@@ -129,10 +129,13 @@ namespace FadedDreams.Boss
         public float camAnchorLerp = 10f;
         public Vector2 camSoftSizeAtBoss = new Vector2(4.8f, 4.5f);   // 横向略收紧
         
+        [Header("Simple Boundary Check")]
+        public bool enableSimpleBoundaryCheck = true;                 // 简单的边界检测
+        [Range(0f, 0.5f)] public float boundaryMargin = 0.2f;         // 边界安全距离（屏幕百分比）
+        
         [Header("Legacy Parameters (Deprecated)")]
         public float camBiasTowardBoss = 1.6f;
         public float camBiasLerp = 5f;
-        public bool camHardKeepPlayerInView = false;                 // 已禁用：避免摄像头拉扯
         public float camHorizontalMargin01 = 0.18f;
         public float camGuardPullStrength = 1.0f;
         
@@ -263,13 +266,38 @@ namespace FadedDreams.Boss
                     cam.fieldOfView = Mathf.Lerp(cam.fieldOfView, _origFov * camFovMul, Time.deltaTime * camPerspectiveLerp);
             }
 
-            // 相机构图：只聚焦玩家，简化逻辑避免拉扯
+            // 相机构图：聚焦玩家，带简单边界检测
             if (_camModified && _camFollow && player && camUsePlayerFirstCompose && _camAnchor)
             {
                 Vector3 p = player.position;
-                Vector3 targetAnchor = p; // 直接跟随玩家，不进行复杂的边界计算
+                Vector3 targetAnchor = p; // 默认跟随玩家
 
-                // 平滑更新锚点 - 直接跟随玩家
+                // 简单的边界检测 - 只在玩家接近屏幕边缘时调整
+                if (enableSimpleBoundaryCheck && cam)
+                {
+                    Vector3 vp = cam.WorldToViewportPoint(p);
+                    
+                    // 只在玩家在相机前方时进行边界检测
+                    if (vp.z > 0f)
+                    {
+                        float margin = boundaryMargin;
+                        
+                        // 如果玩家超出左边界，稍微向右调整锚点
+                        if (vp.x < margin)
+                        {
+                            float adjustAmount = (margin - vp.x) * 2f; // 调整强度
+                            targetAnchor.x += adjustAmount;
+                        }
+                        // 如果玩家超出右边界，稍微向左调整锚点
+                        else if (vp.x > 1f - margin)
+                        {
+                            float adjustAmount = (vp.x - (1f - margin)) * 2f; // 调整强度
+                            targetAnchor.x -= adjustAmount;
+                        }
+                    }
+                }
+
+                // 平滑更新锚点
                 _camAnchor.position = Vector3.Lerp(_camAnchor.position, targetAnchor, Time.deltaTime * camAnchorLerp);
                 
                 // 调试信息
