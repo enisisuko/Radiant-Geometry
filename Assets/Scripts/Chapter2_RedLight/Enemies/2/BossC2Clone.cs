@@ -22,10 +22,23 @@ namespace FadedDreams.Bosses
             Destroy(gameObject);
         }
 
+        public void Setup(Vector3 target, bool tremble, float lifeSeconds)
+        {
+            SpawnTo(target, tremble, lifeSeconds);
+        }
+
+        public void OnCloneDestroyed(System.Action<BossC2Clone> callback)
+        {
+            if (callback != null)
+            {
+                callback(this);
+            }
+        }
+
         private IEnumerator CoSpawnTo(Vector3 target, bool tremble, float lifeSeconds)
         {
             _alive = true;
-            // ¿ìËÙÂäµã
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
             while ((transform.position - target).sqrMagnitude > 0.01f)
             {
                 transform.position = Vector3.MoveTowards(transform.position, target, 20f * Time.deltaTime);

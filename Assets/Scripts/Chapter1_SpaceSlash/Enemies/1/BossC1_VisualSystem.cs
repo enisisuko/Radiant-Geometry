@@ -453,7 +453,8 @@ namespace FadedDreams.Boss
         private void SetupHPBarRenderer(LineRenderer renderer, Color color)
         {
             renderer.material = new Material(Shader.Find("Sprites/Default"));
-            renderer.color = color;
+            renderer.startColor = color;
+            renderer.endColor = color;
             renderer.startWidth = 0.1f;
             renderer.endWidth = 0.1f;
             renderer.positionCount = 4;

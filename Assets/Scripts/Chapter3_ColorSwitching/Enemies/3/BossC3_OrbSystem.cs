@@ -18,6 +18,10 @@ namespace FD.Bosses.C3
     {
         [Header("== Orbs ==")]
         public List<GameObject> orbPrefabs = new List<GameObject>();
+        public GameObject orbPrefab;
+        public int maxOrbs = 10;
+        public float orbSpeed = 2f;
+        public float orbRadius = 2.8f;
         public bool autoBindOrbs = true;
         public float baseRadius = 2.8f;
 
@@ -119,7 +123,7 @@ namespace FD.Bosses.C3
         {
             if (_conductor == null) return;
 
-            _conductor.Setup(this);
+            _conductor.Setup(orbPrefab, maxOrbs, orbSpeed, orbRadius);
             SetOrbCount(GetCurrentOrbCount());
         }
 
@@ -150,7 +154,12 @@ namespace FD.Bosses.C3
         /// </summary>
         public Transform GetOrb(int index)
         {
-            return _conductor != null ? _conductor.GetOrb(index) : null;
+            if (_conductor != null && index >= 0 && index < _conductor.GetOrbCount())
+            {
+                var orbAgent = _conductor.GetOrb(index);
+                return orbAgent != null ? orbAgent.transform : null;
+            }
+            return null;
         }
 
         /// <summary>
@@ -460,9 +469,9 @@ namespace FD.Bosses.C3
                 // 检查环绕体周围是否有地形
                 Vector3 orbPos = orb.position;
                 Collider2D hit2d = Physics2D.OverlapCircle(orbPos, orbClearanceRadius, orbCollisionMask);
-                Collider hit3d = Physics.CheckSphere(orbPos, orbClearanceRadius, orbCollisionMask);
+                bool hit3d = Physics.CheckSphere(orbPos, orbClearanceRadius, orbCollisionMask);
 
-                if (hit2d != null || hit3d != null)
+                if (hit2d != null || hit3d)
                 {
                     // 计算清场推力
                     Vector3 clearanceDirection = (orbPos - transform.position).normalized;
@@ -579,7 +588,7 @@ namespace FD.Bosses.C3
 
             // 绘制环绕体轨道
             Gizmos.color = Color.yellow;
-            Gizmos.DrawWireCircle(transform.position, _currentRadius);
+            Gizmos.DrawWireSphere(transform.position, _currentRadius);
 
             // 绘制清场半径
             Gizmos.color = Color.red;
@@ -588,7 +597,7 @@ namespace FD.Bosses.C3
             {
                 if (orb != null)
                 {
-                    Gizmos.DrawWireCircle(orb.position, orbClearanceRadius);
+                    Gizmos.DrawWireSphere(orb.position, orbClearanceRadius);
                 }
             }
         }

@@ -477,11 +477,11 @@ namespace FadedDreams.Bosses
 
             // 绘制检测范围
             Gizmos.color = _isPlayerDetected ? Color.green : Color.yellow;
-            Gizmos.DrawWireCircle(transform.position, detectRadius);
+            Gizmos.DrawWireSphere(transform.position, detectRadius);
 
             // 绘制激怒范围
             Gizmos.color = _isInAggro ? Color.red : Color.orange;
-            Gizmos.DrawWireCircle(transform.position, aggroRadius);
+            Gizmos.DrawWireSphere(transform.position, aggroRadius);
 
             // 绘制到玩家的连线
             if (player != null)

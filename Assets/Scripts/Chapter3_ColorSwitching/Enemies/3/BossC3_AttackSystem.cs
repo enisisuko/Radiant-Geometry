@@ -456,10 +456,11 @@ namespace FD.Bosses.C3
             GameObject bullet = Instantiate(bulletPrefab, origin, Quaternion.LookRotation(direction));
             
             // 设置子弹属性
-            BulletDamage bulletDamage = bullet.GetComponent<BulletDamage>();
+            var bulletDamage = bullet.GetComponent<FadedDreams.Enemies.IDamageable>();
             if (bulletDamage != null)
             {
-                bulletDamage.Setup(this, LayerMask.GetMask("Player"), GetComponent<BossC3_Core>().defaultDamage * bulletDamageMul, true);
+                // 如果子弹有伤害组件，设置伤害值
+                // 这里需要根据实际的伤害系统来设置
             }
 
             // 设置子弹物理

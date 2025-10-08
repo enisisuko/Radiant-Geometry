@@ -185,7 +185,8 @@ public class LaserBeamSegment2D : MonoBehaviour, IDamageable
         _edge = GetComponent<EdgeCollider2D>();
         if (_edge == null) _edge = gameObject.AddComponent<EdgeCollider2D>();
         _edge.isTrigger = true;
-        _edge.usedByComposite = false;
+        // Unity 6.2: EdgeCollider2D不支持compositeOperation，移除usedByComposite设置
+        // _edge.usedByComposite = false;  // 已废弃
         _edge.edgeRadius = Mathf.Max(0.01f, thickness * 0.5f);
 
         transform.position = Vector3.zero;
@@ -391,13 +392,13 @@ public class LaserBeamSegment2D : MonoBehaviour, IDamageable
         _edge.enabled = lethal;
     }
 
-    private Color GetColor()
+    public Color GetColor()
     {
         if (_mat && _mat.HasProperty("_BaseColor")) return _mat.GetColor("_BaseColor");
         return baseColor;
     }
 
-    private void SetColor(Color c)
+    public void SetColor(Color c)
     {
         if (_mat && _mat.HasProperty("_BaseColor")) _mat.SetColor("_BaseColor", c);
         baseColor = c;
@@ -613,4 +614,31 @@ public class LaserBeamSegment2D : MonoBehaviour, IDamageable
 
     // —— 缓动
     private float EaseOutExpo(float x) => (x >= 1f) ? 1f : 1f - Mathf.Pow(2f, -10f * x);
+
+    // —— 公共方法
+    public void Setup(float thickness, Color color)
+    {
+        this.thickness = thickness;
+        this.baseColor = color;
+        SetColor(color);
+        SetThickness(thickness);
+    }
+
+
+    public void SetThickness(float thickness)
+    {
+        this.thickness = thickness;
+        // 更新渲染器宽度
+        LineRenderer lr = GetComponent<LineRenderer>();
+        if (lr != null)
+        {
+            lr.startWidth = thickness;
+            lr.endWidth = thickness;
+        }
+    }
+
+    public float GetThickness()
+    {
+        return thickness;
+    }
 }

@@ -34,13 +34,13 @@ namespace FD.Bosses.C3
             return null;
         }
         
-        public void SpawnBulletFan(Vector3 direction, int count, float spread)
+        public void SpawnBulletFan(Vector3 origin, Vector3 toward, int count, float spreadDeg, float speedScale = 1f)
         {
             for (int i = 0; i < count; i++)
             {
-                float angle = (i - count / 2f) * spread / count;
-                Vector3 shootDir = Quaternion.AngleAxis(angle, Vector3.forward) * direction;
-                SpawnBullet(transform.position, shootDir);
+                float angle = (i - count / 2f) * spreadDeg / count;
+                Vector3 shootDir = Quaternion.AngleAxis(angle, Vector3.forward) * toward.normalized;
+                SpawnBullet(origin, shootDir, speedScale);
             }
         }
         
@@ -49,7 +49,43 @@ namespace FD.Bosses.C3
             isLocked = locked;
         }
         
-        private void SpawnBullet(Vector3 position, Vector3 direction)
+        public void SetOrbCount(int count)
+        {
+            // 调整活跃环绕体数量
+            while (activeOrbs.Count > count)
+            {
+                if (activeOrbs.Count > 0)
+                {
+                    OrbAgent orb = activeOrbs[activeOrbs.Count - 1];
+                    activeOrbs.RemoveAt(activeOrbs.Count - 1);
+                    if (orb != null)
+                        Destroy(orb.gameObject);
+                }
+            }
+            
+            while (activeOrbs.Count < count && activeOrbs.Count < maxOrbs)
+            {
+                SpawnOrb();
+            }
+        }
+        
+        private void SpawnOrb()
+        {
+            if (orbPrefab != null)
+            {
+                Vector3 randomPos = transform.position + Random.insideUnitSphere * spawnRadius;
+                randomPos.z = 0f;
+                GameObject orb = Instantiate(orbPrefab, randomPos, Quaternion.identity);
+                OrbAgent agent = orb.GetComponent<OrbAgent>();
+                if (agent != null)
+                {
+                    agent.Setup(Vector3.right, orbSpeed);
+                    activeOrbs.Add(agent);
+                }
+            }
+        }
+        
+        private void SpawnBullet(Vector3 position, Vector3 direction, float speedScale = 1f)
         {
             if (orbPrefab != null)
             {
@@ -57,7 +93,7 @@ namespace FD.Bosses.C3
                 OrbAgent agent = bullet.GetComponent<OrbAgent>();
                 if (agent != null)
                 {
-                    agent.Setup(direction, orbSpeed);
+                    agent.Setup(direction, orbSpeed * speedScale);
                     activeOrbs.Add(agent);
                 }
             }

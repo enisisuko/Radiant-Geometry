@@ -1,6 +1,7 @@
 ﻿// Torch.cs
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.Rendering.Universal;
 using FadedDreams.Player; // RedLightController
@@ -151,11 +152,12 @@ namespace FadedDreams.World.Light
 
             if (!_lit) return;
 
-            // 给圈内“任何可回红对象”回红（包含敌人、机关、其他火把——前提：其图层被 redTargets 勾选）
+            // 给圈内"任何可回红对象"回红（包含敌人、机关、其他火把——前提：其图层被 redTargets 勾选）
             if (_insideRedables.Count > 0 && enemyRedPerSec > 0f)
             {
                 float inc = enemyRedPerSec * Time.deltaTime;
-                foreach (var r in _insideRedables)
+                // 使用ToList()创建副本，避免在遍历时集合被修改
+                foreach (var r in _insideRedables.ToList())
                     if (r) r.Add(inc);
             }
 

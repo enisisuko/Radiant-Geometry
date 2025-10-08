@@ -172,7 +172,8 @@ namespace FadedDreams.Bosses
         private void SetupHPBarRenderer(LineRenderer renderer, Color color)
         {
             renderer.material = lineMaterial;
-            renderer.color = color;
+            renderer.startColor = color;
+            renderer.endColor = color;
             renderer.startWidth = lineWidth;
             renderer.endWidth = lineWidth;
             renderer.positionCount = 4;
@@ -209,7 +210,8 @@ namespace FadedDreams.Bosses
         private void SetupEnergyBarRenderer(LineRenderer renderer, Color color)
         {
             renderer.material = lineMaterial;
-            renderer.color = color;
+            renderer.startColor = color;
+            renderer.endColor = color;
             renderer.startWidth = lineWidth;
             renderer.endWidth = lineWidth;
             renderer.positionCount = 4;
@@ -408,9 +410,10 @@ namespace FadedDreams.Bosses
         {
             if (renderer != null)
             {
-                Color color = renderer.color;
+                Color color = renderer.startColor;
                 color.a = alpha;
-                renderer.color = color;
+                renderer.startColor = color;
+            renderer.endColor = color;
             }
         }
 
@@ -497,7 +500,8 @@ namespace FadedDreams.Bosses
             hpBarColor = color;
             if (_hpBarRenderer != null)
             {
-                _hpBarRenderer.color = color;
+                _hpBarRenderer.startColor = color;
+                _hpBarRenderer.endColor = color;
             }
         }
 
@@ -509,7 +513,8 @@ namespace FadedDreams.Bosses
             energyBarColor = color;
             if (_energyBarRenderer != null)
             {
-                _energyBarRenderer.color = color;
+                _energyBarRenderer.startColor = color;
+                _energyBarRenderer.endColor = color;
             }
         }
 
@@ -590,10 +595,10 @@ namespace FadedDreams.Bosses
 
             // 绘制可见性范围
             Gizmos.color = Color.green;
-            Gizmos.DrawWireCircle(transform.position, visibilityDistance);
+            Gizmos.DrawWireSphere(transform.position, visibilityDistance);
 
             Gizmos.color = Color.yellow;
-            Gizmos.DrawWireCircle(transform.position, fadeDistance);
+            Gizmos.DrawWireSphere(transform.position, fadeDistance);
 
             // 绘制条位置
             Vector3 bossPosition = transform.position;

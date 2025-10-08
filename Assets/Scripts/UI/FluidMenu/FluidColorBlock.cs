@@ -290,6 +290,43 @@ namespace FadedDreams.UI
             return currentAlpha;
         }
         
+        public void SetColors(Color primaryColor, Color secondaryColor)
+        {
+            if (config != null)
+            {
+                config.primaryColor = primaryColor;
+                config.secondaryColor = secondaryColor;
+            }
+            
+            if (image != null)
+            {
+                image.color = primaryColor;
+            }
+        }
+        
+        public void SetName(string name)
+        {
+            if (config != null)
+            {
+                config.name = name;
+            }
+        }
+        
+        public void SetScale(float scale)
+        {
+            transform.localScale = Vector3.one * scale;
+        }
+        
+        public void SetPosition(Vector3 position)
+        {
+            transform.position = position;
+        }
+        
+        public void SetVisible(bool visible)
+        {
+            gameObject.SetActive(visible);
+        }
+
         void OnDestroy()
         {
             // 清理资源

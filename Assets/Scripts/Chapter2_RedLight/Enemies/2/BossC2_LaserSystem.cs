@@ -161,7 +161,8 @@ namespace FadedDreams.Bosses
 
             // 创建激光
             _currentLaser = CreateLaserRenderer();
-            _currentLaser.color = color;
+            _currentLaser.startColor = color;
+            _currentLaser.endColor = color;
             _currentLaser.startWidth = width;
             _currentLaser.endWidth = width;
 
@@ -234,7 +235,8 @@ namespace FadedDreams.Bosses
 
             // 创建激光
             _currentLaser = CreateLaserRenderer();
-            _currentLaser.color = color;
+            _currentLaser.startColor = color;
+            _currentLaser.endColor = color;
             _currentLaser.startWidth = width;
             _currentLaser.endWidth = width;
 
@@ -343,14 +345,15 @@ namespace FadedDreams.Bosses
 
             float fadeDuration = 0.5f;
             float elapsed = 0f;
-            Color originalColor = _currentLaser.color;
+            Color originalColor = _currentLaser.startColor;
 
             while (elapsed < fadeDuration)
             {
                 float alpha = Mathf.Lerp(1f, 0f, elapsed / fadeDuration);
                 Color fadeColor = originalColor;
                 fadeColor.a = alpha;
-                _currentLaser.color = fadeColor;
+                _currentLaser.startColor = fadeColor;
+                _currentLaser.endColor = fadeColor;
 
                 elapsed += Time.deltaTime;
                 yield return null;
@@ -512,7 +515,7 @@ namespace FadedDreams.Bosses
 
             // 绘制激光范围
             Gizmos.color = Color.red;
-            Gizmos.DrawWireCircle(transform.position, laserRange);
+            Gizmos.DrawWireSphere(transform.position, laserRange);
 
             // 绘制当前激光方向
             if (_isLaserActive && _currentLaser != null)

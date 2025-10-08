@@ -24,6 +24,7 @@ namespace FD.Bosses.C3
         [Header("== Ring Materials ==")]
         public Material ringMaterial;
         public Material bossRingMaterial;
+        public Color ringColor = Color.red;
 
         [Header("== Ring Gradients ==")]
         public Gradient ringGradientP1;
@@ -138,7 +139,7 @@ namespace FD.Bosses.C3
 
             // 创建StellarRing组件
             _ring = gameObject.AddComponent<StellarRing>();
-            _ring.Setup(ringRadius, ringWidth, ringSegments);
+            _ring.Setup(ringRadius, ringWidth, ringColor, ringMaterial);
 
             // 设置材质
             if (ringMaterial != null)
@@ -540,11 +541,11 @@ namespace FD.Bosses.C3
 
             // 绘制血条环轮廓
             Gizmos.color = Color.red;
-            Gizmos.DrawWireCircle(transform.position, ringRadius);
+            Gizmos.DrawWireSphere(transform.position, ringRadius);
 
             // 绘制内圈
             Gizmos.color = Color.yellow;
-            Gizmos.DrawWireCircle(transform.position, ringRadius - ringWidth);
+            Gizmos.DrawWireSphere(transform.position, ringRadius - ringWidth);
         }
 
         #endregion

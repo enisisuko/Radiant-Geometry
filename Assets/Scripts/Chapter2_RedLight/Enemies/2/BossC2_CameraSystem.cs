@@ -471,7 +471,7 @@ namespace FadedDreams.Bosses
             if (anchorPoint != null)
             {
                 Gizmos.color = Color.blue;
-                Gizmos.DrawWireCircle(anchorPoint.position, anchorMaxDistance);
+                Gizmos.DrawWireSphere(anchorPoint.position, anchorMaxDistance);
             }
 
             // 绘制相机目标位置

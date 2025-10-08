@@ -93,6 +93,24 @@ namespace FadedDreams.Bosses
             UpdateMatrixPosition();
         }
         
+        /// <summary>
+        /// 设置大阵配置
+        /// </summary>
+        public void SetupFormation(int circleCount, int layerCount, float baseRadius, float layerSpacing, float circleSpacing)
+        {
+            this.baseRadius = baseRadius;
+            
+            // 重新计算层级半径
+            layerRadii = new float[layerCount];
+            for (int i = 0; i < layerCount; i++)
+            {
+                layerRadii[i] = baseRadius + i * layerSpacing;
+            }
+            
+            // 重新初始化大阵
+            InitializeMatrix();
+        }
+        
         private void Update()
         {
             if (isActive)

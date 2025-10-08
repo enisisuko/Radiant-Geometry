@@ -91,5 +91,46 @@ namespace FadedDreams.Bosses
         {
             return Time.time - _lastScytheSweepTime >= scytheSweepCooldown;
         }
+
+        /// <summary>
+        /// 生成子弹
+        /// </summary>
+        public void SpawnBullet(Vector3 position, Vector3 direction, float speed, float damage)
+        {
+            if (homingLaserPrefab != null)
+            {
+                GameObject bullet = Instantiate(homingLaserPrefab, position, Quaternion.LookRotation(Vector3.forward, direction));
+                // 设置子弹属性
+                var bulletScript = bullet.GetComponent<FadedDreams.Enemies.IDamageable>();
+                if (bulletScript != null)
+                {
+                    // 如果子弹有伤害组件，设置伤害值
+                    // 这里需要根据实际的伤害系统来设置
+                }
+                
+                var rb = bullet.GetComponent<Rigidbody2D>();
+                if (rb != null)
+                {
+                    rb.linearVelocity = direction.normalized * speed;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 生成手榴弹
+        /// </summary>
+        public void SpawnGrenade(Vector3 position, Vector3 direction, float speed)
+        {
+            if (scytheSweepPrefab != null)
+            {
+                GameObject grenade = Instantiate(scytheSweepPrefab, position, Quaternion.LookRotation(Vector3.forward, direction));
+                
+                var rb = grenade.GetComponent<Rigidbody2D>();
+                if (rb != null)
+                {
+                    rb.linearVelocity = direction.normalized * speed;
+                }
+            }
+        }
     }
 }

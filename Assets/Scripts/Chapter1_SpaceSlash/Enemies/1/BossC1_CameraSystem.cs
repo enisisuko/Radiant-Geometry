@@ -517,7 +517,7 @@ namespace FadedDreams.Boss
             if (anchorPoint != null)
             {
                 Gizmos.color = Color.blue;
-                Gizmos.DrawWireCircle(anchorPoint.position, anchorMaxDistance);
+                Gizmos.DrawWireSphere(anchorPoint.position, anchorMaxDistance);
             }
 
             // 绘制相机目标位置
@@ -533,7 +533,7 @@ namespace FadedDreams.Boss
             if (enableBoundaryDetection && targetCamera != null)
             {
                 Gizmos.color = Color.red;
-                Gizmos.DrawWireCircle(targetCamera.transform.position, boundaryMargin);
+                Gizmos.DrawWireSphere(targetCamera.transform.position, boundaryMargin);
             }
         }
 

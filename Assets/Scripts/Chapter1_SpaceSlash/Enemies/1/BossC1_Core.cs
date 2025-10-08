@@ -483,6 +483,24 @@ namespace FadedDreams.Boss
         /// 获取是否死亡
         /// </summary>
         public bool IsDead => _isDead;
+        
+        /// <summary>
+        /// 获取当前生命值
+        /// </summary>
+        public float GetCurrentHealth()
+        {
+            switch (_currentPhase)
+            {
+                case 1:
+                    return phase1Hits - _phase1HitCount;
+                case 2:
+                    return phase2Hits - _phase2HitCount;
+                case 3:
+                    return phase3Hits - _phase3HitCount;
+                default:
+                    return 0f;
+            }
+        }
 
         /// <summary>
         /// 获取是否无敌
@@ -582,11 +600,11 @@ namespace FadedDreams.Boss
 
             // 绘制检测范围
             Gizmos.color = _isPlayerDetected ? Color.green : Color.yellow;
-            Gizmos.DrawWireCircle(transform.position, detectRadius);
+            Gizmos.DrawWireSphere(transform.position, detectRadius);
 
             // 绘制激怒范围
             Gizmos.color = _isInAggro ? Color.red : Color.orange;
-            Gizmos.DrawWireCircle(transform.position, detectRadius * 0.8f);
+            Gizmos.DrawWireSphere(transform.position, detectRadius * 0.8f);
 
             // 绘制到玩家的连线
             if (player != null)

@@ -191,7 +191,7 @@ namespace FadedDreams.Bosses
                 if (torch != null)
                 {
                     torch.SetActive(true);
-                    torch.OnTorchIgnited += HandleTorchIgnited;
+                    torch.OnTorchIgnited(HandleTorchIgnited);
                 }
             }
         }
@@ -207,7 +207,7 @@ namespace FadedDreams.Bosses
                 if (torch != null)
                 {
                     torch.SetActive(false);
-                    torch.OnTorchIgnited -= HandleTorchIgnited;
+                    // 不需要取消订阅，因为对象即将被禁用
                 }
             }
 
@@ -217,7 +217,7 @@ namespace FadedDreams.Bosses
                 if (torch != null)
                 {
                     torch.SetActive(false);
-                    torch.OnTorchIgnited -= HandleTorchIgnited;
+                    // 不需要取消订阅，因为对象即将被禁用
                 }
             }
         }
@@ -317,14 +317,14 @@ namespace FadedDreams.Bosses
 
             // 创建分身
             BossC2Clone clone = Instantiate(clonePrefab, transform.position, transform.rotation);
-            clone.Setup(transform, cloneDuration);
+            clone.Setup(transform.position, true, cloneDuration);
 
             // 添加到列表
             _cloneList.Add(clone);
             _activeClones++;
 
             // 订阅分身事件
-            clone.OnCloneDestroyed += HandleCloneDestroyed;
+            clone.OnCloneDestroyed(HandleCloneDestroyed);
 
             // 消耗能量
             ConsumeEnergy(maxEnergy);
@@ -358,7 +358,7 @@ namespace FadedDreams.Bosses
             {
                 if (clone != null)
                 {
-                    clone.OnCloneDestroyed -= HandleCloneDestroyed;
+                    // 不需要取消订阅，因为对象即将被销毁
                     Destroy(clone.gameObject);
                 }
             }

@@ -232,7 +232,7 @@ namespace FadedDreams.Bosses
             if (verboseLogs)
                 Debug.Log("[BossC2_PhaseSystem] Phase 1 loop started");
 
-            while (_currentPhase == 1 && !core.IsDead())
+            while (_currentPhase == 1 && !core.IsDead)
             {
                 // 等待攻击间隔
                 float interval = UnityEngine.Random.Range(attackIntervalRange.x, attackIntervalRange.y);
@@ -330,7 +330,7 @@ namespace FadedDreams.Bosses
             if (verboseLogs)
                 Debug.Log("[BossC2_PhaseSystem] Phase 2 loop started");
 
-            while (_currentPhase == 2 && !core.IsDead())
+            while (_currentPhase == 2 && !core.IsDead)
             {
                 // 旋转射击
                 yield return StartCoroutine(CoSpinShoot(3f));
@@ -385,8 +385,7 @@ namespace FadedDreams.Bosses
 
             if (availableSkills.Count == 0)
             {
-                yield return null;
-                return;
+                yield break;
             }
 
             int randomIndex = UnityEngine.Random.Range(0, availableSkills.Count);

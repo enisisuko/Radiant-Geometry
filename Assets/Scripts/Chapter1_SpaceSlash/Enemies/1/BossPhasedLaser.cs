@@ -2,7 +2,6 @@
 // 注：为避免 CameraShake2D 重名冲突，显式使用 FadedDreams.CameraFX 版本
 using FadedDreams.Enemies;
 using FadedDreams.Player;
-using FadedDreams.Utilities;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -111,36 +110,30 @@ namespace FadedDreams.Boss
         public float redCurtainFadeOut = 0.6f;
         public float redCurtainHoldAtFull = 0.2f;
 
-        [Header("Smooth Camera Transition")]
-        public SmoothCameraTransition smoothCamera;
-        public bool useSmoothTransition = true;
-        
-        [Header("Legacy Camera Settings (Deprecated)")]
+        [Header("Camera During Bossfight (Orthographic)")]
         public float camSizeMul = 1.25f;
-        public bool camUseDolly = true;
+
+        [Header("Camera During Bossfight (Perspective)")]
+        public bool camUseDolly = true;        // 透视：后退拉远
         public float camBackDistance = 6f;
-        public bool camUseFov = false;
+        public bool camUseFov = false;         // 透视：放大FOV
         public float camFovMul = 1.15f;
         public float camPerspectiveLerp = 4.5f;
 
-        [Header("Camera Composition (Player-only)")]
+        [Header("Camera Bias Toward Boss")]
+        public float camBiasTowardBoss = 1.6f;
+        public float camBiasLerp = 5f;
+
+        [Header("Camera Composition (Player-first)")]
         public bool camUsePlayerFirstCompose = true;
         [Range(0f, 1f)] public float camPlayerCenterWeight = 1.0f;   // 锚点=玩家
         public float camAnchorLerp = 10f;
         public Vector2 camSoftSizeAtBoss = new Vector2(4.8f, 4.5f);   // 横向略收紧
-        
-        [Header("Simple Boundary Check")]
-        public bool enableSimpleBoundaryCheck = true;                 // 简单的边界检测
-        [Range(0f, 0.5f)] public float boundaryMargin = 0.2f;         // 边界安全距离（屏幕百分比）
-        
-        [Header("Legacy Parameters (Deprecated)")]
-        public float camBiasTowardBoss = 1.6f;
-        public float camBiasLerp = 5f;
-        public float camHorizontalMargin01 = 0.18f;
-        public float camGuardPullStrength = 1.0f;
-        
-        [Header("Debug")]
-        public bool debugCameraFollow = false;                       // 调试摄像头跟随
+
+        [Header("Camera Keep-In-View (Hard Guard)")]
+        public bool camHardKeepPlayerInView = true;                  // 开关：玩家永不出框（左右）
+        [Range(0f, 0.45f)] public float camHorizontalMargin01 = 0.18f; // 屏幕左右安全边（百分比）
+        [Range(0.5f, 1.5f)] public float camGuardPullStrength = 1.0f;  // 拉回强度（1=镜像超出量）
 
         // 运行态
         private int _phase = 1;
@@ -266,50 +259,41 @@ namespace FadedDreams.Boss
                     cam.fieldOfView = Mathf.Lerp(cam.fieldOfView, _origFov * camFovMul, Time.deltaTime * camPerspectiveLerp);
             }
 
-            // 相机构图：聚焦玩家，带简单边界检测
+            // 相机构图：玩家优先锚点（锚点=玩家） + 硬性守卫（左右不出屏）
             if (_camModified && _camFollow && player && camUsePlayerFirstCompose && _camAnchor)
             {
                 Vector3 p = player.position;
-                Vector3 targetAnchor = p; // 默认跟随玩家
+                Vector3 targetAnchor = p; // 默认紧贴玩家
 
-                // 简单的边界检测 - 只在玩家接近屏幕边缘时调整
-                if (enableSimpleBoundaryCheck && cam)
+                if (camHardKeepPlayerInView && cam)
                 {
+                    // 取玩家在相机视口中的位置（0..1）
                     Vector3 vp = cam.WorldToViewportPoint(p);
-                    
-                    // 只在玩家在相机前方时进行边界检测
-                    if (vp.z > 0f)
+                    float m = camHorizontalMargin01;
+
+                    if (vp.z > 0f) // 仅在相机前方处理
                     {
-                        float margin = boundaryMargin;
-                        
-                        // 如果玩家超出左边界，稍微向右调整锚点
-                        if (vp.x < margin)
+                        // 在“玩家的深度与垂直位置”上求左右安全边界的世界坐标
+                        Vector3 worldL = cam.ViewportToWorldPoint(new Vector3(m, vp.y, vp.z));
+                        Vector3 worldR = cam.ViewportToWorldPoint(new Vector3(1f - m, vp.y, vp.z));
+
+                        if (vp.x < m)
                         {
-                            float adjustAmount = (margin - vp.x) * 2f; // 调整强度
-                            targetAnchor.x += adjustAmount;
+                            // 玩家越过左界：沿着“玩家→左界”的反方向镜像一点锚点
+                            Vector3 delta = worldL - p;                 // 指向左界
+                            targetAnchor = p - delta * camGuardPullStrength;
                         }
-                        // 如果玩家超出右边界，稍微向左调整锚点
-                        else if (vp.x > 1f - margin)
+                        else if (vp.x > 1f - m)
                         {
-                            float adjustAmount = (vp.x - (1f - margin)) * 2f; // 调整强度
-                            targetAnchor.x -= adjustAmount;
+                            // 玩家越过右界：沿着“玩家→右界”的反方向镜像一点锚点
+                            Vector3 delta = worldR - p;                 // 指向右界
+                            targetAnchor = p - delta * camGuardPullStrength;
                         }
                     }
                 }
 
                 // 平滑更新锚点
                 _camAnchor.position = Vector3.Lerp(_camAnchor.position, targetAnchor, Time.deltaTime * camAnchorLerp);
-                
-                // 调试信息
-                if (debugCameraFollow)
-                {
-                    Vector3 vp = cam.WorldToViewportPoint(p);
-                    float fixedDepth = Mathf.Abs(cam.transform.position.z - p.z);
-                    if (fixedDepth < 0.1f) fixedDepth = 10f;
-                    
-                    Debug.Log($"[BossCamera] Player: {p}, Viewport: {vp}, TargetAnchor: {targetAnchor}, " +
-                             $"CamPos: {cam.transform.position}, FixedDepth: {fixedDepth:F2}", this);
-                }
 
                 // 软偏移回归 0，避免额外水平偏置
                 _camFollow.softZoneCenterOffset =
@@ -770,14 +754,6 @@ namespace FadedDreams.Boss
         // == 相机处理 ==
         private void ApplyCameraForBossfight()
         {
-            if (useSmoothTransition && smoothCamera)
-            {
-                // 使用新的平滑过渡系统
-                smoothCamera.StartPullBack(player);
-                return;
-            }
-            
-            // 旧系统（保持兼容性）
             if (cam == null) return;
 
             if (cam.orthographic)
@@ -791,11 +767,7 @@ namespace FadedDreams.Boss
                 _targetCamPos = _origCamPos;
 
                 if (camUseDolly)
-                {
-                    // 2D项目中的正确拉远方向：向Z轴负方向拉远
-                    Vector3 pullBackDir = new Vector3(0, 0, -1);
-                    _targetCamPos = _origCamPos + pullBackDir * camBackDistance;
-                }
+                    _targetCamPos = _origCamPos - cam.transform.forward * camBackDistance;
                 if (camUseFov)
                     cam.fieldOfView = Mathf.Lerp(_origFov, _origFov * camFovMul, 0.5f);
             }
@@ -824,14 +796,6 @@ namespace FadedDreams.Boss
 
         private void RestoreCamera()
         {
-            if (useSmoothTransition && smoothCamera)
-            {
-                // 使用新的平滑过渡系统
-                smoothCamera.StartPullIn();
-                return;
-            }
-            
-            // 旧系统（保持兼容性）
             if (cam == null) return;
 
             if (cam.orthographic)

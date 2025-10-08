@@ -32,7 +32,8 @@ namespace FD.Bosses.C3
                 lineRenderer.material = material;
                 lineRenderer.startWidth = width;
                 lineRenderer.endWidth = width;
-                lineRenderer.color = color;
+                lineRenderer.startColor = color;
+            lineRenderer.endColor = color;
             }
             
             if (spriteRenderer != null)
@@ -58,7 +59,11 @@ namespace FD.Bosses.C3
         public void SetColor(Color color)
         {
             ringColor = color;
-            if (lineRenderer != null) lineRenderer.color = color;
+            if (lineRenderer != null) 
+            {
+                lineRenderer.startColor = color;
+                lineRenderer.endColor = color;
+            }
             if (spriteRenderer != null) spriteRenderer.color = color;
         }
         
@@ -93,6 +98,11 @@ namespace FD.Bosses.C3
         public float GetWidth()
         {
             return width;
+        }
+        
+        public void SetVisible(bool visible)
+        {
+            gameObject.SetActive(visible);
         }
         
         private void UpdateRing()

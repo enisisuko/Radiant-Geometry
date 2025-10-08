@@ -599,7 +599,7 @@ namespace FD.Bosses.C3
             for (int circle = 0; circle < circleCount; circle++)
             {
                 float circleRadius = baseRadius + circle * circleSpacing;
-                Gizmos.DrawWireCircle(transform.position, circleRadius);
+                Gizmos.DrawWireSphere(transform.position, circleRadius);
             }
 
             // 绘制大阵点

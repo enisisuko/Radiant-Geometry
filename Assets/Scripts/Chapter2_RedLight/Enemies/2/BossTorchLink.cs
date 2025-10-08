@@ -11,7 +11,7 @@ namespace FadedDreams.Bosses
     {
         public Torch torch;
 
-        // µ±¡°±»µãÈ¼¡±Ê±£¨= Torch.selfRed ´Ó0¡ú>0£©·¢³öÍ¨Öª
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¼ï¿½ï¿½Ê±ï¿½ï¿½= Torch.selfRed ï¿½ï¿½0ï¿½ï¿½>0ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¨Öª
         public event Action<BossTorchLink> onIgnited;
 
         private void Reset()
@@ -28,7 +28,7 @@ namespace FadedDreams.Bosses
         {
             if (torch && torch.selfRed != null)
             {
-                // Torch.cs µÄ selfRed.onRelit ÔÚ¡°´Ó0»Ö¸´µ½>0¡±Ê±´¥·¢
+                // Torch.cs ï¿½ï¿½ selfRed.onRelit ï¿½Ú¡ï¿½ï¿½ï¿½0ï¿½Ö¸ï¿½ï¿½ï¿½>0ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½
                 torch.selfRed.onRelit.AddListener(HandleRelit);
             }
         }
@@ -44,6 +44,19 @@ namespace FadedDreams.Bosses
         private void HandleRelit()
         {
             onIgnited?.Invoke(this);
+        }
+
+        public void SetActive(bool active)
+        {
+            gameObject.SetActive(active);
+        }
+
+        public void OnTorchIgnited(System.Action<BossTorchLink> callback)
+        {
+            if (callback != null)
+            {
+                onIgnited += callback;
+            }
         }
     }
 }

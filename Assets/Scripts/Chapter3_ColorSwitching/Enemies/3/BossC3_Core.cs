@@ -559,19 +559,19 @@ namespace FD.Bosses.C3
             // 绘制激怒范围
             Gizmos.color = battleStarted ? Color.red : Color.yellow;
             float effectiveRadius = (aggroRadius > 0) ? aggroRadius : preferRange;
-            Gizmos.DrawWireCircle(transform.position, effectiveRadius);
+            Gizmos.DrawWireSphere(transform.position, effectiveRadius);
 
             // 绘制安全探测半径
             Gizmos.color = Color.green;
-            Gizmos.DrawWireCircle(transform.position, safeProbeRadius);
+            Gizmos.DrawWireSphere(transform.position, safeProbeRadius);
 
             // 绘制智能移动范围
             if (useSmartMovement)
             {
                 Gizmos.color = Color.blue;
-                Gizmos.DrawWireCircle(transform.position, smartDesiredMin);
+                Gizmos.DrawWireSphere(transform.position, smartDesiredMin);
                 Gizmos.color = Color.cyan;
-                Gizmos.DrawWireCircle(transform.position, smartDesiredMax);
+                Gizmos.DrawWireSphere(transform.position, smartDesiredMax);
             }
         }
 
