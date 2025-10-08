@@ -72,6 +72,12 @@ namespace FadedDreams.World.Light
         public bool requireLaserForRegen = false;
         [Tooltip("给玩家回红时，是否要求'玩家必须在圈内'")]
         public bool requirePlayerInside = true;
+        
+        [Header("Player Touch Ignite")]
+        [Tooltip("玩家碰到火炬时是否点燃火炬")]
+        public bool playerTouchIgnites = true;
+        [Tooltip("玩家层（用于检测玩家碰撞）")]
+        public LayerMask playerLayers;
 
         // ========= 运行时 =========
         private bool _lit;                    // 是否认为“已点亮”（>= minLightRedThreshold）
@@ -250,6 +256,14 @@ namespace FadedDreams.World.Light
             TryIgniteByLaser(default, false, 100f);
         }
 
+        /// <summary>
+        /// 玩家碰到火炬时点燃（新功能）
+        /// </summary>
+        internal void IgniteByPlayerTouch()
+        {
+            // 玩家触碰视为100%光照强度点燃
+            TryIgniteByLaser(default, false, 100f);
+        }
 
         private void StartIgniteFlash()
         {
@@ -338,8 +352,19 @@ namespace FadedDreams.World.Light
         {
             if (!owner) return;
             int l = other.gameObject.layer;
+            
+            // 检测激光层
             if ((owner.laserLayers.value & (1 << l)) != 0)
+            {
                 owner.IgniteByOverlap();
+                return;
+            }
+            
+            // 检测玩家层（新功能）
+            if (owner.playerTouchIgnites && (owner.playerLayers.value & (1 << l)) != 0)
+            {
+                owner.IgniteByPlayerTouch();
+            }
         }
 
         private void OnTriggerStay2D(Collider2D other)

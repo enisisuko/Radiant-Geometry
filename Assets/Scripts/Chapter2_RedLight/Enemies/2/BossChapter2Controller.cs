@@ -285,7 +285,6 @@ namespace FadedDreams.Bosses
         private float _energy;
 
         private Coroutine _trembleCR;
-        private Coroutine _statusMonitorCR;
         private Vector3 _trembleOrigin; // 抖动的原始位置
 
         // Torch 窗口控制
@@ -381,10 +380,6 @@ namespace FadedDreams.Bosses
 
             ResolvePlayer(); // 先解析一次
 
-            // 启动状态监控
-            if (_statusMonitorCR != null) StopCoroutine(_statusMonitorCR);
-            _statusMonitorCR = StartCoroutine(CoStatusMonitor());
-
             if (useDetectRadius)
             {
                 if (debugLog)
@@ -401,13 +396,6 @@ namespace FadedDreams.Bosses
         {
             RestoreCamera();
             TrembleStop();
-            
-            // 停止状态监控
-            if (_statusMonitorCR != null)
-            {
-                StopCoroutine(_statusMonitorCR);
-                _statusMonitorCR = null;
-            }
         }
 
         private void Update()
@@ -622,17 +610,13 @@ namespace FadedDreams.Bosses
 
             if (link == null || link.transform == null)
             {
-                Debug.LogWarning("[BossC2] CoOnTorchSuccess: link或link.transform是null，跳过击退！", this);
                 _busy = false;
                 yield break;
             }
 
             Vector2 linkPos = link.transform.position;
             Vector2 bossPos = transform.position;
-            Debug.Log($"[BossC2] 击退前 - BOSS位置: {bossPos}, 火炬位置: {linkPos}", this);
-            
             Vector2 away = (bossPos - linkPos).normalized;
-            Debug.Log($"[BossC2] 击退方向: {away}, 力度: {Mathf.Min(knockbackImpulse, 6f)}", this);
             
             // 临时切换为Dynamic以接受击退力
             RigidbodyType2D originalBodyType = rb.bodyType;
@@ -642,13 +626,9 @@ namespace FadedDreams.Bosses
             
             yield return new WaitForSeconds(0.06f);
             
-            Debug.Log($"[BossC2] 击退后 - BOSS位置: {transform.position}, velocity: {rb.linearVelocity}", this);
-            
             // 恢复为Kinematic，清除速度
             rb.linearVelocity = Vector2.zero; rb.angularVelocity = 0f;
             rb.bodyType = originalBodyType;
-            
-            Debug.Log($"[BossC2] 击退完成 - 最终位置: {transform.position}", this);
 
             if (auraLight) auraLight.intensity *= 1.15f;
 
@@ -903,9 +883,7 @@ namespace FadedDreams.Bosses
             _busy = true;
             _currentTorch = null;
 
-            // 保存当前位置，避免火炬点燃后位置被重置的问题
-            Vector3 currentPos = transform.position;
-            float hoverY1 = (player ? player.position.y : currentPos.y) + 6f;
+            float hoverY1 = (player ? player.position.y : transform.position.y) + 6f;
             yield return MoveToHoverY(hoverY1, 9f);
 
             for (int i = 0; i < 3; i++)
@@ -943,7 +921,6 @@ namespace FadedDreams.Bosses
 
             // 从有效点位中随机选择一个作为真实BOSS落点
             int realIdx = validIndices[Random.Range(0, validIndices.Count)];
-            Debug.Log($"[BossC2] Phase1: 选择了点位索引 {realIdx}, 位置: {phase1DropPoints[realIdx].position}", this);
             var clones = new List<BossC2Clone>(3);
             
             for (int i = 0; i < 4; i++)
@@ -953,19 +930,15 @@ namespace FadedDreams.Bosses
                 if (i == realIdx)
                 {
                     yield return MoveToPoint(phase1DropPoints[i].position, 10f);
-                    Debug.Log($"[BossC2] Phase1: 真BOSS到达点位，当前位置: {transform.position}", this);
                     TrembleStart();
                 }
                 else
                 {
                     if (clonePrefab)
                     {
-                        Vector3 spawnPos = transform.position;
-                        Debug.Log($"[BossC2] Phase1: 创建复制体 {i}，BOSS当前位置: {spawnPos}, 目标: {phase1DropPoints[i].position}", this);
-                        var c = Instantiate(clonePrefab, spawnPos, Quaternion.identity);
+                        var c = Instantiate(clonePrefab, transform.position, Quaternion.identity);
                         c.SpawnTo(phase1DropPoints[i].position, tremble: true, lifeSeconds: torchWindowSeconds);
                         clones.Add(c);
-                        Debug.Log($"[BossC2] Phase1: 复制体 {i} 创建后，BOSS位置: {transform.position}", this);
                     }
                 }
             }
@@ -1266,15 +1239,7 @@ namespace FadedDreams.Bosses
             {
                 float hover = (player ? player.position.y : transform.position.y) + ((_phase == Phase.Phase1) ? 6f : 5.5f);
                 Vector3 target = new Vector3(player.position.x, hover, transform.position.z);
-                Vector3 currentPos = transform.position;
-                Vector3 next = Vector3.MoveTowards(currentPos, target, pursuitChaseSpeed * Time.deltaTime);
-                
-                // 每帧记录追击移动（但限制频率避免刷屏）
-                if (Time.frameCount % 30 == 0) // 每30帧记录一次
-                {
-                    Debug.Log($"[BossC2] 追击移动 - 当前位置: {currentPos}, 目标: {target}, 距离: {dist:F2}", this);
-                }
-                
+                Vector3 next = Vector3.MoveTowards(transform.position, target, pursuitChaseSpeed * Time.deltaTime);
                 rb.MovePosition(next);
             }
         }
@@ -1447,53 +1412,17 @@ namespace FadedDreams.Bosses
         // ================== 通用动作 ==================
         private IEnumerator MoveToPoint(Vector3 target, float speed)
         {
-            Vector3 startPos = transform.position;
-            float startTime = Time.time;
-            Debug.Log($"[BossC2] MoveToPoint开始 - 起始位置: {startPos}, 目标位置: {target}, 速度: {speed}", this);
-            
             while ((transform.position - target).sqrMagnitude > 0.02f)
             {
-                Vector3 currentPos = transform.position;
-                Vector3 next = Vector3.MoveTowards(currentPos, target, speed * Time.deltaTime);
-                
-                // 每秒打印一次移动状态
-                if (Time.time - startTime >= 1f)
-                {
-                    Debug.Log($"[BossC2] MoveToPoint进行中 - 当前位置: {currentPos}, 目标: {target}, 剩余距离: {Vector3.Distance(currentPos, target):F2}", this);
-                    startTime = Time.time;
-                }
-                
+                Vector3 next = Vector3.MoveTowards(transform.position, target, speed * Time.deltaTime);
                 rb.MovePosition(next);
                 yield return null;
             }
-            
-            Debug.Log($"[BossC2] MoveToPoint完成 - 最终位置: {transform.position}, 总耗时: {Time.time - startTime:F2}秒", this);
         }
         private IEnumerator MoveToHoverY(float targetY, float speed)
         {
-            Vector3 currentPos = transform.position;
-            Vector3 target = new Vector3(currentPos.x, targetY, currentPos.z);
+            Vector3 target = new Vector3(transform.position.x, targetY, transform.position.z);
             yield return MoveToPoint(target, speed);
-        }
-
-        // ================== 状态监控 ==================
-        private IEnumerator CoStatusMonitor()
-        {
-            while (true)
-            {
-                yield return new WaitForSeconds(1f);
-                
-                if (IsDead) continue;
-                
-                Vector3 currentPos = transform.position;
-                Vector3 velocity = rb.linearVelocity;
-                string phaseStr = _phase.ToString();
-                string busyStr = _busy ? "忙碌" : "空闲";
-                string windowStr = _windowOpen ? "窗口开启" : "窗口关闭";
-                string torchStr = _currentTorch != null ? $"当前火炬: {_currentTorch.name}" : "无火炬";
-                
-                Debug.Log($"[BossC2] 状态监控 - 位置: {currentPos}, 速度: {velocity}, 阶段: {phaseStr}, 状态: {busyStr}, {windowStr}, {torchStr}", this);
-            }
         }
 
         // --- 抖动 ---
