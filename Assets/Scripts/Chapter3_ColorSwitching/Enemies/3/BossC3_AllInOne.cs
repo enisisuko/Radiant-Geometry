@@ -19,18 +19,19 @@ using UnityEngine.Android;
 
 namespace FD.Bosses.C3
 {
-    public enum Phase { P1, P2 }
-    public enum BossColor { Red, Green, None }
-    public enum Stage { TELL, WINDUP, ACTIVE, RECOVER }
+    // 枚举已移至 BossC3_Enums.cs
+    // public enum Phase { P1, P2 }
+    // public enum BossColor { Red, Green, None }
+    // public enum Stage { TELL, WINDUP, ACTIVE, RECOVER }
 
     [DisallowMultipleComponent]
     public class BossC3_AllInOne : MonoBehaviour
     {
-        // === 玩家颜色接口（嵌套，供 PlayerColorBridge.cs 使用） ===
-        public interface IColorState
-        {
-            BossColor GetColorMode();
-        }
+        // === 玩家颜色接口已移至 BossC3_Enums.cs ===
+        // public interface IColorState
+        // {
+        //     BossColor GetColorMode();
+        // }
 
         [Header("== Core Refs ==")]
         public Transform orbAnchor;
@@ -3218,8 +3219,8 @@ namespace FD.Bosses.C3
                     if (((1 << other.gameObject.layer) & _playerMask) == 0) return;
 
                     // 与父层相同的“同色闸门”逻辑：尝试从攻击体上拿到颜色
-                    var ic = other.GetComponent<BossC3_AllInOne.IColorState>();
-                    if (ic == null && _owner.player) ic = _owner.player.GetComponent<BossC3_AllInOne.IColorState>();
+                    var ic = other.GetComponent<IColorState>();
+                    if (ic == null && _owner.player) ic = _owner.player.GetComponent<IColorState>();
 
                     // 如果玩家/攻击体提供了颜色，就把该颜色送去父OrbAgent的“被玩家同色命中”入口
                     if (ic != null) _parent.OnHitByPlayerColor(ic.GetColorMode(), null);
@@ -3243,8 +3244,8 @@ namespace FD.Bosses.C3
                     if (_parent == null || _owner == null) return;
                     if (((1 << other.gameObject.layer) & _playerMask) == 0) return;
 
-                    var ic = other.GetComponent<BossC3_AllInOne.IColorState>();
-                    if (ic == null && _owner.player) ic = _owner.player.GetComponent<BossC3_AllInOne.IColorState>();
+                    var ic = other.GetComponent<IColorState>();
+                    if (ic == null && _owner.player) ic = _owner.player.GetComponent<IColorState>();
 
                     if (ic != null) _parent.OnHitByPlayerColor(ic.GetColorMode(), null);
                 }
@@ -3428,7 +3429,7 @@ namespace FD.Bosses.C3
                 if (((1 << other.gameObject.layer) & _playerMask) == 0) return;
 
                 // 统一同色闸门（若玩家没实现 IColorState，则默认放行）
-                var ic = other.GetComponent<BossC3_AllInOne.IColorState>();
+                var ic = other.GetComponent<IColorState>();
                 if (_colorGate && ic != null && ic.GetColorMode() != _current) return;
 
                 if (_isBumper)

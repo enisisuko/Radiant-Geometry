@@ -13,7 +13,7 @@ namespace FadedDreams.Player
     /// <summary>
     /// 模式切换控制器：双能量条 + 事件广播 + UI/特效通知
     /// </summary>
-    public class PlayerColorModeController : MonoBehaviour, BossC3_AllInOne.IColorState
+    public class PlayerColorModeController : MonoBehaviour, IColorState
     {
         [Header("Energies")]
         [SerializeField] private float redMax = 100f;
