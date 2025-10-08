@@ -13,8 +13,8 @@ GameObject:
   - component: {fileID: 3753752915501498061}
   - component: {fileID: 3557191316186406452}
   - component: {fileID: 5447693780258077897}
-  - component: {fileID: 1519837144092550140}
   - component: {fileID: 1860263788683792008}
+  - component: {fileID: 4055052320239595981}
   m_Layer: 0
   m_Name: MirrorSentinel
   m_TagString: Untagged
@@ -220,56 +220,6 @@ MonoBehaviour:
   - {x: 0.5, y: -0.5, z: 0}
   - {x: 0.5, y: 0.5, z: 0}
   - {x: -0.5, y: 0.5, z: 0}
---- !u!114 &1519837144092550140
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4605251886359509825}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 88d63fa5c6545754f83e94c5608fdfe5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::FadedDreams.Enemies.EnemyHealth
-  maxHp: 60
-  spawnInvulnerableSeconds: 0.25
-  deathVfxPrefab: {fileID: 0}
-  dropPrefab: {fileID: 0}
-  spawnExplosionLight: 1
-  explosionLightColor: {r: 1, g: 0, b: 0, a: 1}
-  explosionPeakIntensity: 8
-  explosionInnerRadius: 0.5
-  explosionOuterRadius: 4
-  explosionFadeSeconds: 0.65
-  explosionIntensityCurve:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 1
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    - serializedVersion: 3
-      time: 1
-      value: 0
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
-  shakeOnDeath: 1
-  shakeDuration: 0.2
-  shakeStrength: 0.5
-  shakeFrequency: 24
 --- !u!114 &1860263788683792008
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -310,3 +260,28 @@ MonoBehaviour:
   shatterEffectPrefab: {fileID: 0}
   maxHp: 100
   currentCharge: 0
+--- !u!114 &4055052320239595981
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4605251886359509825}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 24326cdee75509946841abe141c8539c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FadedDreams.Player.RedLightController
+  maxRed: 100
+  startRed: 0
+  allowScatterWhenEmpty: 1
+  current: 0
+  onChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  onDepleted:
+    m_PersistentCalls:
+      m_Calls: []
+  onRelit:
+    m_PersistentCalls:
+      m_Calls: []

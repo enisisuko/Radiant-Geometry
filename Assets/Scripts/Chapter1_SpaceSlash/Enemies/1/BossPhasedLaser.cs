@@ -2,6 +2,7 @@
 // 注：为避免 CameraShake2D 重名冲突，显式使用 FadedDreams.CameraFX 版本
 using FadedDreams.Enemies;
 using FadedDreams.Player;
+using FadedDreams.Utilities;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -110,13 +111,15 @@ namespace FadedDreams.Boss
         public float redCurtainFadeOut = 0.6f;
         public float redCurtainHoldAtFull = 0.2f;
 
-        [Header("Camera During Bossfight (Orthographic)")]
+        [Header("Smooth Camera Transition")]
+        public SmoothCameraTransition smoothCamera;
+        public bool useSmoothTransition = true;
+        
+        [Header("Legacy Camera Settings (Deprecated)")]
         public float camSizeMul = 1.25f;
-
-        [Header("Camera During Bossfight (Perspective)")]
-        public bool camUseDolly = true;        // 透视：后退拉远
+        public bool camUseDolly = true;
         public float camBackDistance = 6f;
-        public bool camUseFov = false;         // 透视：放大FOV
+        public bool camUseFov = false;
         public float camFovMul = 1.15f;
         public float camPerspectiveLerp = 4.5f;
 
@@ -754,6 +757,14 @@ namespace FadedDreams.Boss
         // == 相机处理 ==
         private void ApplyCameraForBossfight()
         {
+            if (useSmoothTransition && smoothCamera)
+            {
+                // 使用新的平滑过渡系统
+                smoothCamera.StartPullBack(player);
+                return;
+            }
+            
+            // 旧系统（保持兼容性）
             if (cam == null) return;
 
             if (cam.orthographic)
@@ -796,6 +807,14 @@ namespace FadedDreams.Boss
 
         private void RestoreCamera()
         {
+            if (useSmoothTransition && smoothCamera)
+            {
+                // 使用新的平滑过渡系统
+                smoothCamera.StartPullIn();
+                return;
+            }
+            
+            // 旧系统（保持兼容性）
             if (cam == null) return;
 
             if (cam.orthographic)
