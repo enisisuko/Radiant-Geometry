@@ -235,9 +235,9 @@ namespace FadedDreams.UI
         
         void LoadScene(string sceneName, string checkpointId)
         {
-            if (sceneLoader != null)
+            if (SceneLoader.Instance != null)
             {
-                sceneLoader.LoadScene(sceneName, checkpointId);
+                SceneLoader.LoadScene(sceneName, checkpointId);
             }
             else
             {

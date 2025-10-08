@@ -387,23 +387,51 @@ namespace FadedDreams.UI
         
         public void NewGame()
         {
-            // 清空存档
-            SaveSystem.Instance.ResetAll();
-            
-            // 设置新游戏起点
-            SaveSystem.Instance.SaveLastScene(newGameScene);
-            SaveSystem.Instance.SaveCheckpoint(firstCheckpointId);
+            if (SaveSystem.Instance != null)
+            {
+                // 清空存档
+                SaveSystem.Instance.ResetAll();
+                
+                // 设置新游戏起点
+                SaveSystem.Instance.SaveLastScene(newGameScene);
+                SaveSystem.Instance.SaveCheckpoint(firstCheckpointId);
+            }
+            else
+            {
+                Debug.LogWarning("SaveSystem.Instance is null! Proceeding without save system.");
+            }
             
             // 加载新游戏场景
-            SceneLoader.LoadScene(newGameScene, firstCheckpointId);
+            if (SceneLoader.Instance != null)
+            {
+                SceneLoader.LoadScene(newGameScene, firstCheckpointId);
+            }
+            else
+            {
+                Debug.LogError("SceneLoader.Instance is null! Cannot load scene.");
+            }
         }
         
         public void ContinueGame()
         {
+            if (SaveSystem.Instance == null)
+            {
+                Debug.LogError("SaveSystem.Instance is null! Cannot continue game.");
+                return;
+            }
+            
             var scene = SaveSystem.Instance.LoadLastScene();
             if (string.IsNullOrEmpty(scene)) scene = newGameScene;
             var checkpoint = SaveSystem.Instance.LoadCheckpoint();
-            SceneLoader.LoadScene(scene, checkpoint);
+            
+            if (SceneLoader.Instance != null)
+            {
+                SceneLoader.LoadScene(scene, checkpoint);
+            }
+            else
+            {
+                Debug.LogError("SceneLoader.Instance is null! Cannot load scene.");
+            }
         }
         
         public void CoopMode()

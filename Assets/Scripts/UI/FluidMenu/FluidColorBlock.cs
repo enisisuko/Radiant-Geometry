@@ -207,9 +207,9 @@ namespace FadedDreams.UI
             while (elapsedTime < duration)
             {
                 float progress = elapsedTime / duration;
-                float currentAlpha = Mathf.Lerp(startAlpha, 0f, progress);
+                float targetAlpha = Mathf.Lerp(startAlpha, 0f, progress);
                 
-                SetAlpha(currentAlpha);
+                SetAlpha(targetAlpha);
                 
                 elapsedTime += Time.deltaTime;
                 yield return null;
