@@ -885,8 +885,27 @@ namespace FadedDreams.Bosses
                 yield return new WaitForSeconds(Random.Range(attackIntervalRange.x, attackIntervalRange.y));
             }
 
-            int realIdx = Random.Range(0, 4);
+            // 收集有效的点位索引
+            var validIndices = new List<int>();
+            for (int i = 0; i < 4; i++)
+            {
+                if (phase1DropPoints[i] != null)
+                {
+                    validIndices.Add(i);
+                }
+            }
+
+            // 如果没有有效点位，记录警告并跳过此阶段
+            if (validIndices.Count == 0)
+            {
+                Debug.LogWarning("[BossC2] Phase1: 没有有效的DropPoints，跳过落点阶段！", this);
+                yield break;
+            }
+
+            // 从有效点位中随机选择一个作为真实BOSS落点
+            int realIdx = validIndices[Random.Range(0, validIndices.Count)];
             var clones = new List<BossC2Clone>(3);
+            
             for (int i = 0; i < 4; i++)
             {
                 if (!phase1DropPoints[i]) continue;
@@ -1000,11 +1019,34 @@ namespace FadedDreams.Bosses
 
             yield return CoSpinShoot(spinDuration);
 
+            // 收集有效的第二阶段点位索引
+            var validP2Indices = new List<int>();
+            for (int i = 0; i < 4; i++)
+            {
+                if (phase2DashPoints[i] != null)
+                {
+                    validP2Indices.Add(i);
+                }
+            }
+
+            // 如果没有有效点位，记录警告并跳过冲刺阶段
+            if (validP2Indices.Count == 0)
+            {
+                Debug.LogWarning("[BossC2] Phase2: 没有有效的DashPoints，跳过冲刺阶段！", this);
+                _currentTorch = null;
+                _busy = false;
+                yield break;
+            }
+
             int last = -1;
             for (int i = 0; i < dashCount; i++)
             {
-                int pick = Random.Range(0, 4);
-                if (pick == last) pick = (pick + 1) % 4;
+                int pick = validP2Indices[Random.Range(0, validP2Indices.Count)];
+                if (pick == last && validP2Indices.Count > 1)
+                {
+                    // 避免连续两次选同一个点位（如果有多个点位的话）
+                    pick = validP2Indices[Random.Range(0, validP2Indices.Count)];
+                }
                 last = pick;
 
                 if (phase2DashPoints[pick])
@@ -1012,7 +1054,7 @@ namespace FadedDreams.Bosses
                 yield return new WaitForSeconds(dashPauseSeconds);
             }
 
-            int stay = (last >= 0) ? last : Random.Range(0, 4);
+            int stay = (last >= 0) ? last : validP2Indices[Random.Range(0, validP2Indices.Count)];
             if (phase2DashPoints[stay])
                 yield return MoveToPoint(phase2DashPoints[stay].position + (Vector3)Random.insideUnitCircle * 0.5f, dashSpeed);
 
