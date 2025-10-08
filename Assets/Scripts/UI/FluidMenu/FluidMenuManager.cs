@@ -114,6 +114,9 @@ namespace FadedDreams.UI
                     audioSource = gameObject.AddComponent<AudioSource>();
                 }
             }
+            
+            // 初始化动画状态
+            InitializeAnimationState();
         }
         
         void Start()
@@ -428,35 +431,9 @@ namespace FadedDreams.UI
             }
         }
         
-        void InitializeComponents()
+        // 初始化动画状态
+        void InitializeAnimationState()
         {
-            // 自动查找Canvas
-            if (canvas == null)
-            {
-                canvas = FindObjectOfType<Canvas>();
-            }
-            
-            // 自动查找相机
-            if (menuCamera == null)
-            {
-                menuCamera = Camera.main;
-                if (menuCamera == null)
-                {
-                    menuCamera = FindObjectOfType<Camera>();
-                }
-            }
-            
-            // 自动查找音频源
-            if (audioSource == null)
-            {
-                audioSource = GetComponent<AudioSource>();
-                if (audioSource == null)
-                {
-                    audioSource = gameObject.AddComponent<AudioSource>();
-                }
-            }
-            
-            // 初始化动画状态
             for (int i = 0; i < 5; i++)
             {
                 targetScales[i] = (i == 1) ? centerBlockSize : cornerBlockSize; // 中心块稍大
