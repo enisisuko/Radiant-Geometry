@@ -123,20 +123,18 @@ namespace FadedDreams.Boss
         public float camFovMul = 1.15f;
         public float camPerspectiveLerp = 4.5f;
 
-        [Header("Camera Bias Toward Boss")]
-        public float camBiasTowardBoss = 1.6f;
-        public float camBiasLerp = 5f;
-
-        [Header("Camera Composition (Player-first)")]
+        [Header("Camera Composition (Player-only)")]
         public bool camUsePlayerFirstCompose = true;
         [Range(0f, 1f)] public float camPlayerCenterWeight = 1.0f;   // 锚点=玩家
         public float camAnchorLerp = 10f;
         public Vector2 camSoftSizeAtBoss = new Vector2(4.8f, 4.5f);   // 横向略收紧
-
-        [Header("Camera Keep-In-View (Hard Guard)")]
-        public bool camHardKeepPlayerInView = true;                  // 开关：玩家永不出框（左右）
-        [Range(0f, 0.45f)] public float camHorizontalMargin01 = 0.18f; // 屏幕左右安全边（百分比）
-        [Range(0.5f, 1.5f)] public float camGuardPullStrength = 1.0f;  // 拉回强度（1=镜像超出量）
+        
+        [Header("Legacy Parameters (Deprecated)")]
+        public float camBiasTowardBoss = 1.6f;
+        public float camBiasLerp = 5f;
+        public bool camHardKeepPlayerInView = false;                 // 已禁用：避免摄像头拉扯
+        public float camHorizontalMargin01 = 0.18f;
+        public float camGuardPullStrength = 1.0f;
         
         [Header("Debug")]
         public bool debugCameraFollow = false;                       // 调试摄像头跟随
@@ -265,45 +263,13 @@ namespace FadedDreams.Boss
                     cam.fieldOfView = Mathf.Lerp(cam.fieldOfView, _origFov * camFovMul, Time.deltaTime * camPerspectiveLerp);
             }
 
-            // 相机构图：玩家优先锚点（锚点=玩家） + 硬性守卫（左右不出屏）
+            // 相机构图：只聚焦玩家，简化逻辑避免拉扯
             if (_camModified && _camFollow && player && camUsePlayerFirstCompose && _camAnchor)
             {
                 Vector3 p = player.position;
-                Vector3 targetAnchor = p; // 默认紧贴玩家
+                Vector3 targetAnchor = p; // 直接跟随玩家，不进行复杂的边界计算
 
-                if (camHardKeepPlayerInView && cam)
-                {
-                    // 取玩家在相机视口中的位置（0..1）
-                    Vector3 vp = cam.WorldToViewportPoint(p);
-                    float m = camHorizontalMargin01;
-
-                    // 2D项目中的深度检查：使用更宽松的深度范围
-                    if (vp.z > -10f && vp.z < 10f) // 扩大深度范围，适应透视摄像机
-                    {
-                        // 使用固定的深度值来计算边界，避免深度变化导致的计算错误
-                        float fixedDepth = Mathf.Abs(cam.transform.position.z - p.z);
-                        if (fixedDepth < 0.1f) fixedDepth = 10f; // 避免除零
-                        
-                        // 在固定深度上计算左右边界
-                        Vector3 worldL = cam.ViewportToWorldPoint(new Vector3(m, vp.y, fixedDepth));
-                        Vector3 worldR = cam.ViewportToWorldPoint(new Vector3(1f - m, vp.y, fixedDepth));
-
-                        if (vp.x < m)
-                        {
-                            // 玩家越过左界：沿着"玩家→左界"的反方向镜像一点锚点
-                            Vector3 delta = worldL - p;                 // 指向左界
-                            targetAnchor = p - delta * camGuardPullStrength;
-                        }
-                        else if (vp.x > 1f - m)
-                        {
-                            // 玩家越过右界：沿着"玩家→右界"的反方向镜像一点锚点
-                            Vector3 delta = worldR - p;                 // 指向右界
-                            targetAnchor = p - delta * camGuardPullStrength;
-                        }
-                    }
-                }
-
-                // 平滑更新锚点
+                // 平滑更新锚点 - 直接跟随玩家
                 _camAnchor.position = Vector3.Lerp(_camAnchor.position, targetAnchor, Time.deltaTime * camAnchorLerp);
                 
                 // 调试信息
