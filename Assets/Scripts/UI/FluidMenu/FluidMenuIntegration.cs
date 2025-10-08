@@ -14,7 +14,6 @@ namespace FadedDreams.UI
         [Header("系统引用")]
         public FluidMenuManager menuManager;
         public SaveSystem saveSystem;
-        public SceneLoader sceneLoader;
         
         [Header("场景配置")]
         public string newGameScene = "STORY0";
@@ -44,7 +43,6 @@ namespace FadedDreams.UI
             // 自动获取组件引用
             if (menuManager == null) menuManager = GetComponent<FluidMenuManager>();
             if (saveSystem == null) saveSystem = SaveSystem.Instance;
-            if (sceneLoader == null) sceneLoader = FindObjectOfType<SceneLoader>();
             
             // 检查存档状态
             if (checkSaveOnStart)
@@ -235,15 +233,8 @@ namespace FadedDreams.UI
         
         void LoadScene(string sceneName, string checkpointId)
         {
-            if (sceneLoader != null)
-            {
-                sceneLoader.LoadScene(sceneName, checkpointId);
-            }
-            else
-            {
-                // 备用方案：直接加载场景
-                SceneManager.LoadScene(sceneName);
-            }
+            // 使用静态的SceneLoader类
+            SceneLoader.LoadScene(sceneName, checkpointId);
         }
         
         void QuitApplication()
