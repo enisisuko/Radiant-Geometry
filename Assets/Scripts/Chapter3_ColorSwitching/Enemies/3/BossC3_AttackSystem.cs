@@ -49,6 +49,18 @@ namespace FD.Bosses.C3
         public float shockwaveBombSpeed = 12f;
         public float shockwaveBombLifetime = 3f;
 
+        [Header("== VFX Effects ==")]
+        [Tooltip("P1大招：冲到脚下爆炸特效")]
+        public GameObject p1DashExplodeVfx;
+        [Tooltip("P2大招：冲撞命中特效")]
+        public GameObject p2RamHitVfx;
+        [Tooltip("环绕体发射特效")]
+        public GameObject orbLaunchVfx;
+        [Tooltip("通用爆炸特效")]
+        public GameObject genericExplosionVfx;
+        [Tooltip("能量爆发特效")]
+        public GameObject energyBurstVfx;
+
         [Header("== Debug ==")]
         public bool verboseLogs = true;
 
