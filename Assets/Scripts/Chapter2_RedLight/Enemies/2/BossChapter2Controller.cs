@@ -607,7 +607,19 @@ namespace FadedDreams.Bosses
         {
             _busy = true;
 
-            Vector2 away = ((Vector2)transform.position - (Vector2)link.transform.position).normalized;
+            if (link == null || link.transform == null)
+            {
+                Debug.LogWarning("[BossC2] CoOnTorchSuccess: link或link.transform是null，跳过击退！", this);
+                _busy = false;
+                yield break;
+            }
+
+            Vector2 linkPos = link.transform.position;
+            Vector2 bossPos = transform.position;
+            Debug.Log($"[BossC2] 击退前 - BOSS位置: {bossPos}, 火炬位置: {linkPos}", this);
+            
+            Vector2 away = (bossPos - linkPos).normalized;
+            Debug.Log($"[BossC2] 击退方向: {away}, 力度: {Mathf.Min(knockbackImpulse, 6f)}", this);
             
             // 临时切换为Dynamic以接受击退力
             RigidbodyType2D originalBodyType = rb.bodyType;
@@ -617,9 +629,13 @@ namespace FadedDreams.Bosses
             
             yield return new WaitForSeconds(0.06f);
             
+            Debug.Log($"[BossC2] 击退后 - BOSS位置: {transform.position}, velocity: {rb.linearVelocity}", this);
+            
             // 恢复为Kinematic，清除速度
             rb.linearVelocity = Vector2.zero; rb.angularVelocity = 0f;
             rb.bodyType = originalBodyType;
+            
+            Debug.Log($"[BossC2] 击退完成 - 最终位置: {transform.position}", this);
 
             if (auraLight) auraLight.intensity *= 1.15f;
 
@@ -912,6 +928,7 @@ namespace FadedDreams.Bosses
 
             // 从有效点位中随机选择一个作为真实BOSS落点
             int realIdx = validIndices[Random.Range(0, validIndices.Count)];
+            Debug.Log($"[BossC2] Phase1: 选择了点位索引 {realIdx}, 位置: {phase1DropPoints[realIdx].position}", this);
             var clones = new List<BossC2Clone>(3);
             
             for (int i = 0; i < 4; i++)
