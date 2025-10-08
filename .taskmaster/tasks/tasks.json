@@ -1,0 +1,100 @@
+{
+  "tasks": [
+    {
+      "id": 1,
+      "title": "完善角色控制系统",
+      "description": "优化现有的角色控制脚本，确保移动、跳跃和视角控制流畅自然",
+      "status": "pending",
+      "priority": "high",
+      "tags": ["backlog"],
+      "dependencies": [],
+      "estimatedHours": 8,
+      "createdAt": "2025-10-08T11:00:00Z"
+    },
+    {
+      "id": 2,
+      "title": "优化URP渲染性能",
+      "description": "调整URP设置，优化光照、阴影和后处理效果，确保60FPS稳定运行",
+      "status": "pending",
+      "priority": "high",
+      "tags": ["backlog"],
+      "dependencies": [],
+      "estimatedHours": 12,
+      "createdAt": "2025-10-08T11:00:00Z"
+    },
+    {
+      "id": 3,
+      "title": "实现游戏核心机制",
+      "description": "开发物品收集、关卡进度和存档系统等核心游戏机制",
+      "status": "pending",
+      "priority": "medium",
+      "tags": ["backlog"],
+      "dependencies": [1],
+      "estimatedHours": 16,
+      "createdAt": "2025-10-08T11:00:00Z"
+    },
+    {
+      "id": 4,
+      "title": "集成音频系统",
+      "description": "实现背景音乐播放、音效系统和音频管理器",
+      "status": "pending",
+      "priority": "medium",
+      "tags": ["backlog"],
+      "dependencies": [],
+      "estimatedHours": 6,
+      "createdAt": "2025-10-08T11:00:00Z"
+    },
+    {
+      "id": 5,
+      "title": "场景设计和环境搭建",
+      "description": "创建游戏场景，设计关卡布局和环境装饰",
+      "status": "pending",
+      "priority": "medium",
+      "tags": ["backlog"],
+      "dependencies": [2],
+      "estimatedHours": 20,
+      "createdAt": "2025-10-08T11:00:00Z"
+    },
+    {
+      "id": 6,
+      "title": "UI系统优化",
+      "description": "完善游戏UI界面，包括主菜单、设置界面和游戏内HUD",
+      "status": "pending",
+      "priority": "low",
+      "tags": ["backlog"],
+      "dependencies": [3],
+      "estimatedHours": 10,
+      "createdAt": "2025-10-08T11:00:00Z"
+    },
+    {
+      "id": 7,
+      "title": "性能测试和优化",
+      "description": "进行全面的性能测试，优化内存使用和帧率稳定性",
+      "status": "pending",
+      "priority": "high",
+      "tags": ["backlog"],
+      "dependencies": [2, 5],
+      "estimatedHours": 8,
+      "createdAt": "2025-10-08T11:00:00Z"
+    },
+    {
+      "id": 8,
+      "title": "游戏测试和Bug修复",
+      "description": "进行游戏测试，修复发现的bug和问题",
+      "status": "pending",
+      "priority": "high",
+      "tags": ["backlog"],
+      "dependencies": [7],
+      "estimatedHours": 12,
+      "createdAt": "2025-10-08T11:00:00Z"
+    }
+  ],
+  "tags": {
+    "backlog": "待办",
+    "in-progress": "进行中",
+    "done": "已完成",
+    "blocked": "阻塞",
+    "cancelled": "已取消"
+  },
+  "nextTaskId": 9
+}
