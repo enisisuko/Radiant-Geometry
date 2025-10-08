@@ -179,9 +179,16 @@ namespace FadedDreams.Enemies
                 return;
             }
 
-            // 抽取能量
+            // 抽取能量 - 修复：应该消耗火把的RedLightController，而不是LightSource2D
             float siphonAmount = siphonRate * Time.deltaTime;
-            _targetTorch.currentEnergy = Mathf.Max(0, _targetTorch.currentEnergy - siphonAmount);
+            
+            // 获取火把的RedLightController并消耗其红光值
+            var torchRedLight = _targetTorch.GetComponent<RedLightController>();
+            if (torchRedLight)
+            {
+                torchRedLight.TryConsume(siphonAmount);
+            }
+            
             currentCharge += siphonAmount;
 
             // 牵引火焰
