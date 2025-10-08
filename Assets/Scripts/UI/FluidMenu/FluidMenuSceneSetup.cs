@@ -132,10 +132,8 @@ namespace FadedDreams.UI
             {
                 scaler = canvas.gameObject.AddComponent<CanvasScaler>();
             }
-            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            scaler.referenceResolution = canvasSize;
-            scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
-            scaler.matchWidthOrHeight = 0.5f;
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ConstantPixelSize;
+            scaler.scaleFactor = 1.0f;
             
             // 添加GraphicRaycaster
             if (canvas.GetComponent<GraphicRaycaster>() == null)
@@ -167,11 +165,12 @@ namespace FadedDreams.UI
             blocksContainer.transform.SetParent(canvas.transform, false);
             
             RectTransform containerRect = blocksContainer.AddComponent<RectTransform>();
-            containerRect.anchorMin = Vector2.zero;
-            containerRect.anchorMax = Vector2.one;
-            containerRect.offsetMin = Vector2.zero;
-            containerRect.offsetMax = Vector2.zero;
+            // 设置容器锚点为屏幕中心
+            containerRect.anchorMin = new Vector2(0.5f, 0.5f);
+            containerRect.anchorMax = new Vector2(0.5f, 0.5f);
             containerRect.pivot = new Vector2(0.5f, 0.5f);
+            containerRect.anchoredPosition = Vector2.zero;
+            containerRect.sizeDelta = Vector2.zero;
             
             // 创建5个色块
             for (int i = 0; i < 5; i++)
@@ -197,6 +196,9 @@ namespace FadedDreams.UI
             // 设置位置
             Vector2 position = GetBlockPosition(index);
             rectTransform.anchoredPosition = position;
+            
+            // 调试信息
+            Debug.Log($"ColorBlock_{index}: position={position}, anchoredPosition={rectTransform.anchoredPosition}");
             
             // 添加Image组件
             Image image = blockGO.AddComponent<Image>();
