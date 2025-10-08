@@ -186,10 +186,12 @@ namespace FadedDreams.UI
             image.color = GetBlockColor(index);
             image.raycastTarget = true;
             
-            // 添加Collider用于射线检测
-            BoxCollider collider = blockGO.AddComponent<BoxCollider>();
-            collider.size = new Vector3(blockSize, blockSize, 1f);
-            collider.isTrigger = true;
+            // 添加流体形状生成器
+            FluidShapeGenerator shapeGenerator = blockGO.AddComponent<FluidShapeGenerator>();
+            
+            // 设置流体纹理
+            Texture2D fluidTexture = shapeGenerator.GenerateFluidTexture();
+            image.sprite = Sprite.Create(fluidTexture, new Rect(0, 0, fluidTexture.width, fluidTexture.height), new Vector2(0.5f, 0.5f));
             
             // 添加FluidColorBlock组件
             FluidColorBlock fluidBlock = blockGO.AddComponent<FluidColorBlock>();

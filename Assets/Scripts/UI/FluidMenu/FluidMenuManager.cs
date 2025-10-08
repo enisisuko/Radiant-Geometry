@@ -40,6 +40,7 @@ namespace FadedDreams.UI
         
         [Header("后期处理")]
         public Camera menuCamera;
+        public Canvas canvas;
         public bool enableBloom = true;
         
         // 菜单项配置
@@ -86,6 +87,35 @@ namespace FadedDreams.UI
             InitializeComponents();
         }
         
+        void InitializeComponents()
+        {
+            // 自动查找Canvas
+            if (canvas == null)
+            {
+                canvas = FindObjectOfType<Canvas>();
+            }
+            
+            // 自动查找相机
+            if (menuCamera == null)
+            {
+                menuCamera = Camera.main;
+                if (menuCamera == null)
+                {
+                    menuCamera = FindObjectOfType<Camera>();
+                }
+            }
+            
+            // 自动查找音频源
+            if (audioSource == null)
+            {
+                audioSource = GetComponent<AudioSource>();
+                if (audioSource == null)
+                {
+                    audioSource = gameObject.AddComponent<AudioSource>();
+                }
+            }
+        }
+        
         void Start()
         {
             StartCoroutine(InitializeMenu());
@@ -107,47 +137,69 @@ namespace FadedDreams.UI
         
         void HandleMouseInput()
         {
-            if (Input.GetMouseButtonDown(0))
+            // 使用UI事件系统检测鼠标交互
+            Vector2 mousePosition = Input.mousePosition;
+            
+            // 检查鼠标是否在Canvas内
+            if (canvas != null && RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                canvas.transform as RectTransform, mousePosition, canvas.worldCamera, out Vector2 localPoint))
             {
-                Ray ray = menuCamera.ScreenPointToRay(Input.mousePosition);
-                RaycastHit hit;
-                
-                if (Physics.Raycast(ray, out hit))
-                {
-                    for (int i = 0; i < blockTransforms.Length; i++)
-                    {
-                        if (blockTransforms[i] != null && hit.collider.transform == blockTransforms[i])
-                        {
-                            OnBlockClicked(i);
-                            break;
-                        }
-                    }
-                }
-            }
-            else
-            {
-                // 处理悬停
-                Ray ray = menuCamera.ScreenPointToRay(Input.mousePosition);
-                RaycastHit hit;
-                
                 int hoveredIndex = -1;
-                if (Physics.Raycast(ray, out hit))
+                
+                // 检查鼠标是否悬停在某个色块上
+                for (int i = 0; i < colorBlocks.Length; i++)
                 {
-                    for (int i = 0; i < blockTransforms.Length; i++)
+                    if (colorBlocks[i] != null && IsMouseOverBlock(i, localPoint))
                     {
-                        if (blockTransforms[i] != null && hit.collider.transform == blockTransforms[i])
-                        {
-                            hoveredIndex = i;
-                            break;
-                        }
+                        hoveredIndex = i;
+                        break;
                     }
                 }
                 
+                // 处理悬停变化
                 if (hoveredIndex != currentHoveredIndex)
                 {
                     OnHoverChanged(hoveredIndex);
                 }
+                
+                // 处理点击
+                if (Input.GetMouseButtonDown(0) && hoveredIndex >= 0)
+                {
+                    OnBlockClicked(hoveredIndex);
+                }
             }
+            else
+            {
+                // 鼠标不在Canvas内，清除悬停状态
+                if (currentHoveredIndex >= 0)
+                {
+                    OnHoverChanged(-1);
+                }
+            }
+        }
+        
+        bool IsMouseOverBlock(int blockIndex, Vector2 localMousePosition)
+        {
+            if (colorBlocks[blockIndex] == null) return false;
+            
+            // 获取色块的RectTransform
+            RectTransform blockRect = colorBlocks[blockIndex].GetComponent<RectTransform>();
+            if (blockRect == null) return false;
+            
+            // 检查鼠标位置是否在色块范围内
+            Vector2 blockPosition = blockRect.anchoredPosition;
+            Vector2 blockSize = blockRect.sizeDelta;
+            
+            // 考虑缩放
+            float scale = targetScales[blockIndex];
+            blockSize *= scale;
+            
+            // 计算边界
+            Vector2 min = blockPosition - blockSize * 0.5f;
+            Vector2 max = blockPosition + blockSize * 0.5f;
+            
+            return localMousePosition.x >= min.x && localMousePosition.x <= max.x &&
+                   localMousePosition.y >= min.y && localMousePosition.y <= max.y;
         }
         
         void HandleKeyboardInput()
