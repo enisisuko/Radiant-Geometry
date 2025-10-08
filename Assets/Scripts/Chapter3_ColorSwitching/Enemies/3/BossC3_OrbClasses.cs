@@ -431,6 +431,10 @@ namespace FD.Bosses.C3
         private float emissionIntensity = 0f;
         private Renderer rend;
         
+        // 攻击相关
+        private BossColor gateColor = BossColor.Red;
+        private bool ignoreColorGate = false;
+        
         private void Awake()
         {
             rb = GetComponent<Rigidbody2D>();
@@ -481,6 +485,29 @@ namespace FD.Bosses.C3
             {
                 direction = (target.position - transform.position).normalized;
             }
+        }
+        
+        /// <summary>
+        /// 设置攻击门/碰撞器
+        /// </summary>
+        public void EnsureAttackableGate(BossColor bossColor, bool enableColliders)
+        {
+            gateColor = bossColor;
+            
+            // 启用或禁用碰撞器
+            Collider2D col2d = GetComponent<Collider2D>();
+            Collider col3d = GetComponent<Collider>();
+            
+            if (col2d != null) col2d.enabled = enableColliders;
+            if (col3d != null) col3d.enabled = enableColliders;
+        }
+        
+        /// <summary>
+        /// 强制忽略颜色相性（用于大招自由攻击）
+        /// </summary>
+        public void ForceIgnoreColor(bool ignore)
+        {
+            ignoreColorGate = ignore;
         }
         
         private void Update()

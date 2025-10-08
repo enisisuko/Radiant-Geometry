@@ -1,9 +1,18 @@
 // BossC3_Enums.cs
-// BossC3相关的枚举定义
+// BossC3相关的枚举定义和接口
 // Unity 2021+ / Unity 6.2 兼容（URP/HDRP均可）
 
 namespace FD.Bosses.C3
 {
+    /// <summary>
+    /// 玩家颜色状态接口 - 供PlayerColorBridge使用
+    /// </summary>
+    public interface IColorState
+    {
+        BossColor GetColorMode();
+    }
+    
+
     /// <summary>
     /// Boss阶段
     /// </summary>

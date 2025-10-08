@@ -14,6 +14,7 @@ namespace FD.Bosses.C3
     {
         private BossC3_CombatSystem combatSystem;
         private BossC3_PhaseManager phaseManager;
+        private object bossReference; // 通用Boss引用（可以是任何Boss类型）
         
         public bool IsDead => combatSystem != null && combatSystem.IsDead();
         
@@ -21,6 +22,20 @@ namespace FD.Bosses.C3
         {
             combatSystem = GetComponent<BossC3_CombatSystem>();
             phaseManager = GetComponent<BossC3_PhaseManager>();
+        }
+        
+        /// <summary>
+        /// 设置Boss引用（All-In-One兼容）
+        /// </summary>
+        public void Setup(object boss)
+        {
+            bossReference = boss;
+            
+            // 如果尚未获取组件引用，现在获取
+            if (combatSystem == null)
+                combatSystem = GetComponent<BossC3_CombatSystem>();
+            if (phaseManager == null)
+                phaseManager = GetComponent<BossC3_PhaseManager>();
         }
         
         /// <summary>

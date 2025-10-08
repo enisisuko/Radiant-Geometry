@@ -146,7 +146,7 @@ namespace FD.Bosses.C3
         /// </summary>
         public int GetCurrentOrbCount()
         {
-            return _conductor != null ? _conductor.GetOrbCount() : 0;
+            return _conductor != null ? _conductor.OrbCount : 0;
         }
 
         /// <summary>
@@ -154,10 +154,9 @@ namespace FD.Bosses.C3
         /// </summary>
         public Transform GetOrb(int index)
         {
-            if (_conductor != null && index >= 0 && index < _conductor.GetOrbCount())
+            if (_conductor != null && index >= 0 && index < _conductor.OrbCount)
             {
-                var orbAgent = _conductor.GetOrb(index);
-                return orbAgent != null ? orbAgent.transform : null;
+                return _conductor.GetOrb(index);
             }
             return null;
         }

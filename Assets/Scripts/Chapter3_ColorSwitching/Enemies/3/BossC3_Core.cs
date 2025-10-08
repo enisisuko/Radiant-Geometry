@@ -547,6 +547,20 @@ namespace FD.Bosses.C3
         /// 获取战斗状态
         /// </summary>
         public bool IsBattleStarted() => battleStarted;
+        
+        /// <summary>
+        /// 广播停止所有小技（用于大招期间）
+        /// </summary>
+        public void BroadcastStopMicros()
+        {
+            // 通知所有OrbUnit停止
+            OrbUnit[] units = GetComponentsInChildren<OrbUnit>();
+            foreach (var unit in units)
+            {
+                if (unit != null)
+                    unit.StopNow();
+            }
+        }
 
         #endregion
 
