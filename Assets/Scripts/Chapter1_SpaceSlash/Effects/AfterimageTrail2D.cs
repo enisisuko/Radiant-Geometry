@@ -256,7 +256,15 @@ namespace FadedDreams.VFX
                 var go = new GameObject(src.name + "_snap");
                 go.transform.SetParent(root.transform, false);
                 go.transform.SetPositionAndRotation(src.transform.position, src.transform.rotation);
-                go.transform.localScale = src.transform.lossyScale;
+                
+                // 修复：确保残影大小和玩家当前大小一致
+                // 计算相对于父对象的本地缩放
+                Vector3 relativeScale = new Vector3(
+                    src.transform.lossyScale.x / transform.lossyScale.x,
+                    src.transform.lossyScale.y / transform.lossyScale.y,
+                    src.transform.lossyScale.z / transform.lossyScale.z
+                );
+                go.transform.localScale = relativeScale;
 
                 var s = go.AddComponent<SpriteRenderer>();
                 s.sprite = src.sprite;
@@ -270,11 +278,7 @@ namespace FadedDreams.VFX
                 var baseColor = useTint ? tint : src.color;
                 s.color = new Color(baseColor.r, baseColor.g, baseColor.b, startAlpha);
 
-                // 设置初始缩放
-                if (enableScaleAnimation)
-                {
-                    go.transform.localScale *= startScaleMultiplier;
-                }
+                // 注意：缩放动画会在AnimateAndKill中处理，这里不修改localScale
             }
 
             _activeSnapshots.Add(root);
@@ -294,7 +298,12 @@ namespace FadedDreams.VFX
                 if (renderers[i])
                 {
                     initialColors[i] = renderers[i].color;
+                    // 修复：记录正确的初始缩放值，考虑startScaleMultiplier
                     initialScales[i] = renderers[i].transform.localScale;
+                    if (enableScaleAnimation)
+                    {
+                        initialScales[i] *= startScaleMultiplier;
+                    }
                 }
             }
 
@@ -334,6 +343,7 @@ namespace FadedDreams.VFX
                     if (enableScaleAnimation)
                     {
                         float scaleMultiplier = scaleCurve.Evaluate(u);
+                        // 修复：基于正确的初始缩放值进行动画
                         r.transform.localScale = initialScales[i] * scaleMultiplier;
                     }
 
