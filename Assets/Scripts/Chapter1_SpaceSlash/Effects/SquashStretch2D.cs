@@ -1,69 +1,97 @@
 using UnityEngine;
 
 /// <summary>
-/// 2D ĞÎ±ä¿ØÖÆ£¨¿Éµş¼Ó£©£º
-/// ²ã 1¡¾ÒÆ¶¯Á¬ĞøĞÎ±ä¡¿£º°´Ë®Æ½ËÙ¶È×öÇáÎ¢À­Éì/Ñ¹Ëõ£»
-/// ²ã 2¡¾ÊÂ¼şÂö³åĞÎ±ä¡¿£ºÆğÌø/¶ş¶ÎÌø/ÂäµØ×¢ÈëÂö³å£¬¿É¶à´Îµş¼Ó²¢ËæÊ±¼ä»Øµ¯£»
-/// ²ã 3¡¾¹û¶³Ò¡»Î Jelly Wobble¡¿£º×óÓÒÒÆ¶¯Ê±´¥·¢µ¯ĞÔÒ¡»Î£¨¿ÉÓëÉÏÃæÁ½²ãµş¼Ó£©¡£
-/// ÈçÓĞ²ÄÖÊ/Shader£¬¿É¸Ä²ÄÖÊ²ÎÊı£»·ñÔòÖ±½Ó¸Ä transform.localScale¡£
-/// Ê¹ÓÃ£º
-/// 1) ½«±¾½Å±¾¹Òµ½Íæ¼Ò£»
-/// 2) °ó¶¨ PlayerController2D µÄ onJump/onDoubleJump/onLanded µ½±¾½Å±¾ Trigger*£»
-/// 3) ÈôĞè²ÄÖÊÄ£Ê½£¬¹´Ñ¡ useMaterial£¬²¢Ö¸¶¨ SpriteRenderer£»
-/// 4) ¹û¶³Ò¡»Î²ÎÊıÔÚ¡°Jelly Wobble¡±·Ö×éÀïµ÷½Ú¡£
+/// 2D æŒ¤å‹æ‹‰ä¼¸ï¼ˆæœå†»ï¼‰ç³»ç»Ÿ - å¢å¼ºç‰ˆ
+/// ã€1ã€‘ç§»åŠ¨æ—¶æŒ¤å‹å˜å½¢ï¼šæ ¹æ®æ°´å¹³é€Ÿåº¦è¿›è¡Œå¾®æ‹‰ä¼¸/å‹ç¼©
+/// ã€2ã€‘äº‹ä»¶å†²å‡»å˜å½¢ï¼šè·³è·ƒ/è½åœ°/å—ä¼¤ç­‰äº‹ä»¶ï¼Œå¯å¤šæ¬¡å åŠ ï¼Œä¼šéšæ—¶é—´è¡°å‡
+/// ã€3ã€‘æœå†»æ‘‡æ™ƒ Jelly Wobbleï¼šç§»åŠ¨æ—¶äº§ç”Ÿæ‘‡æ™ƒï¼Œé€Ÿåº¦è¶Šå¿«æ‘‡æ™ƒè¶Šæ˜æ˜¾
+/// ã€4ã€‘é¡¶ç«¯æ™ƒåŠ¨ Top Wobbleï¼šå·¦å³ç§»åŠ¨æ—¶é¡¶ç«¯ä¼šæ™ƒåŠ¨ï¼Œåƒæœå†»ä¸€æ ·æ›´çµåŠ¨
+/// æ”¯æŒæè´¨/Shaderï¼Œå¯æ”¹æè´¨å±æ€§ï¼Œå¦åˆ™ç›´æ¥æ”¹ transform.localScale
+/// ä½¿ç”¨ï¼š
+/// 1) æŒ‚è„šæœ¬åˆ°è§’è‰²ä¸Šï¼›
+/// 2) åœ¨ PlayerController2D çš„ onJump/onDoubleJump/onLanded è°ƒç”¨ Trigger*ï¼›
+/// 3) æè´¨æ¨¡å¼å¯é€‰ useMaterial å¹¶æŒ‡å®š SpriteRendererï¼›
+/// 4) æ‘‡æ™ƒå‚æ•°åœ¨"Jelly Wobble"å’Œ"Top Wobble"ä¸­è°ƒæ•´ã€‚
 /// </summary>
 [RequireComponent(typeof(Transform))]
 public class SquashStretch2D : MonoBehaviour
 {
     [Header("Continuous by Speed")]
-    public Rigidbody2D sourceBody;            // ÓÃÀ´¶ÁËÙ¶È£¬½¨ÒéÍÏÍæ¼Ò×ÔÉí
-    public float maxSpeedForNormalize = 10f;  // ×î´óËÙ¶ÈÓ³Éä
-    [Tooltip("ÒÆ¶¯Ê±»ù´¡À­ÉìÇ¿¶È£¨x À­Éì / y Ñ¹Ëõ£©£¬0.05~0.12 ×ÔÈ»")]
+    public Rigidbody2D sourceBody;            // è·å–é€Ÿåº¦ï¼Œå»ºè®®æ‹–å…¥
+    public float maxSpeedForNormalize = 10f;  // æœ€å¤§é€Ÿåº¦æ˜ å°„
+    [Tooltip("ç§»åŠ¨æ—¶æ‹‰ä¼¸å¼ºåº¦ï¼ˆx æ‹‰ä¼¸ / y å‹ç¼©ï¼‰ï¼Œ0.05~0.12 è¾ƒè‡ªç„¶")]
     public float moveStretchAmount = 0.08f;
 
     [Header("Event Impulses (Stackable)")]
-    [Tooltip("ÆğÌø£º×İÏòÀ­Éì¡¢ºáÏòÑ¹Ëõ")]
+    [Tooltip("è·³è·ƒæ—¶ï¼šå‘ä¸Šæ‹‰ä¼¸ã€å‘ä¸‹å‹ç¼©")]
     public float jumpImpulse = 0.18f;
-    [Tooltip("¶ş¶ÎÌø£ºÂÔÇ¿ÓÚÆğÌø")]
+    [Tooltip("äºŒæ®µè·³ï¼šæ›´å¼ºæ‹‰ä¼¸")]
     public float doubleJumpImpulse = 0.22f;
-    [Tooltip("ÂäµØ£º×İÏòÑ¹Ëõ¡¢ºáÏòÀ­Éì")]
+    [Tooltip("è½åœ°ï¼šå‘ä¸‹å‹ç¼©ï¼Œå‘ä¸Šæ‹‰ä¼¸")]
     public float landImpulse = 0.20f;
-    [Tooltip("Âö³åË¥¼õ£¨Ô½´ó»Øµ¯Ô½¿ì£©")]
+    [Tooltip("å†²å‡»è¡°å‡ï¼ˆè¶Šå¤§è¡°å‡è¶Šå¿«ï¼‰")]
     public float impulseDamp = 4f;
 
     [Header("Jelly Wobble (Additive)")]
-    [Tooltip("»ù´¡ÆµÂÊ£¨Hz£©£¬0.8~2 Ö®¼ä½Ï×ÔÈ»")]
+    [Tooltip("æ‘‡æ™ƒé¢‘ç‡ï¼ˆHzï¼‰ï¼Œ0.8~2 ä¹‹é—´è¾ƒè‡ªç„¶")]
     public float wobbleFrequencyHz = 1.2f;
-    [Tooltip("Ò¡»Î×î´óÕñ·ù£¨Ïàµ±ÓÚ scale ±ä»¯±ÈÀı£©")]
+    [Tooltip("æ‘‡æ™ƒæœ€å¤§å¹…åº¦ï¼Œç›¸å½“äº scale å˜åŒ–çš„ç™¾åˆ†æ¯”")]
     public float wobbleMaxAmplitude = 0.12f;
-    [Tooltip("Ò¡»Î×èÄá£¨Ô½´óÔ½¿ìÍ££¬½¨Òé 3~8£©")]
+    [Tooltip("æ‘‡æ™ƒè¡°å‡ï¼ˆè¶Šå¤§è¶Šå¿«é€Ÿåœï¼‰ï¼Œå»ºè®® 3~8")]
     public float wobbleDamping = 5f;
-    [Tooltip("ËÙ¶È¡úÕñ·ùÓ³ÉäÏµÊı£¬ËÙ¶ÈÔ½´ó£¬Ò¡»ÎÔ½ÈİÒ×±»¡°Ò¡ÆğÀ´¡±")]
+    [Tooltip("é€Ÿåº¦â†’å¹…åº¦æ˜ å°„ç³»æ•°ï¼Œé€Ÿåº¦è¶Šå¿«æ‘‡æ™ƒè¶Šå®¹æ˜“è¢«æ¿€å‘")]
     public float wobbleVelocityToAmplitude = 0.08f;
-    [Tooltip("×óÓÒ×ªÏò»òÂäµØµÈÊÂ¼ş¸øÓèµÄ¶îÍâÒ¡»ÎÂö³å")]
+    [Tooltip("æ–¹å‘è½¬å˜äº‹ä»¶è¸¢ï¼Œå¢åŠ æ–¹å‘æ”¹å˜æ—¶çš„é¢å¤–æ‘‡æ™ƒ")]
     public float wobbleEventKick = 0.08f;
-    [Tooltip("ÔÚ¿ÕÖĞÊ±½µµÍÒ¡»ÎÇ¿¶È£¨0~1£©")]
+    [Tooltip("åœ¨ç©ºä¸­æ—¶æ‘‡æ™ƒå¼ºåº¦ï¼ˆ0~1ï¼‰")]
     public float airWobbleMultiplier = 0.75f;
+
+    [Header("Top Wobble (é¡¶ç«¯æ™ƒåŠ¨)")]
+    [Tooltip("æ˜¯å¦å¯ç”¨é¡¶ç«¯æ™ƒåŠ¨æ•ˆæœ")]
+    public bool enableTopWobble = true;
+    [Tooltip("é¡¶ç«¯æ™ƒåŠ¨é¢‘ç‡ï¼ˆHzï¼‰ï¼Œæ¯”æ•´ä½“æ‘‡æ™ƒç¨å¿«")]
+    public float topWobbleFrequencyHz = 2.5f;
+    [Tooltip("é¡¶ç«¯æ™ƒåŠ¨æœ€å¤§å¹…åº¦")]
+    public float topWobbleMaxAmplitude = 0.15f;
+    [Tooltip("é¡¶ç«¯æ™ƒåŠ¨è¡°å‡é€Ÿåº¦")]
+    public float topWobbleDamping = 6f;
+    [Tooltip("ç§»åŠ¨é€Ÿåº¦å¯¹é¡¶ç«¯æ™ƒåŠ¨çš„å½±å“ç³»æ•°")]
+    public float topWobbleVelocityInfluence = 0.12f;
+    [Tooltip("æ–¹å‘æ”¹å˜æ—¶é¡¶ç«¯æ™ƒåŠ¨çš„é¢å¤–å¼ºåº¦")]
+    public float topWobbleDirectionKick = 0.2f;
+    [Tooltip("é¡¶ç«¯æ™ƒåŠ¨çš„ç›¸ä½åç§»ï¼ˆåˆ›é€ æ›´è‡ªç„¶çš„æ‘†åŠ¨ï¼‰")]
+    public float topWobblePhaseOffset = 0.3f;
+    [Tooltip("é¡¶ç«¯æ™ƒåŠ¨çš„å·¦å³æ‘†åŠ¨å¼ºåº¦")]
+    public float topWobbleSideSway = 0.8f;
 
     [Header("Material Mode (Optional)")]
     public bool useMaterial = false;
-    public SpriteRenderer spriteRenderer;     // ÈôÊ¹ÓÃ²ÄÖÊ£¬ÇëÖ¸¶¨
-    public string deformXProp = "_DeformX";   // ºáÏòĞÎ±ä²ÎÊıÃû
-    public string deformYProp = "_DeformY";   // ×İÏòĞÎ±ä²ÎÊıÃû
+    public SpriteRenderer spriteRenderer;     // å¦‚ä½¿ç”¨æè´¨ï¼Œéœ€æŒ‡å®š
+    public string deformXProp = "_DeformX";   // æè´¨å˜å½¢å±æ€§
+    public string deformYProp = "_DeformY";   // æè´¨å˜å½¢å±æ€§
+    public string topWobbleXProp = "_TopWobbleX"; // é¡¶ç«¯æ™ƒåŠ¨Xå±æ€§
+    public string topWobbleYProp = "_TopWobbleY"; // é¡¶ç«¯æ™ƒåŠ¨Yå±æ€§
 
     Vector2 baseScale = Vector2.one;
 
-    // ÊÂ¼şÂö³å¿Éµş¼ÓĞÎ±äÁ¿£¨x/y ¸÷Ò»£©
+    // äº‹ä»¶å†²å‡»ç´¯ç§¯çš„å˜å½¢ï¼ˆx/y ç‹¬ç«‹ï¼‰
     Vector2 impulseAccum;
     MaterialPropertyBlock mpb;
 
-    // Jelly Ò¡»Î×´Ì¬
-    float wobblePhase;        // ÏàÎ»£¨»¡¶È£©
-    float wobbleAmp;          // µ±Ç°Õñ·ù£¨0~wobbleMaxAmplitude£©
-    float lastVX;             // ÉÏÒ»Ö¡Ë®Æ½ËÙ¶È
+    // Jelly æ‘‡æ™ƒçŠ¶æ€
+    float wobblePhase;        // ç›¸ä½ï¼ˆå¼§åº¦ï¼‰
+    float wobbleAmp;          // å½“å‰å¹…åº¦ï¼ˆ0~wobbleMaxAmplitudeï¼‰
+    float lastVX;             // ä¸Šä¸€å¸§æ°´å¹³é€Ÿåº¦
     bool lastGrounded = true;
 
-    // ¿ÉÑ¡£º¶ÁµØÃæÌ¬£¨ÈôÄãÎ´½ÓÈë£¬Õâ¸ö±ê¼ÇÖ»»á»ùÓÚËÙ¶È²Â²âÇ¿¶È£©
+    // é¡¶ç«¯æ™ƒåŠ¨çŠ¶æ€
+    float topWobblePhase;     // é¡¶ç«¯æ™ƒåŠ¨ç›¸ä½
+    float topWobbleAmp;       // é¡¶ç«¯æ™ƒåŠ¨å¹…åº¦
+    float topWobbleX;         // é¡¶ç«¯æ™ƒåŠ¨Xåˆ†é‡
+    float topWobbleY;         // é¡¶ç«¯æ™ƒåŠ¨Yåˆ†é‡
+    float lastTopWobbleVX;    // ä¸Šä¸€å¸§ç”¨äºé¡¶ç«¯æ™ƒåŠ¨çš„é€Ÿåº¦
+
+    // å¯é€‰ï¼šåœ°é¢çŠ¶æ€ï¼ˆå¦‚æœªæ¥å…¥ï¼Œç³»ç»Ÿåªä¼šæ ¹æ®é€Ÿåº¦çŒœæµ‹å¼ºåº¦ï¼‰
     public bool grounded = true;
 
     void Awake()
@@ -75,7 +103,7 @@ public class SquashStretch2D : MonoBehaviour
 
     void LateUpdate()
     {
-        // === ²ã 1£ºÒÆ¶¯Á¬ĞøĞÎ±ä ===
+        // === ã€1ã€‘ç§»åŠ¨æ—¶æŒ¤å‹å˜å½¢ ===
         Vector2 moveDeform = Vector2.zero;
         float vx = 0f;
         if (sourceBody)
@@ -83,49 +111,63 @@ public class SquashStretch2D : MonoBehaviour
             vx = sourceBody.linearVelocity.x;
             float spd = Mathf.Abs(vx);
             float n = Mathf.Clamp01(spd / Mathf.Max(0.0001f, maxSpeedForNormalize));
-            moveDeform.x += n * moveStretchAmount; // ºáÏòÀ­Éì
-            moveDeform.y -= n * moveStretchAmount; // ×İÏòÑ¹Ëõ£¨±£³ÖÌå»ı¸Ğ£©
+            moveDeform.x += n * moveStretchAmount; // æ°´å¹³æ‹‰ä¼¸
+            moveDeform.y -= n * moveStretchAmount; // å‚ç›´å‹ç¼©ï¼ˆä¿æŒä½“ç§¯ï¼‰
         }
 
-        // === ²ã 2£ºÊÂ¼şÂö³å£¨Ö¸ÊıË¥¼õ£© ===
+        // === ã€2ã€‘äº‹ä»¶å†²å‡»ï¼ˆæŒ‡æ•°è¡°å‡ï¼‰ ===
         impulseAccum = Vector2.Lerp(impulseAccum, Vector2.zero, 1f - Mathf.Exp(-impulseDamp * Time.deltaTime));
 
-        // === ²ã 3£º¹û¶³Ò¡»Î£¨×èÄáĞ³Õñ + ËÙ¶ÈÇı¶¯£© ===
+        // === ã€3ã€‘æœå†»æ‘‡æ™ƒï¼ˆæ­£å¼¦æ³¢ + é€Ÿåº¦æ¿€å‘ï¼‰ ===
         float dt = Mathf.Max(0.0001f, Time.deltaTime);
         float twoPi = Mathf.PI * 2f;
-        // ¸ù¾İËÙ¶È±ä»¯/¼ÓËÙ¶È¡°¼ÓÈÈ¡±Õñ·ù
+        
+        // è®¡ç®—é€Ÿåº¦å˜åŒ–/åŠ é€Ÿåº¦ï¼Œæ¿€å‘æ‘‡æ™ƒ
         float accelX = (vx - lastVX) / dt;
         float ampTarget = Mathf.Clamp01(Mathf.Abs(vx) * wobbleVelocityToAmplitude);
-        if (!grounded) ampTarget *= airWobbleMultiplier; // ¿ÕÖĞÈõÒ»µã
-        // ÏòÄ¿±êÕñ·ù¿¿Â££¨»ºÂı£©
+        if (!grounded) ampTarget *= airWobbleMultiplier; // ç©ºä¸­å¼±ä¸€ç‚¹
+        // å‘ç›®æ ‡å¹…åº¦ï¼Œå¹³æ»‘è¿‡æ¸¡
         wobbleAmp = Mathf.MoveTowards(wobbleAmp, Mathf.Min(ampTarget, wobbleMaxAmplitude), 3f * dt);
 
-        // ¶îÍâ£ºÈô¼ì²âµ½¡°¼±×ªÏò¡±£¬¼ÓÒ»½ÅÂö³å
+        // æ£€æµ‹ï¼šæ£€æµ‹åˆ°"æ–¹å‘è½¬å˜"ï¼Œç»™ä¸€ä¸ªå†²å‡»
         if (Mathf.Sign(vx) != Mathf.Sign(lastVX) && Mathf.Abs(vx) > 0.1f && Mathf.Abs(lastVX) > 0.1f)
             wobbleAmp = Mathf.Clamp(wobbleAmp + wobbleEventKick, 0f, wobbleMaxAmplitude);
 
-        // ÏàÎ»ÍÆ½ø£¨ÆµÂÊ£©
+        // ç›¸ä½æ¨è¿›é¢‘ç‡
         wobblePhase += twoPi * wobbleFrequencyHz * dt;
         if (wobblePhase > twoPi) wobblePhase -= twoPi;
 
-        // ×èÄá£¨Öğ½¥Í£Ö¹£©
+        // è¡°å‡ï¼ˆé€æ¸åœæ­¢ï¼‰
         wobbleAmp *= Mathf.Exp(-wobbleDamping * dt);
 
-        // °ÑÒ¡»ÎÓ³Éä³É x/y »¥ÄæµÄÀ­ÉìÑ¹Ëõ£¨¿´ÆğÀ´Ïñ¹û¶³×óÓÒË¦£©
+        // æ‘‡æ™ƒæ˜ å°„åˆ° x/yï¼šæ°´å¹³æ‹‰ä¼¸å‹ç¼©ï¼Œå‚ç›´ç›¸åï¼Œåˆ›é€ æœå†»ç”©åŠ¨
         float wobbleSine = Mathf.Sin(wobblePhase);
-        float wobbleX = wobbleAmp * wobbleSine;   // x ËæÕıÏÒ±ä»¯
-        float wobbleY = -wobbleX * 0.8f;          // y ·´ÏòÇÒÂÔĞ¡£¬±ÜÃâ¹ı¶È±äĞÎ
+        float wobbleX = wobbleAmp * wobbleSine;   // x æ°´å¹³å˜åŒ–
+        float wobbleY = -wobbleX * 0.8f;          // y å‚ç›´ç›¸åï¼Œä¿æŒä½“ç§¯æ„Ÿ
 
-        // ºÏ³ÉÈı²ãĞÎ±ä
-        float dx = moveDeform.x + impulseAccum.x + wobbleX;
-        float dy = moveDeform.y + impulseAccum.y + wobbleY;
+        // === ã€4ã€‘é¡¶ç«¯æ™ƒåŠ¨ï¼ˆæ–°å¢ï¼‰ ===
+        if (enableTopWobble)
+        {
+            UpdateTopWobble(vx, dt, twoPi);
+        }
+        else
+        {
+            topWobbleX = 0f;
+            topWobbleY = 0f;
+        }
 
-        // Ó¦ÓÃ
+        // åˆæˆæ‰€æœ‰å˜å½¢
+        float dx = moveDeform.x + impulseAccum.x + wobbleX + topWobbleX;
+        float dy = moveDeform.y + impulseAccum.y + wobbleY + topWobbleY;
+
+        // åº”ç”¨
         if (useMaterial && spriteRenderer)
         {
             spriteRenderer.GetPropertyBlock(mpb);
             mpb.SetFloat(deformXProp, dx);
             mpb.SetFloat(deformYProp, dy);
+            mpb.SetFloat(topWobbleXProp, topWobbleX);
+            mpb.SetFloat(topWobbleYProp, topWobbleY);
             spriteRenderer.SetPropertyBlock(mpb);
         }
         else
@@ -139,25 +181,94 @@ public class SquashStretch2D : MonoBehaviour
         lastGrounded = grounded;
     }
 
-    // === ÊÂ¼ş´¥·¢£¨µş¼Ó£© ===
+    void UpdateTopWobble(float vx, float dt, float twoPi)
+    {
+        // è®¡ç®—é¡¶ç«¯æ™ƒåŠ¨çš„ç›®æ ‡å¹…åº¦
+        float topAmpTarget = Mathf.Clamp01(Mathf.Abs(vx) * topWobbleVelocityInfluence);
+        if (!grounded) topAmpTarget *= airWobbleMultiplier;
+
+        // æ£€æµ‹æ–¹å‘æ”¹å˜ï¼Œç»™é¡¶ç«¯æ™ƒåŠ¨ä¸€ä¸ªå†²å‡»
+        if (Mathf.Sign(vx) != Mathf.Sign(lastTopWobbleVX) && Mathf.Abs(vx) > 0.1f && Mathf.Abs(lastTopWobbleVX) > 0.1f)
+        {
+            topWobbleAmp = Mathf.Clamp(topWobbleAmp + topWobbleDirectionKick, 0f, topWobbleMaxAmplitude);
+        }
+
+        // å‘ç›®æ ‡å¹…åº¦å¹³æ»‘è¿‡æ¸¡
+        topWobbleAmp = Mathf.MoveTowards(topWobbleAmp, Mathf.Min(topAmpTarget, topWobbleMaxAmplitude), 4f * dt);
+
+        // ç›¸ä½æ¨è¿›ï¼ˆæ¯”æ•´ä½“æ‘‡æ™ƒç¨å¿«ï¼‰
+        topWobblePhase += twoPi * topWobbleFrequencyHz * dt;
+        if (topWobblePhase > twoPi) topWobblePhase -= twoPi;
+
+        // è¡°å‡
+        topWobbleAmp *= Mathf.Exp(-topWobbleDamping * dt);
+
+        // è®¡ç®—é¡¶ç«¯æ™ƒåŠ¨çš„Xå’ŒYåˆ†é‡
+        float topWobbleSine = Mathf.Sin(topWobblePhase + topWobblePhaseOffset);
+        float topWobbleCosine = Mathf.Cos(topWobblePhase + topWobblePhaseOffset);
+        
+        // Xåˆ†é‡ï¼šå·¦å³æ‘†åŠ¨ï¼Œè·Ÿéšç§»åŠ¨æ–¹å‘
+        topWobbleX = topWobbleAmp * topWobbleSine * topWobbleSideSway * Mathf.Sign(vx);
+        
+        // Yåˆ†é‡ï¼šä¸Šä¸‹æ‘†åŠ¨ï¼Œåˆ›é€ é¡¶ç«¯æ™ƒåŠ¨çš„æ„Ÿè§‰
+        topWobbleY = topWobbleAmp * topWobbleCosine * 0.6f;
+
+        lastTopWobbleVX = vx;
+    }
+
+    // === äº‹ä»¶è§¦å‘ï¼ˆå¯å åŠ ï¼‰ ===
     public void TriggerJump()
     {
         impulseAccum += new Vector2(-jumpImpulse, jumpImpulse);
-        // ÌøÆğÒ²¸ø Jelly Ò»µã¶îÍâÄÜÁ¿
+        // è·³è·ƒä¹Ÿä¼šæ¿€å‘ Jelly æ‘‡æ™ƒ
         wobbleAmp = Mathf.Clamp(wobbleAmp + wobbleEventKick * 0.6f, 0f, wobbleMaxAmplitude);
+        // è·³è·ƒä¹Ÿä¼šæ¿€å‘é¡¶ç«¯æ™ƒåŠ¨
+        if (enableTopWobble)
+        {
+            topWobbleAmp = Mathf.Clamp(topWobbleAmp + topWobbleDirectionKick * 0.5f, 0f, topWobbleMaxAmplitude);
+        }
     }
 
     public void TriggerDoubleJump()
     {
         impulseAccum += new Vector2(-doubleJumpImpulse, doubleJumpImpulse);
         wobbleAmp = Mathf.Clamp(wobbleAmp + wobbleEventKick * 0.8f, 0f, wobbleMaxAmplitude);
+        if (enableTopWobble)
+        {
+            topWobbleAmp = Mathf.Clamp(topWobbleAmp + topWobbleDirectionKick * 0.7f, 0f, topWobbleMaxAmplitude);
+        }
     }
 
     public void TriggerLand()
     {
         impulseAccum += new Vector2(landImpulse, -landImpulse);
-        // ÂäµØÊ±Ò¡»ÎÏÔÖøÒ»µã£¨Ïñ¹û¶³¶¶Ò»ÏÂ£©
+        // è½åœ°æ—¶æ‘‡æ™ƒå¼ºä¸€ç‚¹ï¼ˆæ¨¡æ‹Ÿå†²å‡»ï¼‰
         wobbleAmp = Mathf.Clamp(wobbleAmp + wobbleEventKick * 1.25f, 0f, wobbleMaxAmplitude);
+        if (enableTopWobble)
+        {
+            topWobbleAmp = Mathf.Clamp(topWobbleAmp + topWobbleDirectionKick * 1.0f, 0f, topWobbleMaxAmplitude);
+        }
         grounded = true;
+    }
+
+    // === æ–°å¢ï¼šæ‰‹åŠ¨è§¦å‘é¡¶ç«¯æ™ƒåŠ¨ ===
+    public void TriggerTopWobble(float intensity = 1f)
+    {
+        if (enableTopWobble)
+        {
+            topWobbleAmp = Mathf.Clamp(topWobbleAmp + topWobbleDirectionKick * intensity, 0f, topWobbleMaxAmplitude);
+        }
+    }
+
+    // === æ–°å¢ï¼šè®¾ç½®é¡¶ç«¯æ™ƒåŠ¨å‚æ•° ===
+    public void SetTopWobbleEnabled(bool enabled)
+    {
+        enableTopWobble = enabled;
+        if (!enabled)
+        {
+            topWobbleAmp = 0f;
+            topWobbleX = 0f;
+            topWobbleY = 0f;
+        }
     }
 }
