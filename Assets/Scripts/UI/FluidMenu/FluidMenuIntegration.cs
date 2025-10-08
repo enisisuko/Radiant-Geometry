@@ -61,7 +61,9 @@ namespace FadedDreams.UI
         {
             if (saveSystem == null) return;
             
-            bool hasSave = saveSystem.HasSaveData();
+            // 检查是否有存档数据（通过检查是否有最后场景记录）
+            string lastScene = saveSystem.LoadLastScene();
+            bool hasSave = !string.IsNullOrEmpty(lastScene);
             
             // 更新继续游戏按钮的状态
             if (menuManager != null && menuManager.colorBlocks != null && menuManager.colorBlocks.Length > 1)
@@ -115,7 +117,8 @@ namespace FadedDreams.UI
             if (isTransitioning) return;
             
             // 检查是否有存档
-            if (saveSystem == null || !saveSystem.HasSaveData())
+            string lastScene = saveSystem?.LoadLastScene();
+            if (saveSystem == null || string.IsNullOrEmpty(lastScene))
             {
                 if (showNoSaveWarning)
                 {
