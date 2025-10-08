@@ -72,6 +72,9 @@ namespace FadedDreams.UI
         {
             if (fluidImage != null)
             {
+                // 设置Image的颜色
+                fluidImage.color = fluidColor;
+                
                 // 创建流体材质
                 Shader fluidShader = Shader.Find("UI/FluidColorBlock");
                 if (fluidShader != null)
@@ -85,6 +88,11 @@ namespace FadedDreams.UI
                     fluidMaterial.SetFloat("_DistortionStrength", 0.1f);
                     fluidMaterial.SetFloat("_WaveSpeed", spreadSpeed);
                     fluidMaterial.SetFloat("_WaveFrequency", 5.0f);
+                }
+                else
+                {
+                    // 如果没有找到自定义Shader，使用默认材质
+                    Debug.LogWarning("FluidColorBlock Shader not found, using default material");
                 }
             }
         }
@@ -289,6 +297,10 @@ namespace FadedDreams.UI
         public void SetFluidColor(Color color)
         {
             fluidColor = color;
+            if (fluidImage != null)
+            {
+                fluidImage.color = color;
+            }
             if (fluidMaterial != null)
             {
                 fluidMaterial.SetColor("_Color", color);

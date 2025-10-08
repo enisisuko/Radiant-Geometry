@@ -10,11 +10,11 @@ namespace FadedDreams.UI
     public class FluidPhysicsSimulator : MonoBehaviour
     {
         [Header("流体参数")]
-        public float viscosity = 0.1f; // 粘度
-        public float surfaceTension = 0.5f; // 表面张力
-        public float flowSpeed = 2.0f; // 流动速度
-        public float spreadRate = 1.5f; // 蔓延速度
-        public float minDensity = 0.1f; // 最小密度
+        public float viscosity = 0.05f; // 粘度（降低）
+        public float surfaceTension = 0.2f; // 表面张力（降低）
+        public float flowSpeed = 3.0f; // 流动速度（增加）
+        public float spreadRate = 2.0f; // 蔓延速度（增加）
+        public float minDensity = 0.05f; // 最小密度（降低）
         public float maxDensity = 1.0f; // 最大密度
         
         [Header("网格参数")]
@@ -66,10 +66,10 @@ namespace FadedDreams.UI
             velocityGrid = new Vector2[gridWidth, gridHeight];
             pressureGrid = new Vector2[gridWidth, gridHeight];
             
-            // 初始化中心区域为高密度
+            // 初始化更大的中心区域为高密度
             int centerX = gridWidth / 2;
             int centerY = gridHeight / 2;
-            int radius = 8;
+            int radius = 20; // 增大初始半径
             
             for (int x = 0; x < gridWidth; x++)
             {
@@ -78,7 +78,9 @@ namespace FadedDreams.UI
                     float distance = Vector2.Distance(new Vector2(x, y), new Vector2(centerX, centerY));
                     if (distance <= radius)
                     {
-                        densityGrid[x, y] = maxDensity * (1.0f - distance / radius);
+                        // 使用更平滑的密度分布
+                        float normalizedDistance = distance / radius;
+                        densityGrid[x, y] = maxDensity * (1.0f - normalizedDistance * normalizedDistance);
                     }
                     else
                     {
@@ -237,6 +239,15 @@ namespace FadedDreams.UI
         {
             float[,] newDensityGrid = new float[gridWidth, gridHeight];
             
+            // 先复制当前密度
+            for (int x = 0; x < gridWidth; x++)
+            {
+                for (int y = 0; y < gridHeight; y++)
+                {
+                    newDensityGrid[x, y] = densityGrid[x, y];
+                }
+            }
+            
             for (int x = 1; x < gridWidth - 1; x++)
             {
                 for (int y = 1; y < gridHeight - 1; y++)
@@ -246,8 +257,8 @@ namespace FadedDreams.UI
                     {
                         // 对流传输
                         Vector2 velocity = velocityGrid[x, y];
-                        float newX = x - velocity.x * simulationTimeStep;
-                        float newY = y - velocity.y * simulationTimeStep;
+                        float newX = x - velocity.x * simulationTimeStep * 10f; // 增加传输速度
+                        float newY = y - velocity.y * simulationTimeStep * 10f;
                         
                         // 双线性插值
                         int x0 = Mathf.FloorToInt(newX);
@@ -271,10 +282,12 @@ namespace FadedDreams.UI
                                 density01 * (1 - fx) * fy +
                                 density11 * fx * fy;
                             
-                            newDensityGrid[x, y] = interpolatedDensity;
+                            // 保持最小密度，防止完全消失
+                            newDensityGrid[x, y] = Mathf.Max(interpolatedDensity, density * 0.95f);
                         }
                         else
                         {
+                            // 边界处保持密度
                             newDensityGrid[x, y] = density;
                         }
                     }
@@ -286,17 +299,21 @@ namespace FadedDreams.UI
         
         void ApplyBoundaryConditions()
         {
-            // 边界处密度衰减
+            // 边界处保持密度，不衰减
             for (int x = 0; x < gridWidth; x++)
             {
-                densityGrid[x, 0] *= 0.9f;
-                densityGrid[x, gridHeight - 1] *= 0.9f;
+                if (densityGrid[x, 0] > minDensity)
+                    densityGrid[x, 0] = Mathf.Max(densityGrid[x, 0], minDensity);
+                if (densityGrid[x, gridHeight - 1] > minDensity)
+                    densityGrid[x, gridHeight - 1] = Mathf.Max(densityGrid[x, gridHeight - 1], minDensity);
             }
             
             for (int y = 0; y < gridHeight; y++)
             {
-                densityGrid[0, y] *= 0.9f;
-                densityGrid[gridWidth - 1, y] *= 0.9f;
+                if (densityGrid[0, y] > minDensity)
+                    densityGrid[0, y] = Mathf.Max(densityGrid[0, y], minDensity);
+                if (densityGrid[gridWidth - 1, y] > minDensity)
+                    densityGrid[gridWidth - 1, y] = Mathf.Max(densityGrid[gridWidth - 1, y], minDensity);
             }
         }
         
@@ -309,7 +326,7 @@ namespace FadedDreams.UI
                     float density = densityGrid[x, y];
                     float alpha = Mathf.Clamp01(density);
                     
-                    // 根据密度创建颜色
+                    // 创建白色纹理，让Image的颜色显示出来
                     Color fluidColor = new Color(1f, 1f, 1f, alpha);
                     fluidPixels[y * gridWidth + x] = fluidColor;
                 }
