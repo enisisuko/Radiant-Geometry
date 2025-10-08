@@ -5,48 +5,113 @@ using UnityEngine;
 namespace FadedDreams.VFX
 {
     /// <summary>
-    /// ºÏ²¢°æ 2D ²ĞÓ°×é¼ş£º
-    /// - BurstOnce(): ³å´ÌË²¼ä´òÒ»´®²ĞÓ°£¨Ò»´ÎĞÔ±¬·¢£©
-    /// - BeginEmit()/StopEmit(): ³ÖĞøÍÏÎ²£¨Ğ­³ÌÇı¶¯£¬ÎŞĞè Update£©
-    /// - BeginTrail()/EndTrail(): ¼æÈİ¾É½Å±¾µÄÃû×Ö£¬µÈ¼ÛÓÚ BeginEmit()/StopEmit()
+    /// æ®‹å½± 2D æ‹–å°¾ç³»ç»Ÿ - å¢å¼ºç‰ˆ
+    /// - BurstOnce(): ç¬é—´ç”Ÿæˆä¸€å †æ®‹å½±ï¼Œä¸€æ¬¡æ€§çš„ï¼ˆå¦‚ Dash ç¬é—´ï¼‰
+    /// - BeginEmit()/StopEmit(): æŒç»­æ‹–å°¾ç³»ç»Ÿï¼Œå»ºè®®åœ¨ Update ä¸­è°ƒç”¨
+    /// - BeginTrail()/EndTrail(): å…¼å®¹æ—§è„šæœ¬å‘½åï¼Œç­‰åŒäº BeginEmit()/StopEmit()
     ///
-    /// ÓÃ·¨£º
-    ///   1) Ö±½Ó¹Òµ½Íæ¼Ò/µĞÈË¸ùÎïÌåÉÏ¼´¿É£¬Ä¬ÈÏ»á×Ô¶¯ÊÕ¼¯×Ó½ÚµãµÄ SpriteRenderer£»
-    ///   2) ĞèÒªÁ¢¼´´òÒ»´®²ĞÓ°£ºµ÷ÓÃ BurstOnce();
-    ///   3) ĞèÒª³¤Ê±¼äÍÏÎ²£ºBeginEmit(); ½áÊøÊ± StopEmit();
-    ///   4) Èô¾É´úÂëÊ¹ÓÃ BeginTrail/EndTrail£¬²»ÓÃ¸Ä£¬ÈÔ¿ÉÓÃ¡£
+    /// æ–°å¢åŠŸèƒ½ï¼š
+    ///   - åŠ¨æ€é¢œè‰²æ¸å˜ï¼šæ®‹å½±ä¼šä»åŸè‰²æ¸å˜åˆ°æŒ‡å®šé¢œè‰²
+    ///   - åŠ¨æ€ç¼©æ”¾æ•ˆæœï¼šæ®‹å½±ä¼šé€æ¸ç¼©å°
+    ///   - åŠ¨æ€é€æ˜åº¦ï¼šæ›´å¹³æ»‘çš„æ·¡å‡ºæ•ˆæœ
+    ///   - åŠ¨æ€æ—‹è½¬ï¼šæ®‹å½±å¯ä»¥æ·»åŠ æ—‹è½¬æ•ˆæœ
+    ///   - ç²’å­ç³»ç»Ÿé›†æˆï¼šå¯é€‰çš„ç²’å­æ•ˆæœå¢å¼º
+    ///   - é€Ÿåº¦å“åº”ï¼šæ ¹æ®ç§»åŠ¨é€Ÿåº¦è°ƒæ•´æ®‹å½±å¯†åº¦
+    ///
+    /// ç”¨æ³•ï¼š
+    ///   1) ç›´æ¥æŒ‚åˆ°è§’è‰²/æ•Œäººèº«ä¸Šå³å¯ï¼Œé»˜è®¤ä¼šè‡ªåŠ¨æ”¶é›†å­èŠ‚ç‚¹çš„ SpriteRenderer
+    ///   2) éœ€è¦ç¬é—´æ®‹å½±æ•ˆæœæ—¶è°ƒç”¨ BurstOnce();
+    ///   3) éœ€è¦æŒç»­æ‹–å°¾æ—¶è°ƒç”¨ BeginEmit(); ç»“æŸæ—¶ StopEmit();
+    ///   4) å…¼å®¹æ—§è„šæœ¬å¯ä»¥ä½¿ç”¨ BeginTrail/EndTrailï¼ŒåŠŸèƒ½ç›¸åŒã€‚
     /// </summary>
     [DisallowMultipleComponent]
     public class AfterimageTrail2D : MonoBehaviour
     {
-        [Header("Snapshot£¨¿ìÕÕ²ÎÊı£©")]
-        [Tooltip("Á½Ö¡²ĞÓ°Ö®¼äµÄÊ±¼ä¼ä¸ô")]
+        [Header("Snapshot åŸºç¡€è®¾ç½®")]
+        [Tooltip("æ¯å¸§æ®‹å½±ä¹‹é—´çš„æ—¶é—´é—´éš”")]
         public float snapshotInterval = 0.02f;
-        [Tooltip("BurstOnce Ê±Òª´ò³öµÄÕÅÊı")]
+        [Tooltip("BurstOnce æ—¶è¦ç”Ÿæˆçš„æ®‹å½±æ•°é‡")]
         public int snapshotCount = 6;
-        [Tooltip("Ã¿ÕÅ²ĞÓ°µÄÊÙÃü")]
+        [Tooltip("æ¯å¼ æ®‹å½±çš„å­˜æ´»æ—¶é—´")]
         public float snapshotLife = 0.25f;
         [Range(0, 1)] public float startAlpha = 0.8f;
         [Range(0, 1)] public float endAlpha = 0.0f;
 
-        [Header("Íâ¹Û")]
-        [Tooltip("ÊÇ·ñ¸ø²ĞÓ°Í³Ò»ÉÏÉ«£¨·ñÔò¼Ì³ĞÔ´ÑÕÉ«£©")]
+        [Header("é¢œè‰²æ•ˆæœ")]
+        [Tooltip("æ˜¯å¦è®©æ®‹å½±ç»Ÿä¸€é¢œè‰²ï¼Œå¦åˆ™ç»§æ‰¿æºé¢œè‰²")]
         public bool useTint = false;
         public Color tint = Color.white;
-        [Tooltip("²ĞÓ°µÄÅÅĞòË³ĞòÏà¶ÔÔ´µÄÆ«ÒÆ")]
-        public int sortingOrderOffset = -1;
-        [Tooltip("ÊÇ·ñ¸´ÖÆÔ´²ÄÖÊ£¨Ò»°ã²»ĞèÒª£©")]
-        public bool copyMaterial = false;
+        [Tooltip("æ˜¯å¦å¯ç”¨é¢œè‰²æ¸å˜æ•ˆæœ")]
+        public bool enableColorGradient = true;
+        [Tooltip("æ®‹å½±ç»“æŸæ—¶çš„é¢œè‰²")]
+        public Color endColor = new Color(1f, 0.5f, 0f, 0f); // æ©™çº¢è‰²æ¸å˜
+        [Tooltip("é¢œè‰²æ¸å˜æ›²çº¿")]
+        public AnimationCurve colorGradientCurve = AnimationCurve.EaseInOut(0, 0, 1, 1);
 
-        [Header("Ô´äÖÈ¾Æ÷£¨Áô¿Õ½«×Ô¶¯ÊÕ¼¯×Ó½ÚµãÈ«²¿ SpriteRenderer£©")]
+        [Header("ç¼©æ”¾æ•ˆæœ")]
+        [Tooltip("æ˜¯å¦å¯ç”¨åŠ¨æ€ç¼©æ”¾")]
+        public bool enableScaleAnimation = true;
+        [Tooltip("æ®‹å½±å¼€å§‹æ—¶çš„ç¼©æ”¾å€æ•°")]
+        public float startScaleMultiplier = 1.0f;
+        [Tooltip("æ®‹å½±ç»“æŸæ—¶çš„ç¼©æ”¾å€æ•°")]
+        public float endScaleMultiplier = 0.3f;
+        [Tooltip("ç¼©æ”¾åŠ¨ç”»æ›²çº¿")]
+        public AnimationCurve scaleCurve = AnimationCurve.EaseInOut(0, 1, 1, 0.3f);
+
+        [Header("æ—‹è½¬æ•ˆæœ")]
+        [Tooltip("æ˜¯å¦å¯ç”¨æ—‹è½¬æ•ˆæœ")]
+        public bool enableRotation = false;
+        [Tooltip("æ—‹è½¬é€Ÿåº¦ï¼ˆåº¦/ç§’ï¼‰")]
+        public float rotationSpeed = 180f;
+        [Tooltip("æ˜¯å¦éšæœºæ—‹è½¬æ–¹å‘")]
+        public bool randomizeRotation = true;
+
+        [Header("é€æ˜åº¦æ•ˆæœ")]
+        [Tooltip("é€æ˜åº¦åŠ¨ç”»æ›²çº¿")]
+        public AnimationCurve alphaCurve = AnimationCurve.EaseInOut(0, 1, 1, 0);
+        [Tooltip("æ˜¯å¦å¯ç”¨é—ªçƒæ•ˆæœ")]
+        public bool enableFlicker = false;
+        [Tooltip("é—ªçƒé¢‘ç‡")]
+        public float flickerFrequency = 10f;
+
+        [Header("æ’åºå’Œæè´¨")]
+        [Tooltip("æ®‹å½±çš„æ’åºé¡ºåºåç§»ï¼ˆç›¸å¯¹äºæºï¼‰")]
+        public int sortingOrderOffset = -1;
+        [Tooltip("æ˜¯å¦å¤åˆ¶æºæè´¨ï¼Œä¸€èˆ¬ä¸éœ€è¦")]
+        public bool copyMaterial = false;
+        [Tooltip("æ˜¯å¦å¯ç”¨æè´¨ç€è‰²å™¨æ•ˆæœ")]
+        public bool enableShaderEffects = false;
+        [Tooltip("ç€è‰²å™¨å±æ€§åç§°")]
+        public string shaderPropertyName = "_MainTex";
+
+        [Header("é€Ÿåº¦å“åº”")]
+        [Tooltip("æ˜¯å¦æ ¹æ®ç§»åŠ¨é€Ÿåº¦è°ƒæ•´æ®‹å½±å¯†åº¦")]
+        public bool enableSpeedResponse = true;
+        [Tooltip("é€Ÿåº¦é˜ˆå€¼ï¼Œè¶…è¿‡æ­¤é€Ÿåº¦æ—¶å¢åŠ æ®‹å½±å¯†åº¦")]
+        public float speedThreshold = 5f;
+        [Tooltip("é«˜é€Ÿæ—¶çš„æ®‹å½±é—´éš”å€æ•°")]
+        public float highSpeedIntervalMultiplier = 0.5f;
+
+        [Header("ç²’å­æ•ˆæœå¢å¼º")]
+        [Tooltip("æ˜¯å¦å¯ç”¨ç²’å­æ•ˆæœ")]
+        public bool enableParticleEffect = false;
+        [Tooltip("ç²’å­ç³»ç»Ÿé¢„åˆ¶ä½“")]
+        public GameObject particleEffectPrefab;
+        [Tooltip("ç²’å­æ•ˆæœæŒç»­æ—¶é—´")]
+        public float particleEffectDuration = 0.1f;
+
+        [Header("æºæ¸²æŸ“å™¨ï¼ˆä¼šè‡ªåŠ¨æ”¶é›†å­èŠ‚ç‚¹å…¨éƒ¨çš„ SpriteRendererï¼‰")]
         public List<SpriteRenderer> sourceSprites = new();
-        [Tooltip("Èç¹ûÄãÖ»ÏëÓÃµ¥Ò» SpriteRenderer£¬Ò²¿ÉÒÔÖ»Ö¸¶¨Õâ¸ö")]
+        [Tooltip("å¦‚æœåªéœ€è¦ç”¨åˆ°ä¸€ SpriteRendererï¼Œä¹Ÿå¯ä»¥åªæŒ‡å®šè¿™ä¸ª")]
         public SpriteRenderer spriteSource;
 
-        // ÔËĞĞÌ¬
+        // è¿è¡Œæ—¶çŠ¶æ€
         bool _emitting;
         float _emitTimer;
         Coroutine _emitCo;
+        Vector3 _lastPosition;
+        float _currentSpeed;
+        List<GameObject> _activeSnapshots = new List<GameObject>();
 
         void Reset()
         {
@@ -56,6 +121,22 @@ namespace FadedDreams.VFX
         void Awake()
         {
             AutoCollectIfNeeded();
+            _lastPosition = transform.position;
+        }
+
+        void Update()
+        {
+            if (enableSpeedResponse)
+            {
+                CalculateSpeed();
+            }
+        }
+
+        void CalculateSpeed()
+        {
+            Vector3 currentPosition = transform.position;
+            _currentSpeed = Vector3.Distance(currentPosition, _lastPosition) / Time.deltaTime;
+            _lastPosition = currentPosition;
         }
 
         void AutoCollectIfNeeded()
@@ -64,7 +145,7 @@ namespace FadedDreams.VFX
             {
                 sourceSprites = new List<SpriteRenderer>(GetComponentsInChildren<SpriteRenderer>(true));
             }
-            // Èç¹ûÓÃ»§Ö»ÏëÓÃµ¥Ò» SpriteRenderer£¬¾Í°ÑËü·Åµ½ÁĞ±íÀï£¨ÇÒÈ¥ÖØ£©
+            // å¦‚æœåªç”¨åˆ°ä¸€ SpriteRendererï¼Œå°±æŠŠå®ƒæ”¾åˆ°åˆ—è¡¨é‡Œï¼ˆå»é‡ï¼‰
             if (spriteSource)
             {
                 if (sourceSprites == null) sourceSprites = new List<SpriteRenderer>();
@@ -73,31 +154,41 @@ namespace FadedDreams.VFX
             }
         }
 
-        // ===== ĞÂ API =====
+        // ===== å…¬å…± API =====
 
-        /// <summary> Ò»´ÎĞÔÁ¬·¢Èô¸ÉÕÅ²ĞÓ°£¨³£ÓÃÓÚ Dash Ë²¼ä£© </summary>
+        /// <summary> ä¸€ç¬é—´ç”Ÿæˆä¸€å †æ®‹å½±ï¼Œé€‚åˆ Dash ç¬é—´ </summary>
         public void BurstOnce()
         {
             StopAllCoroutines();
             StartCoroutine(CoBurst());
         }
 
-        /// <summary> ³ÖĞøÍÏÎ²£¨¿ªÊ¼£© </summary>
+        /// <summary> å¼€å§‹æŒç»­æ‹–å°¾ </summary>
         public void BeginEmit()
         {
             _emitting = true;
             _emitTimer = 0f;
             if (_emitCo != null) StopCoroutine(_emitCo);
-            // Á¢¼´´òÒ»ÕÅ£¬ÊÖ¸Ğ¸üÀûÂä
+            // ç«‹å³ç”Ÿæˆä¸€å¼ ï¼Œç»™ç”¨æˆ·å³æ—¶åé¦ˆ
             CreateSnapshot();
             _emitCo = StartCoroutine(CoEmitLoop());
         }
 
-        /// <summary> ³ÖĞøÍÏÎ²£¨Í£Ö¹£© </summary>
+        /// <summary> åœæ­¢æŒç»­æ‹–å°¾ </summary>
         public void StopEmit()
         {
             _emitting = false;
             if (_emitCo != null) { StopCoroutine(_emitCo); _emitCo = null; }
+        }
+
+        /// <summary> æ¸…ç†æ‰€æœ‰æ´»è·ƒçš„æ®‹å½± </summary>
+        public void ClearAllSnapshots()
+        {
+            foreach (var snapshot in _activeSnapshots)
+            {
+                if (snapshot) Destroy(snapshot);
+            }
+            _activeSnapshots.Clear();
         }
 
         IEnumerator CoEmitLoop()
@@ -105,7 +196,14 @@ namespace FadedDreams.VFX
             while (_emitting)
             {
                 _emitTimer += Time.deltaTime;
-                if (_emitTimer >= snapshotInterval)
+                
+                float interval = snapshotInterval;
+                if (enableSpeedResponse && _currentSpeed > speedThreshold)
+                {
+                    interval *= highSpeedIntervalMultiplier;
+                }
+                
+                if (_emitTimer >= interval)
                 {
                     _emitTimer = 0f;
                     CreateSnapshot();
@@ -124,15 +222,15 @@ namespace FadedDreams.VFX
             }
         }
 
-        // ===== ¾É API£¨¼æÈİÓÃ£© =====
+        // ===== å…¼å®¹ APIï¼ˆå‘åå…¼å®¹ï¼‰ =====
 
-        /// <summary> µÈ¼ÛÓÚ BeginEmit()£¬ÓÃÀ´¼æÈİÀÏ½Å±¾µ÷ÓÃ </summary>
+        /// <summary> ç­‰åŒäº BeginEmit()ï¼Œä¸ºäº†å…¼å®¹æ—§è„šæœ¬ </summary>
         public void BeginTrail() => BeginEmit();
 
-        /// <summary> µÈ¼ÛÓÚ StopEmit()£¬ÓÃÀ´¼æÈİÀÏ½Å±¾µ÷ÓÃ </summary>
+        /// <summary> ç­‰åŒäº StopEmit()ï¼Œä¸ºäº†å…¼å®¹æ—§è„šæœ¬ </summary>
         public void EndTrail() => StopEmit();
 
-        // ===== ÄÚ²¿£ºÉú³É/µ­³ö =====
+        // ===== å†…éƒ¨æ–¹æ³•/åç¨‹ =====
 
         void CreateSnapshot()
         {
@@ -143,6 +241,13 @@ namespace FadedDreams.VFX
             root.transform.position = transform.position;
             root.transform.rotation = transform.rotation;
             root.transform.localScale = transform.lossyScale;
+
+            // æ·»åŠ ç²’å­æ•ˆæœ
+            if (enableParticleEffect && particleEffectPrefab)
+            {
+                var particle = Instantiate(particleEffectPrefab, root.transform);
+                Destroy(particle, particleEffectDuration);
+            }
 
             foreach (var src in sourceSprites)
             {
@@ -161,29 +266,98 @@ namespace FadedDreams.VFX
                 s.sortingOrder = src.sortingOrder + sortingOrderOffset;
                 if (copyMaterial) s.sharedMaterial = src.sharedMaterial;
 
+                // è®¾ç½®åˆå§‹é¢œè‰²
                 var baseColor = useTint ? tint : src.color;
                 s.color = new Color(baseColor.r, baseColor.g, baseColor.b, startAlpha);
+
+                // è®¾ç½®åˆå§‹ç¼©æ”¾
+                if (enableScaleAnimation)
+                {
+                    go.transform.localScale *= startScaleMultiplier;
+                }
             }
 
-            StartCoroutine(FadeAndKill(root));
+            _activeSnapshots.Add(root);
+            StartCoroutine(AnimateAndKill(root));
         }
 
-        IEnumerator FadeAndKill(GameObject root)
+        IEnumerator AnimateAndKill(GameObject root)
         {
             float t = 0f;
             var renderers = root.GetComponentsInChildren<SpriteRenderer>();
+            var initialColors = new Color[renderers.Length];
+            var initialScales = new Vector3[renderers.Length];
+            
+            // è®°å½•åˆå§‹çŠ¶æ€
+            for (int i = 0; i < renderers.Length; i++)
+            {
+                if (renderers[i])
+                {
+                    initialColors[i] = renderers[i].color;
+                    initialScales[i] = renderers[i].transform.localScale;
+                }
+            }
+
             while (t < snapshotLife)
             {
                 t += Time.deltaTime;
                 float u = Mathf.Clamp01(t / snapshotLife);
-                float a = Mathf.Lerp(startAlpha, endAlpha, u);
-                foreach (var r in renderers)
+                
+                for (int i = 0; i < renderers.Length; i++)
                 {
-                    if (r) r.color = new Color(r.color.r, r.color.g, r.color.b, a);
+                    var r = renderers[i];
+                    if (!r) continue;
+
+                    // é€æ˜åº¦åŠ¨ç”»
+                    float alpha = alphaCurve.Evaluate(u);
+                    if (enableFlicker)
+                    {
+                        alpha *= (Mathf.Sin(t * flickerFrequency * Mathf.PI * 2) + 1f) * 0.5f;
+                    }
+                    alpha = Mathf.Clamp01(alpha);
+
+                    // é¢œè‰²æ¸å˜
+                    Color currentColor;
+                    if (enableColorGradient)
+                    {
+                        float colorLerp = colorGradientCurve.Evaluate(u);
+                        currentColor = Color.Lerp(initialColors[i], endColor, colorLerp);
+                    }
+                    else
+                    {
+                        currentColor = initialColors[i];
+                    }
+
+                    r.color = new Color(currentColor.r, currentColor.g, currentColor.b, alpha);
+
+                    // ç¼©æ”¾åŠ¨ç”»
+                    if (enableScaleAnimation)
+                    {
+                        float scaleMultiplier = scaleCurve.Evaluate(u);
+                        r.transform.localScale = initialScales[i] * scaleMultiplier;
+                    }
+
+                    // æ—‹è½¬åŠ¨ç”»
+                    if (enableRotation)
+                    {
+                        float rotationAmount = rotationSpeed * t;
+                        if (randomizeRotation && i == 0) // åªå¯¹ç¬¬ä¸€ä¸ªåº”ç”¨éšæœºæ—‹è½¬
+                        {
+                            rotationAmount *= Random.Range(-1f, 1f);
+                        }
+                        r.transform.Rotate(0, 0, rotationAmount * Time.deltaTime);
+                    }
                 }
                 yield return null;
             }
+            
+            _activeSnapshots.Remove(root);
             Destroy(root);
+        }
+
+        void OnDestroy()
+        {
+            ClearAllSnapshots();
         }
     }
 }
