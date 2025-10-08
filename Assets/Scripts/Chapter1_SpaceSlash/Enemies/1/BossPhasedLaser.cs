@@ -137,6 +137,9 @@ namespace FadedDreams.Boss
         public bool camHardKeepPlayerInView = true;                  // 开关：玩家永不出框（左右）
         [Range(0f, 0.45f)] public float camHorizontalMargin01 = 0.18f; // 屏幕左右安全边（百分比）
         [Range(0.5f, 1.5f)] public float camGuardPullStrength = 1.0f;  // 拉回强度（1=镜像超出量）
+        
+        [Header("Debug")]
+        public bool debugCameraFollow = false;                       // 调试摄像头跟随
 
         // 运行态
         private int _phase = 1;
@@ -274,21 +277,26 @@ namespace FadedDreams.Boss
                     Vector3 vp = cam.WorldToViewportPoint(p);
                     float m = camHorizontalMargin01;
 
-                    if (vp.z > 0f) // 仅在相机前方处理
+                    // 2D项目中的深度检查：使用更宽松的深度范围
+                    if (vp.z > -10f && vp.z < 10f) // 扩大深度范围，适应透视摄像机
                     {
-                        // 在“玩家的深度与垂直位置”上求左右安全边界的世界坐标
-                        Vector3 worldL = cam.ViewportToWorldPoint(new Vector3(m, vp.y, vp.z));
-                        Vector3 worldR = cam.ViewportToWorldPoint(new Vector3(1f - m, vp.y, vp.z));
+                        // 使用固定的深度值来计算边界，避免深度变化导致的计算错误
+                        float fixedDepth = Mathf.Abs(cam.transform.position.z - p.z);
+                        if (fixedDepth < 0.1f) fixedDepth = 10f; // 避免除零
+                        
+                        // 在固定深度上计算左右边界
+                        Vector3 worldL = cam.ViewportToWorldPoint(new Vector3(m, vp.y, fixedDepth));
+                        Vector3 worldR = cam.ViewportToWorldPoint(new Vector3(1f - m, vp.y, fixedDepth));
 
                         if (vp.x < m)
                         {
-                            // 玩家越过左界：沿着“玩家→左界”的反方向镜像一点锚点
+                            // 玩家越过左界：沿着"玩家→左界"的反方向镜像一点锚点
                             Vector3 delta = worldL - p;                 // 指向左界
                             targetAnchor = p - delta * camGuardPullStrength;
                         }
                         else if (vp.x > 1f - m)
                         {
-                            // 玩家越过右界：沿着“玩家→右界”的反方向镜像一点锚点
+                            // 玩家越过右界：沿着"玩家→右界"的反方向镜像一点锚点
                             Vector3 delta = worldR - p;                 // 指向右界
                             targetAnchor = p - delta * camGuardPullStrength;
                         }
@@ -297,6 +305,17 @@ namespace FadedDreams.Boss
 
                 // 平滑更新锚点
                 _camAnchor.position = Vector3.Lerp(_camAnchor.position, targetAnchor, Time.deltaTime * camAnchorLerp);
+                
+                // 调试信息
+                if (debugCameraFollow)
+                {
+                    Vector3 vp = cam.WorldToViewportPoint(p);
+                    float fixedDepth = Mathf.Abs(cam.transform.position.z - p.z);
+                    if (fixedDepth < 0.1f) fixedDepth = 10f;
+                    
+                    Debug.Log($"[BossCamera] Player: {p}, Viewport: {vp}, TargetAnchor: {targetAnchor}, " +
+                             $"CamPos: {cam.transform.position}, FixedDepth: {fixedDepth:F2}", this);
+                }
 
                 // 软偏移回归 0，避免额外水平偏置
                 _camFollow.softZoneCenterOffset =
@@ -778,7 +797,11 @@ namespace FadedDreams.Boss
                 _targetCamPos = _origCamPos;
 
                 if (camUseDolly)
-                    _targetCamPos = _origCamPos - cam.transform.forward * camBackDistance;
+                {
+                    // 2D项目中的正确拉远方向：向Z轴负方向拉远
+                    Vector3 pullBackDir = new Vector3(0, 0, -1);
+                    _targetCamPos = _origCamPos + pullBackDir * camBackDistance;
+                }
                 if (camUseFov)
                     cam.fieldOfView = Mathf.Lerp(_origFov, _origFov * camFovMul, 0.5f);
             }
