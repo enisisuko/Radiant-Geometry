@@ -122,6 +122,10 @@ namespace FadedDreams.UI
                 canvas.sortingOrder = 0;
             }
             
+            // 确保Canvas正确设置
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            canvas.pixelPerfect = false;
+            
             // 设置Canvas Scaler
             CanvasScaler scaler = canvas.GetComponent<CanvasScaler>();
             if (scaler == null)
@@ -167,6 +171,7 @@ namespace FadedDreams.UI
             containerRect.anchorMax = Vector2.one;
             containerRect.offsetMin = Vector2.zero;
             containerRect.offsetMax = Vector2.zero;
+            containerRect.pivot = new Vector2(0.5f, 0.5f);
             
             // 创建5个色块
             for (int i = 0; i < 5; i++)
@@ -183,6 +188,11 @@ namespace FadedDreams.UI
             // 添加RectTransform
             RectTransform rectTransform = blockGO.AddComponent<RectTransform>();
             rectTransform.sizeDelta = Vector2.one * blockSize;
+            
+            // 设置锚点为屏幕中心
+            rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
+            rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+            rectTransform.pivot = new Vector2(0.5f, 0.5f);
             
             // 设置位置
             Vector2 position = GetBlockPosition(index);
