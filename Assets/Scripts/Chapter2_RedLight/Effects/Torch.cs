@@ -25,7 +25,7 @@ namespace FadedDreams.World.Light
         [Tooltip("火把自身的红光槽（=热量）——与本体同节点的 RedLightController")]
         public RedLightController selfRed;
         [Tooltip("火把点亮后每秒自然冷却（降到0会熄灭）")]
-        public float torchCoolPerSec = 10f;
+        public float torchCoolPerSec = 2f;
 
         // ========= 发光/点燃阈值与爆燃参数 =========
         [Header("Lighting & Ignite Rules")]
