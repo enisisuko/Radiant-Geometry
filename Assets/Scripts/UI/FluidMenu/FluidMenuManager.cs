@@ -430,11 +430,31 @@ namespace FadedDreams.UI
         
         void InitializeComponents()
         {
-            // 自动获取组件引用
-            if (audioSource == null) audioSource = GetComponent<AudioSource>();
-            if (audioSource == null) audioSource = gameObject.AddComponent<AudioSource>();
+            // 自动查找Canvas
+            if (canvas == null)
+            {
+                canvas = FindObjectOfType<Canvas>();
+            }
             
-            if (menuCamera == null) menuCamera = Camera.main;
+            // 自动查找相机
+            if (menuCamera == null)
+            {
+                menuCamera = Camera.main;
+                if (menuCamera == null)
+                {
+                    menuCamera = FindObjectOfType<Camera>();
+                }
+            }
+            
+            // 自动查找音频源
+            if (audioSource == null)
+            {
+                audioSource = GetComponent<AudioSource>();
+                if (audioSource == null)
+                {
+                    audioSource = gameObject.AddComponent<AudioSource>();
+                }
+            }
             
             // 初始化动画状态
             for (int i = 0; i < 5; i++)

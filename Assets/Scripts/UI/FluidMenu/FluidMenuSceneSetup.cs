@@ -74,7 +74,14 @@ namespace FadedDreams.UI
             
             if (destroyAfterSetup)
             {
-                Destroy(gameObject);
+                if (Application.isPlaying)
+                {
+                    Destroy(gameObject);
+                }
+                else
+                {
+                    DestroyImmediate(gameObject);
+                }
             }
         }
         
