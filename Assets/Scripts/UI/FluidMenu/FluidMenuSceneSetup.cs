@@ -197,7 +197,11 @@ namespace FadedDreams.UI
             
             // 设置材质（使用我们的流体Shader）
             Material fluidMaterial = CreateFluidMaterial(index);
-            image.material = fluidMaterial;
+            if (fluidMaterial != null)
+            {
+                image.material = fluidMaterial;
+                fluidBlock.material = fluidMaterial;
+            }
         }
         
         Vector2 GetBlockPosition(int index)

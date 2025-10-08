@@ -140,9 +140,12 @@ Shader "UI/FluidColorBlock"
                 float pressureEffect = 1.0 - smoothstep(0, _PressureRadius, pressureDistance);
                 pressureEffect *= _PressureStrength;
                 
-                // Apply pressure-based vertex displacement
+            // Apply pressure-based vertex displacement
+            if (pressureDistance > 0)
+            {
                 float2 pressureOffset = normalize(pressureDir) * pressureEffect * _DistortionStrength;
                 OUT.vertex.xy += pressureOffset;
+            }
                 
                 // Fluid wave distortion
                 float wave = sin(_Time.y * _WaveSpeed + pressureDistance * _WaveFrequency) * pressureEffect;

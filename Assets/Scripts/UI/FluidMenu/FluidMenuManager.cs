@@ -99,84 +99,6 @@ namespace FadedDreams.UI
             UpdateAnimations();
         }
         
-        void InitializeComponents()
-        {
-            // 自动获取组件引用
-            if (audioSource == null) audioSource = GetComponent<AudioSource>();
-            if (audioSource == null) audioSource = gameObject.AddComponent<AudioSource>();
-            
-            if (menuCamera == null) menuCamera = Camera.main;
-            
-            // 初始化动画状态
-            for (int i = 0; i < 5; i++)
-            {
-                targetScales[i] = (i == 1) ? centerBlockSize : cornerBlockSize; // 中心块稍大
-                currentScales[i] = targetScales[i];
-                targetPositions[i] = GetBlockPosition(i);
-                currentPositions[i] = targetPositions[i];
-            }
-        }
-        
-        IEnumerator InitializeMenu()
-        {
-            // 等待一帧确保所有组件都已初始化
-            yield return null;
-            
-            // 设置色块
-            SetupColorBlocks();
-            
-            // 初始化布局
-            SetupLayout();
-            
-            // 淡入效果
-            yield return StartCoroutine(FadeInBlocks());
-            
-            // 播放背景音乐
-            PlayBackgroundMusic();
-            
-            isInitialized = true;
-        }
-        
-        void SetupColorBlocks()
-        {
-            for (int i = 0; i < colorBlocks.Length && i < menuItems.Length; i++)
-            {
-                if (colorBlocks[i] != null)
-                {
-                    colorBlocks[i].Initialize(menuItems[i], i);
-                }
-            }
-        }
-        
-        void SetupLayout()
-        {
-            for (int i = 0; i < blockTransforms.Length; i++)
-            {
-                if (blockTransforms[i] != null)
-                {
-                    Vector3 position = GetBlockPosition(i);
-                    blockTransforms[i].position = position;
-                    targetPositions[i] = position;
-                    currentPositions[i] = position;
-                }
-            }
-        }
-        
-        Vector3 GetBlockPosition(int index)
-        {
-            float halfSpacing = blockSpacing * 0.5f;
-            
-            switch (index)
-            {
-                case 0: return new Vector3(-halfSpacing, halfSpacing, 0); // 左上：新游戏
-                case 1: return new Vector3(0, 0, 0); // 中心：继续游戏
-                case 2: return new Vector3(halfSpacing, halfSpacing, 0); // 右上：双人模式
-                case 3: return new Vector3(halfSpacing, -halfSpacing, 0); // 右下：退出游戏
-                case 4: return new Vector3(-halfSpacing, -halfSpacing, 0); // 左下：支持我
-                default: return Vector3.zero;
-            }
-        }
-        
         void HandleInput()
         {
             HandleMouseInput();
@@ -387,51 +309,23 @@ namespace FadedDreams.UI
         
         public void NewGame()
         {
-            if (SaveSystem.Instance != null)
-            {
-                // 清空存档
-                SaveSystem.Instance.ResetAll();
-                
-                // 设置新游戏起点
-                SaveSystem.Instance.SaveLastScene(newGameScene);
-                SaveSystem.Instance.SaveCheckpoint(firstCheckpointId);
-            }
-            else
-            {
-                Debug.LogWarning("SaveSystem.Instance is null! Proceeding without save system.");
-            }
+            // 清空存档
+            SaveSystem.Instance.ResetAll();
+            
+            // 设置新游戏起点
+            SaveSystem.Instance.SaveLastScene(newGameScene);
+            SaveSystem.Instance.SaveCheckpoint(firstCheckpointId);
             
             // 加载新游戏场景
-            if (SceneLoader.Instance != null)
-            {
-                SceneLoader.LoadScene(newGameScene, firstCheckpointId);
-            }
-            else
-            {
-                Debug.LogError("SceneLoader.Instance is null! Cannot load scene.");
-            }
+            SceneLoader.LoadScene(newGameScene, firstCheckpointId);
         }
         
         public void ContinueGame()
         {
-            if (SaveSystem.Instance == null)
-            {
-                Debug.LogError("SaveSystem.Instance is null! Cannot continue game.");
-                return;
-            }
-            
             var scene = SaveSystem.Instance.LoadLastScene();
             if (string.IsNullOrEmpty(scene)) scene = newGameScene;
             var checkpoint = SaveSystem.Instance.LoadCheckpoint();
-            
-            if (SceneLoader.Instance != null)
-            {
-                SceneLoader.LoadScene(scene, checkpoint);
-            }
-            else
-            {
-                Debug.LogError("SceneLoader.Instance is null! Cannot load scene.");
-            }
+            SceneLoader.LoadScene(scene, checkpoint);
         }
         
         public void CoopMode()
@@ -479,6 +373,84 @@ namespace FadedDreams.UI
                 {
                     colorBlocks[i].SetHovered(false);
                 }
+            }
+        }
+        
+        void InitializeComponents()
+        {
+            // 自动获取组件引用
+            if (audioSource == null) audioSource = GetComponent<AudioSource>();
+            if (audioSource == null) audioSource = gameObject.AddComponent<AudioSource>();
+            
+            if (menuCamera == null) menuCamera = Camera.main;
+            
+            // 初始化动画状态
+            for (int i = 0; i < 5; i++)
+            {
+                targetScales[i] = (i == 1) ? centerBlockSize : cornerBlockSize; // 中心块稍大
+                currentScales[i] = targetScales[i];
+                targetPositions[i] = GetBlockPosition(i);
+                currentPositions[i] = targetPositions[i];
+            }
+        }
+        
+        IEnumerator InitializeMenu()
+        {
+            // 等待一帧确保所有组件都已初始化
+            yield return null;
+            
+            // 设置色块
+            SetupColorBlocks();
+            
+            // 初始化布局
+            SetupLayout();
+            
+            // 淡入效果
+            yield return StartCoroutine(FadeInBlocks());
+            
+            // 播放背景音乐
+            PlayBackgroundMusic();
+            
+            isInitialized = true;
+        }
+        
+        void SetupColorBlocks()
+        {
+            for (int i = 0; i < colorBlocks.Length && i < menuItems.Length; i++)
+            {
+                if (colorBlocks[i] != null)
+                {
+                    colorBlocks[i].Initialize(menuItems[i], i);
+                }
+            }
+        }
+        
+        void SetupLayout()
+        {
+            for (int i = 0; i < blockTransforms.Length; i++)
+            {
+                if (blockTransforms[i] != null)
+                {
+                    Vector3 position = GetBlockPosition(i);
+                    blockTransforms[i].position = position;
+                    targetPositions[i] = position;
+                    currentPositions[i] = position;
+                }
+            }
+        }
+        
+        Vector3 GetBlockPosition(int index)
+        {
+            float halfSpacing = blockSpacing * 0.5f;
+            
+            switch (index)
+            {
+                case 0: return new Vector3(-halfSpacing, halfSpacing, 0); // 左上：新游戏
+                case 1: return new Vector3(0, 0, 0); // 中心：继续游戏
+                case 2: return new Vector3(halfSpacing, halfSpacing, 0); // 右上：双人模式
+                case 3: return new Vector3(halfSpacing, -halfSpacing, 0); // 右下：退出游戏
+                case 4: return new Vector3(-halfSpacing, -halfSpacing, 0); // 左下：支持我
+                default: return Vector3.zero;
             }
         }
         

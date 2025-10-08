@@ -143,7 +143,7 @@ namespace FadedDreams.UI
                 material.SetColor(EmissionColorId, config.primaryColor);
                 material.SetFloat(EmissionIntensityId, currentIntensity);
                 material.SetVector(PressureCenterId, pressureCenter);
-                material.SetFloat(PressureRadiusId, pressure * pressureRadius);
+                material.SetFloat(PressureRadiusId, scale * pressureRadius);
                 material.SetFloat(PressureStrengthId, pressureStrength);
                 material.SetFloat(DistortionStrengthId, distortionStrength);
                 material.SetFloat(WaveSpeedId, 2.0f);
@@ -207,9 +207,9 @@ namespace FadedDreams.UI
             while (elapsedTime < duration)
             {
                 float progress = elapsedTime / duration;
-                float targetAlpha = Mathf.Lerp(startAlpha, 0f, progress);
+                float currentAlpha = Mathf.Lerp(startAlpha, 0f, progress);
                 
-                SetAlpha(targetAlpha);
+                SetAlpha(currentAlpha);
                 
                 elapsedTime += Time.deltaTime;
                 yield return null;

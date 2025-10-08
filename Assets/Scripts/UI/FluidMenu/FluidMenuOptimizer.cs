@@ -175,12 +175,11 @@ namespace FadedDreams.UI
             // 根据LOD级别调整效果强度
             float lodMultiplier = 1f - (lodLevel * 0.3f);
             
-            // 调整变形强度 - 通过公共方法
-            // block.distortionStrength *= lodMultiplier; // 这个字段是私有的
+            // 调整变形强度
+            block.distortionStrength *= lodMultiplier;
             
             // 调整波纹频率
             // 这里可以通过MaterialPropertyBlock调整Shader参数
-            // 或者添加公共方法来调整这些参数
         }
         
         void DisableNonEssentialEffects()
@@ -189,13 +188,9 @@ namespace FadedDreams.UI
             {
                 if (block != null)
                 {
-                    // 禁用呼吸动画 - 这些字段是私有的，需要通过公共方法调整
-                    // block.breathScale *= 0.5f;
-                    // block.breathSpeed *= 0.5f;
-                    
-                    // 可以通过添加公共方法来调整这些参数
-                    // block.SetBreathScale(block.GetBreathScale() * 0.5f);
-                    // block.SetBreathSpeed(block.GetBreathSpeed() * 0.5f);
+                    // 禁用呼吸动画
+                    block.breathScale *= 0.5f;
+                    block.breathSpeed *= 0.5f;
                 }
             }
         }
@@ -206,13 +201,9 @@ namespace FadedDreams.UI
             {
                 if (block != null)
                 {
-                    // 恢复呼吸动画 - 这些字段是私有的，需要通过公共方法调整
-                    // block.breathScale *= 2f;
-                    // block.breathSpeed *= 2f;
-                    
-                    // 可以通过添加公共方法来调整这些参数
-                    // block.SetBreathScale(block.GetBreathScale() * 2f);
-                    // block.SetBreathSpeed(block.GetBreathSpeed() * 2f);
+                    // 恢复呼吸动画
+                    block.breathScale *= 2f;
+                    block.breathSpeed *= 2f;
                 }
             }
         }
