@@ -11,7 +11,7 @@ namespace FadedDreams.Enemies
     /// 镜卫 - 反射散射光、窗口式强吸收，玩家要么等窗强灼、要么用火把侧打反射进行间接击破
     /// </summary>
     [RequireComponent(typeof(Collider2D))]
-    [RequireComponent(typeof(EnemyHealth))]
+    [RequireComponent(typeof(RedLightController))]
     public class MirrorSentinelAI : MonoBehaviour, IDamageable
     {
         [Header("Refs")]
@@ -94,14 +94,15 @@ namespace FadedDreams.Enemies
         private GameObject _directionStripe;
 
         // 组件引用
-        private EnemyHealth _health;
+        private RedLightController _redLightController;
         private Collider2D _collider;
 
         private void Awake()
         {
-            _health = GetComponent<EnemyHealth>();
+            _redLightController = GetComponent<RedLightController>();
             _collider = GetComponent<Collider2D>();
-            _health.maxHp = maxHp;
+            _redLightController.maxRed = maxHp;
+            _redLightController.startRed = maxHp;
             _baseRotation = transform.eulerAngles.z;
         }
 
@@ -359,7 +360,7 @@ namespace FadedDreams.Enemies
             CreateTrapShards();
 
             // 死亡
-            _health.TakeDamage(_health.maxHp);
+            _redLightController.Set(0f);
         }
 
         private void CreateTrapShards()
@@ -391,10 +392,11 @@ namespace FadedDreams.Enemies
 
         public void TakeDamage(float amount)
         {
-            _health.TakeDamage(amount);
+            if (_redLightController.IsEmpty) return;
+            _redLightController.TryConsume(amount);
         }
 
-        public bool IsDead => _health.IsDead;
+        public bool IsDead => _redLightController.IsEmpty;
 
         private void OnDrawGizmosSelected()
         {

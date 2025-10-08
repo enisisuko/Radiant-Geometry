@@ -10,7 +10,7 @@ namespace FadedDreams.Enemies
     /// 棱镜群体 - 将玩家的光分束/分色，既能帮玩家"绕射"触达盲区，也会"放大误差"
     /// </summary>
     [RequireComponent(typeof(Collider2D))]
-    [RequireComponent(typeof(EnemyHealth))]
+    [RequireComponent(typeof(RedLightController))]
     public class PrismSwarmAI : MonoBehaviour, IDamageable
     {
         [Header("Refs")]
@@ -65,6 +65,9 @@ namespace FadedDreams.Enemies
         [Header("Combat")]
         public float maxHp = 60f;
         public float currentCharge = 0f;
+        
+        // 红光控制器（用于生命值系统）
+        private RedLightController redLightController;
 
         // 内部状态
         private bool _isOverloaded = false;
@@ -74,14 +77,15 @@ namespace FadedDreams.Enemies
         private int _lastBeamCount = 0;
 
         // 组件引用
-        private EnemyHealth _health;
+        private RedLightController _redLightController;
         private Collider2D _collider;
 
         private void Awake()
         {
-            _health = GetComponent<EnemyHealth>();
+            _redLightController = GetComponent<RedLightController>();
             _collider = GetComponent<Collider2D>();
-            _health.maxHp = maxHp;
+            _redLightController.maxRed = maxHp;
+            _redLightController.startRed = maxHp;
         }
 
         private void Start()
@@ -223,7 +227,7 @@ namespace FadedDreams.Enemies
             CreateTempFirePoints();
 
             // 死亡
-            _health.TakeDamage(_health.maxHp);
+            _redLightController.Set(0f);
         }
 
         private void CreateTempFirePoints()
@@ -253,10 +257,11 @@ namespace FadedDreams.Enemies
 
         public void TakeDamage(float amount)
         {
-            _health.TakeDamage(amount);
+            if (_redLightController.IsEmpty) return;
+            _redLightController.TryConsume(amount);
         }
 
-        public bool IsDead => _health.IsDead;
+        public bool IsDead => _redLightController.IsEmpty;
 
         private void OnDrawGizmosSelected()
         {

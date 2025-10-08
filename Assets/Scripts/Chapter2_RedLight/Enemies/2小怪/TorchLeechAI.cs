@@ -11,7 +11,7 @@ namespace FadedDreams.Enemies
     /// 火吸蚀虫 - 会抢火：靠近火把、吸取强度，把火焰"拖移"到身侧当移动电源
     /// </summary>
     [RequireComponent(typeof(Collider2D))]
-    [RequireComponent(typeof(EnemyHealth))]
+    [RequireComponent(typeof(RedLightController))]
     public class TorchLeechAI : MonoBehaviour, IDamageable
     {
         [Header("Refs")]
@@ -82,14 +82,15 @@ namespace FadedDreams.Enemies
         private float _interruptAccumulator = 0f;
 
         // 组件引用
-        private EnemyHealth _health;
+        private RedLightController _redLightController;
         private Collider2D _collider;
 
         private void Awake()
         {
-            _health = GetComponent<EnemyHealth>();
+            _redLightController = GetComponent<RedLightController>();
             _collider = GetComponent<Collider2D>();
-            _health.maxHp = maxHp;
+            _redLightController.maxRed = maxHp;
+            _redLightController.startRed = maxHp;
         }
 
         private void Start()
@@ -371,7 +372,7 @@ namespace FadedDreams.Enemies
             CreateFirePit();
             
             // 死亡
-            _health.TakeDamage(_health.maxHp);
+            _redLightController.Set(0f);
         }
 
         private void CreateFirePit()
@@ -396,10 +397,11 @@ namespace FadedDreams.Enemies
 
         public void TakeDamage(float amount)
         {
-            _health.TakeDamage(amount);
+            if (_redLightController.IsEmpty) return;
+            _redLightController.TryConsume(amount);
         }
 
-        public bool IsDead => _health.IsDead;
+        public bool IsDead => _redLightController.IsEmpty;
 
         private void OnDrawGizmosSelected()
         {
