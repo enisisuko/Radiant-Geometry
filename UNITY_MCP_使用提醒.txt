@@ -1,0 +1,19 @@
+🚨 Unity MCP 使用提醒 🚨
+
+每次使用Unity MCP工具前，请务必检查：
+
+1. 控制台工具必须指定action参数：
+   mcp_unityMCP_read_console(action="get")
+
+2. 资源工具需要await：
+   await list_resources(...)
+   await read_resource(...)
+
+3. 坐标系统从1开始：
+   {"startLine": 1, "startCol": 1}
+
+4. 检查返回的success字段
+
+详细文档请参考：
+- Unity_MCP_使用指南.md
+- Unity_MCP_快速参考.md

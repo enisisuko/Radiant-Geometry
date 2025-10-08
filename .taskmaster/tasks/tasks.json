@@ -1,100 +1,228 @@
 {
-  "tasks": [
-    {
-      "id": 1,
-      "title": "完善角色控制系统",
-      "description": "优化现有的角色控制脚本，确保移动、跳跃和视角控制流畅自然",
-      "status": "pending",
-      "priority": "high",
-      "tags": ["backlog"],
-      "dependencies": [],
-      "estimatedHours": 8,
-      "createdAt": "2025-10-08T11:00:00Z"
-    },
-    {
-      "id": 2,
-      "title": "优化URP渲染性能",
-      "description": "调整URP设置，优化光照、阴影和后处理效果，确保60FPS稳定运行",
-      "status": "pending",
-      "priority": "high",
-      "tags": ["backlog"],
-      "dependencies": [],
-      "estimatedHours": 12,
-      "createdAt": "2025-10-08T11:00:00Z"
-    },
-    {
-      "id": 3,
-      "title": "实现游戏核心机制",
-      "description": "开发物品收集、关卡进度和存档系统等核心游戏机制",
-      "status": "pending",
-      "priority": "medium",
-      "tags": ["backlog"],
-      "dependencies": [1],
-      "estimatedHours": 16,
-      "createdAt": "2025-10-08T11:00:00Z"
-    },
-    {
-      "id": 4,
-      "title": "集成音频系统",
-      "description": "实现背景音乐播放、音效系统和音频管理器",
-      "status": "pending",
-      "priority": "medium",
-      "tags": ["backlog"],
-      "dependencies": [],
-      "estimatedHours": 6,
-      "createdAt": "2025-10-08T11:00:00Z"
-    },
-    {
-      "id": 5,
-      "title": "场景设计和环境搭建",
-      "description": "创建游戏场景，设计关卡布局和环境装饰",
-      "status": "pending",
-      "priority": "medium",
-      "tags": ["backlog"],
-      "dependencies": [2],
-      "estimatedHours": 20,
-      "createdAt": "2025-10-08T11:00:00Z"
-    },
-    {
-      "id": 6,
-      "title": "UI系统优化",
-      "description": "完善游戏UI界面，包括主菜单、设置界面和游戏内HUD",
-      "status": "pending",
-      "priority": "low",
-      "tags": ["backlog"],
-      "dependencies": [3],
-      "estimatedHours": 10,
-      "createdAt": "2025-10-08T11:00:00Z"
-    },
-    {
-      "id": 7,
-      "title": "性能测试和优化",
-      "description": "进行全面的性能测试，优化内存使用和帧率稳定性",
-      "status": "pending",
-      "priority": "high",
-      "tags": ["backlog"],
-      "dependencies": [2, 5],
-      "estimatedHours": 8,
-      "createdAt": "2025-10-08T11:00:00Z"
-    },
-    {
-      "id": 8,
-      "title": "游戏测试和Bug修复",
-      "description": "进行游戏测试，修复发现的bug和问题",
-      "status": "pending",
-      "priority": "high",
-      "tags": ["backlog"],
-      "dependencies": [7],
-      "estimatedHours": 12,
-      "createdAt": "2025-10-08T11:00:00Z"
+  "master": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "完善角色控制系统",
+        "description": "优化现有的角色控制脚本，确保移动、跳跃和视角控制流畅自然",
+        "status": "pending",
+        "priority": "high",
+        "tags": [
+          "backlog"
+        ],
+        "dependencies": [],
+        "estimatedHours": 8,
+        "createdAt": "2025-10-08T11:00:00Z"
+      },
+      {
+        "id": 2,
+        "title": "优化URP渲染性能",
+        "description": "调整URP设置，优化光照、阴影和后处理效果，确保60FPS稳定运行",
+        "status": "pending",
+        "priority": "high",
+        "tags": [
+          "backlog"
+        ],
+        "dependencies": [],
+        "estimatedHours": 12,
+        "createdAt": "2025-10-08T11:00:00Z"
+      },
+      {
+        "id": 3,
+        "title": "实现游戏核心机制",
+        "description": "开发物品收集、关卡进度和存档系统等核心游戏机制",
+        "status": "pending",
+        "priority": "medium",
+        "tags": [
+          "backlog"
+        ],
+        "dependencies": [
+          1
+        ],
+        "estimatedHours": 16,
+        "createdAt": "2025-10-08T11:00:00Z"
+      },
+      {
+        "id": 4,
+        "title": "集成音频系统",
+        "description": "实现背景音乐播放、音效系统和音频管理器",
+        "status": "pending",
+        "priority": "medium",
+        "tags": [
+          "backlog"
+        ],
+        "dependencies": [],
+        "estimatedHours": 6,
+        "createdAt": "2025-10-08T11:00:00Z"
+      },
+      {
+        "id": 5,
+        "title": "场景设计和环境搭建",
+        "description": "创建游戏场景，设计关卡布局和环境装饰",
+        "status": "pending",
+        "priority": "medium",
+        "tags": [
+          "backlog"
+        ],
+        "dependencies": [
+          2
+        ],
+        "estimatedHours": 20,
+        "createdAt": "2025-10-08T11:00:00Z"
+      },
+      {
+        "id": 6,
+        "title": "UI系统优化",
+        "description": "完善游戏UI界面，包括主菜单、设置界面和游戏内HUD",
+        "status": "pending",
+        "priority": "low",
+        "tags": [
+          "backlog"
+        ],
+        "dependencies": [
+          3
+        ],
+        "estimatedHours": 10,
+        "createdAt": "2025-10-08T11:00:00Z"
+      },
+      {
+        "id": 7,
+        "title": "性能测试和优化",
+        "description": "进行全面的性能测试，优化内存使用和帧率稳定性",
+        "status": "pending",
+        "priority": "high",
+        "tags": [
+          "backlog"
+        ],
+        "dependencies": [
+          2,
+          5
+        ],
+        "estimatedHours": 8,
+        "createdAt": "2025-10-08T11:00:00Z"
+      },
+      {
+        "id": 8,
+        "title": "游戏测试和Bug修复",
+        "description": "进行游戏测试，修复发现的bug和问题",
+        "status": "pending",
+        "priority": "high",
+        "tags": [
+          "backlog"
+        ],
+        "dependencies": [
+          7
+        ],
+        "estimatedHours": 12,
+        "createdAt": "2025-10-08T11:00:00Z"
+      },
+      {
+        "id": 9,
+        "title": "拆分 BossC3_AllInOne.cs (4462行) 为 6-7个模块化文件",
+        "description": "将最大的BOSS文件BossC3_AllInOne.cs拆分为多个职责清晰的模块：\n- BossC3_Core.cs (核心控制器，约400行)\n- BossC3_PhaseManager.cs (阶段管理，约300行)  \n- BossC3_OrbSystem.cs (环绕体系统，约600行)\n- BossC3_AttackSystem.cs (攻击系统，约500行)\n- BossC3_MatrixFormation.cs (大阵系统，约800行)\n- BossC3_CombatSystem.cs (战斗/伤害系统，约400行)\n- BossC3_HealthRingUI.cs (血条环UI，约300行)\n\n保持原有功能完全不变，使用Facade模式保持向后兼容。",
+        "details": "",
+        "testStrategy": "",
+        "status": "done",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": 10,
+        "title": "拆分 BossChapter2Controller.cs (1564行) 为 5-6个模块化文件",
+        "description": "将第二章BOSS控制器拆分为多个模块：\n- BossC2_Core.cs (核心控制器，约300行)\n- BossC2_PhaseSystem.cs (阶段系统，约400行)\n- BossC2_TorchSystem.cs (火炬系统，约350行)\n- BossC2_LaserSystem.cs (激光技能系统，约400行)\n- BossC2_CameraSystem.cs (相机控制系统，约300行)\n- BossC2_EnergyUI.cs (能量条UI，约200行)\n\n保持所有原有功能，包括火炬系统、激光技能、相机控制等。",
+        "details": "",
+        "testStrategy": "",
+        "status": "done",
+        "dependencies": [
+          9
+        ],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": 11,
+        "title": "拆分 BossPhasedLaser.cs (862行) 为 4-5个模块化文件",
+        "description": "将第一章BOSS拆分为多个模块：\n- BossC1_Core.cs (核心控制器，约200行)\n- BossC1_PhaseSystem.cs (三阶段系统，约300行)\n- BossC1_AttackSystem.cs (攻击系统，约250行)\n- BossC1_CameraSystem.cs (相机系统，约200行)\n- BossC1_VisualSystem.cs (视觉效果系统，约150行)\n\n保持三阶段激光攻击系统和相机控制功能。",
+        "details": "",
+        "testStrategy": "",
+        "status": "done",
+        "dependencies": [
+          10
+        ],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": 12,
+        "title": "拆分 FluidMenuManager.cs (629行) 为 4个模块化文件",
+        "description": "将流体菜单管理器拆分为多个模块：\n- FluidMenuCore.cs (核心管理器，约200行)\n- FluidMenuInput.cs (输入处理，约150行) [重构现有文件]\n- FluidMenuLayout.cs (布局管理，约150行)\n- FluidMenuActions.cs (菜单动作，约150行)\n\n保持所有菜单功能和流体交互效果。",
+        "details": "",
+        "testStrategy": "",
+        "status": "done",
+        "dependencies": [
+          11
+        ],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 13,
+        "title": "拆分 FluidAnimationController.cs (432行) 为 3个模块化文件",
+        "description": "将流体动画控制器拆分为多个模块：\n- FluidAnimationCore.cs (动画核心，约150行)\n- FluidParticleSystem.cs (粒子系统，约150行)\n- FluidFieldCalculator.cs (场计算器，约150行)\n\n保持流体物理模拟和动画效果。",
+        "details": "",
+        "testStrategy": "",
+        "status": "done",
+        "dependencies": [
+          12
+        ],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 14,
+        "title": "拆分 RealFluidPhysics.cs (453行) 为 3个模块化文件",
+        "description": "将真实流体物理模拟器拆分为多个模块：\n- RealFluidCore.cs (核心物理，约150行)\n- RealFluidSolver.cs (Navier-Stokes求解器，约200行)\n- RealFluidRenderer.cs (渲染器，约100行)\n\n保持Navier-Stokes方程求解和流体渲染功能。",
+        "details": "",
+        "testStrategy": "",
+        "status": "done",
+        "dependencies": [
+          13
+        ],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 15,
+        "title": "全面测试所有拆分的代码，修复问题并优化性能",
+        "description": "对所有拆分的代码进行全面的测试和验证：\n- 编译检查（无错误、无警告）\n- 功能测试（确保原有功能完全保留）\n- 性能测试（确保无明显性能下降）\n- Unity Inspector配置检查（确保配置不丢失）\n- 修复发现的问题\n- 优化性能瓶颈",
+        "details": "",
+        "testStrategy": "",
+        "status": "done",
+        "dependencies": [
+          14
+        ],
+        "priority": "high",
+        "subtasks": []
+      },
+      {
+        "id": 16,
+        "title": "提交所有更改到Git，注明详细的修改内容",
+        "description": "将所有代码拆分重构的更改提交到Git仓库：\n- Git add 所有新创建的文件\n- Git commit 并按照规范格式注明详细的修改内容\n- Git push 到远程仓库\n- 确保提交信息包含：\n  * 拆分的文件列表\n  * 功能保持说明\n  * 性能影响说明\n  * 兼容性说明",
+        "details": "",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [
+          15
+        ],
+        "priority": "high",
+        "subtasks": []
+      }
+    ],
+    "metadata": {
+      "created": "2025-10-08T05:23:02.474Z",
+      "updated": "2025-10-08T06:02:44.587Z",
+      "description": "Tasks for master context"
     }
-  ],
-  "tags": {
-    "backlog": "待办",
-    "in-progress": "进行中",
-    "done": "已完成",
-    "blocked": "阻塞",
-    "cancelled": "已取消"
-  },
-  "nextTaskId": 9
+  }
 }
