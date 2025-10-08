@@ -126,7 +126,8 @@ Assets/Scripts/UI/FluidMenu/
 ### SaveSystem集成
 ```csharp
 // 检查存档状态
-bool hasSave = SaveSystem.Instance.HasSaveData();
+string lastScene = SaveSystem.Instance.LoadLastScene();
+bool hasSave = !string.IsNullOrEmpty(lastScene);
 
 // 继续游戏
 string lastScene = SaveSystem.Instance.LoadLastScene();
