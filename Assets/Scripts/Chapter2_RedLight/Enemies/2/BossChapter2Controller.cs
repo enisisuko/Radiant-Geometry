@@ -285,6 +285,7 @@ namespace FadedDreams.Bosses
         private float _energy;
 
         private Coroutine _trembleCR;
+        private Coroutine _statusMonitorCR;
 
         // Torch 窗口控制
         private bool _windowOpen;
@@ -379,6 +380,10 @@ namespace FadedDreams.Bosses
 
             ResolvePlayer(); // 先解析一次
 
+            // 启动状态监控
+            if (_statusMonitorCR != null) StopCoroutine(_statusMonitorCR);
+            _statusMonitorCR = StartCoroutine(CoStatusMonitor());
+
             if (useDetectRadius)
             {
                 if (debugLog)
@@ -395,6 +400,13 @@ namespace FadedDreams.Bosses
         {
             RestoreCamera();
             TrembleStop();
+            
+            // 停止状态监控
+            if (_statusMonitorCR != null)
+            {
+                StopCoroutine(_statusMonitorCR);
+                _statusMonitorCR = null;
+            }
         }
 
         private void Update()
@@ -1247,7 +1259,15 @@ namespace FadedDreams.Bosses
             {
                 float hover = (player ? player.position.y : transform.position.y) + ((_phase == Phase.Phase1) ? 6f : 5.5f);
                 Vector3 target = new Vector3(player.position.x, hover, transform.position.z);
-                Vector3 next = Vector3.MoveTowards(transform.position, target, pursuitChaseSpeed * Time.deltaTime);
+                Vector3 currentPos = transform.position;
+                Vector3 next = Vector3.MoveTowards(currentPos, target, pursuitChaseSpeed * Time.deltaTime);
+                
+                // 每帧记录追击移动（但限制频率避免刷屏）
+                if (Time.frameCount % 30 == 0) // 每30帧记录一次
+                {
+                    Debug.Log($"[BossC2] 追击移动 - 当前位置: {currentPos}, 目标: {target}, 距离: {dist:F2}", this);
+                }
+                
                 rb.MovePosition(next);
             }
         }
@@ -1420,17 +1440,52 @@ namespace FadedDreams.Bosses
         // ================== 通用动作 ==================
         private IEnumerator MoveToPoint(Vector3 target, float speed)
         {
+            Vector3 startPos = transform.position;
+            float startTime = Time.time;
+            Debug.Log($"[BossC2] MoveToPoint开始 - 起始位置: {startPos}, 目标位置: {target}, 速度: {speed}", this);
+            
             while ((transform.position - target).sqrMagnitude > 0.02f)
             {
-                Vector3 next = Vector3.MoveTowards(transform.position, target, speed * Time.deltaTime);
+                Vector3 currentPos = transform.position;
+                Vector3 next = Vector3.MoveTowards(currentPos, target, speed * Time.deltaTime);
+                
+                // 每秒打印一次移动状态
+                if (Time.time - startTime >= 1f)
+                {
+                    Debug.Log($"[BossC2] MoveToPoint进行中 - 当前位置: {currentPos}, 目标: {target}, 剩余距离: {Vector3.Distance(currentPos, target):F2}", this);
+                    startTime = Time.time;
+                }
+                
                 rb.MovePosition(next);
                 yield return null;
             }
+            
+            Debug.Log($"[BossC2] MoveToPoint完成 - 最终位置: {transform.position}, 总耗时: {Time.time - startTime:F2}秒", this);
         }
         private IEnumerator MoveToHoverY(float targetY, float speed)
         {
             Vector3 target = new Vector3(transform.position.x, targetY, transform.position.z);
             yield return MoveToPoint(target, speed);
+        }
+
+        // ================== 状态监控 ==================
+        private IEnumerator CoStatusMonitor()
+        {
+            while (true)
+            {
+                yield return new WaitForSeconds(1f);
+                
+                if (IsDead) continue;
+                
+                Vector3 currentPos = transform.position;
+                Vector3 velocity = rb.linearVelocity;
+                string phaseStr = _phase.ToString();
+                string busyStr = _busy ? "忙碌" : "空闲";
+                string windowStr = _windowOpen ? "窗口开启" : "窗口关闭";
+                string torchStr = _currentTorch != null ? $"当前火炬: {_currentTorch.name}" : "无火炬";
+                
+                Debug.Log($"[BossC2] 状态监控 - 位置: {currentPos}, 速度: {velocity}, 阶段: {phaseStr}, 状态: {busyStr}, {windowStr}, {torchStr}", this);
+            }
         }
 
         // --- 抖动 ---
