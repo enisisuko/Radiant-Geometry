@@ -131,18 +131,18 @@ namespace FadedDreams.UI
             Debug.Log("继续游戏...");
             
             // 获取存档信息
-            string lastScene = saveSystem.LoadLastScene();
+            string savedScene = saveSystem.LoadLastScene();
             string checkpoint = saveSystem.LoadCheckpoint();
             
-            if (string.IsNullOrEmpty(lastScene))
+            if (string.IsNullOrEmpty(savedScene))
             {
-                lastScene = newGameScene;
+                savedScene = newGameScene;
                 checkpoint = firstCheckpointId;
             }
             
             // 开始过渡动画
             StartTransition(() => {
-                LoadScene(lastScene, checkpoint);
+                LoadScene(savedScene, checkpoint);
             });
         }
         

@@ -117,7 +117,7 @@ namespace FadedDreams.UI
                 StopCoroutine(fadeCoroutine);
             }
             
-            fadeCoroutine = StartCoroutine(FadeOutMusic());
+            fadeCoroutine = StartCoroutine(FadeOutMusicCoroutine());
         }
         
         public void FadeInMusic()
