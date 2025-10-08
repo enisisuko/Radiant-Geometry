@@ -440,6 +440,8 @@ namespace FadedDreams.UI
                 currentScales[i] = targetScales[i];
                 targetPositions[i] = GetBlockPosition(i);
                 currentPositions[i] = targetPositions[i];
+                
+                Debug.Log($"InitializeAnimationState[{i}]: targetPos = {targetPositions[i]}, currentPos = {currentPositions[i]}");
             }
         }
         
@@ -470,6 +472,11 @@ namespace FadedDreams.UI
                 if (colorBlocks[i] != null)
                 {
                     colorBlocks[i].Initialize(menuItems[i], i);
+                    
+                    // 设置blockTransforms引用
+                    blockTransforms[i] = colorBlocks[i].transform;
+                    
+                    Debug.Log($"SetupColorBlocks: blockTransforms[{i}] = {blockTransforms[i].name}");
                 }
             }
         }
@@ -481,7 +488,20 @@ namespace FadedDreams.UI
                 if (blockTransforms[i] != null)
                 {
                     Vector3 position = GetBlockPosition(i);
-                    blockTransforms[i].position = position;
+                    
+                    // 使用RectTransform设置位置
+                    RectTransform rectTransform = blockTransforms[i] as RectTransform;
+                    if (rectTransform != null)
+                    {
+                        rectTransform.anchoredPosition = new Vector2(position.x, position.y);
+                        Debug.Log($"SetupLayout[{i}]: anchoredPosition = {rectTransform.anchoredPosition}, position = {position}");
+                    }
+                    else
+                    {
+                        blockTransforms[i].position = position;
+                        Debug.Log($"SetupLayout[{i}]: position = {position} (using Transform)");
+                    }
+                    
                     targetPositions[i] = position;
                     currentPositions[i] = position;
                 }
@@ -517,7 +537,19 @@ namespace FadedDreams.UI
                 if (blockTransforms[i] != null)
                 {
                     blockTransforms[i].localScale = Vector3.one * currentScales[i];
-                    blockTransforms[i].position = currentPositions[i];
+                    
+                    // 使用RectTransform设置位置
+                    RectTransform rectTransform = blockTransforms[i] as RectTransform;
+                    if (rectTransform != null)
+                    {
+                        rectTransform.anchoredPosition = new Vector2(currentPositions[i].x, currentPositions[i].y);
+                        Debug.Log($"UpdateAnimations[{i}]: anchoredPosition = {rectTransform.anchoredPosition}, currentPos = {currentPositions[i]}");
+                    }
+                    else
+                    {
+                        blockTransforms[i].position = currentPositions[i];
+                        Debug.Log($"UpdateAnimations[{i}]: position = {currentPositions[i]} (using Transform)");
+                    }
                 }
                 
                 // 更新色块的Shader参数
