@@ -286,6 +286,7 @@ namespace FadedDreams.Bosses
 
         private Coroutine _trembleCR;
         private Coroutine _statusMonitorCR;
+        private Vector3 _trembleOrigin; // 抖动的原始位置
 
         // Torch 窗口控制
         private bool _windowOpen;
@@ -1499,13 +1500,18 @@ namespace FadedDreams.Bosses
         private void TrembleStart(float amp = 0.12f)
         {
             TrembleStop();
+            _trembleOrigin = transform.position; // 保存原始位置
             _trembleCR = StartCoroutine(CoTremble(amp));
         }
 
         private void TrembleStop()
         {
             if (_trembleCR != null) { StopCoroutine(_trembleCR); _trembleCR = null; }
-            if (model) model.transform.localPosition = Vector3.zero;
+            // 恢复到抖动前的位置（而不是(0,0,0)！）
+            if (_trembleOrigin != Vector3.zero)
+            {
+                rb.MovePosition(_trembleOrigin);
+            }
         }
 
         private IEnumerator CoTremble(float amp)
@@ -1514,8 +1520,10 @@ namespace FadedDreams.Bosses
             while (true)
             {
                 t += Time.deltaTime * 28f;
-                Vector2 n = new Vector2(Mathf.Sin(t), Mathf.Cos(t * 0.9f)) * amp;
-                if (model) model.transform.localPosition = n;
+                Vector2 offset = new Vector2(Mathf.Sin(t), Mathf.Cos(t * 0.9f)) * amp;
+                // 基于原始位置进行抖动，而不是直接设置localPosition
+                Vector3 tremblePos = _trembleOrigin + (Vector3)offset;
+                rb.MovePosition(tremblePos);
                 yield return null;
             }
         }
