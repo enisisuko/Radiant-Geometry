@@ -608,10 +608,18 @@ namespace FadedDreams.Bosses
             _busy = true;
 
             Vector2 away = ((Vector2)transform.position - (Vector2)link.transform.position).normalized;
+            
+            // 临时切换为Dynamic以接受击退力
+            RigidbodyType2D originalBodyType = rb.bodyType;
+            rb.bodyType = RigidbodyType2D.Dynamic;
             rb.linearVelocity = Vector2.zero; rb.angularVelocity = 0f;
             rb.AddForce(away * Mathf.Min(knockbackImpulse, 6f), ForceMode2D.Impulse);
+            
             yield return new WaitForSeconds(0.06f);
+            
+            // 恢复为Kinematic，清除速度
             rb.linearVelocity = Vector2.zero; rb.angularVelocity = 0f;
+            rb.bodyType = originalBodyType;
 
             if (auraLight) auraLight.intensity *= 1.15f;
 
