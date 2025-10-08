@@ -205,12 +205,12 @@ namespace FadedDreams.UI
             image.color = GetBlockColor(index);
             image.raycastTarget = true;
             
-            // 添加流体蔓延控制器
-            FluidSpreadController spreadController = blockGO.AddComponent<FluidSpreadController>();
+            // 添加真实流体控制器
+            RealFluidController fluidController = blockGO.AddComponent<RealFluidController>();
             
             // 设置流体颜色
             Color blockColor = GetBlockColor(index);
-            spreadController.SetFluidColor(blockColor);
+            fluidController.SetFluidColor(blockColor);
             
             // 添加FluidColorBlock组件
             FluidColorBlock fluidBlock = blockGO.AddComponent<FluidColorBlock>();

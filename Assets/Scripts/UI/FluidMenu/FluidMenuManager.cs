@@ -259,11 +259,12 @@ namespace FadedDreams.UI
                 }
             }
             
-            // 启动流体蔓延效果
-            FluidSpreadController spreadController = colorBlocks[index]?.GetComponent<FluidSpreadController>();
-            if (spreadController != null)
+            // 启动真实流体效果
+            RealFluidController fluidController = colorBlocks[index]?.GetComponent<RealFluidController>();
+            if (fluidController != null)
             {
-                spreadController.StartFluidSpread();
+                // 添加流体到中心区域
+                fluidController.AddFluidAt(Vector2.one * 0.5f, 0.5f);
             }
             
             // 更新色块状态
@@ -281,11 +282,12 @@ namespace FadedDreams.UI
                 targetScales[i] = (i == 1) ? centerBlockSize : cornerBlockSize;
             }
             
-            // 停止流体蔓延效果
-            FluidSpreadController spreadController = colorBlocks[index]?.GetComponent<FluidSpreadController>();
-            if (spreadController != null)
+            // 停止真实流体效果
+            RealFluidController fluidController = colorBlocks[index]?.GetComponent<RealFluidController>();
+            if (fluidController != null)
             {
-                spreadController.StopFluidSpread();
+                // 可以在这里添加停止流体的逻辑
+                // 真实流体会自动稳定下来
             }
             
             // 更新色块状态
