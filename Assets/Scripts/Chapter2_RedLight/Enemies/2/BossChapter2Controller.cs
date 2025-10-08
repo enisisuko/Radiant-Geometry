@@ -902,7 +902,9 @@ namespace FadedDreams.Bosses
             _busy = true;
             _currentTorch = null;
 
-            float hoverY1 = (player ? player.position.y : transform.position.y) + 6f;
+            // 保存当前位置，避免火炬点燃后位置被重置的问题
+            Vector3 currentPos = transform.position;
+            float hoverY1 = (player ? player.position.y : currentPos.y) + 6f;
             yield return MoveToHoverY(hoverY1, 9f);
 
             for (int i = 0; i < 3; i++)
@@ -950,15 +952,19 @@ namespace FadedDreams.Bosses
                 if (i == realIdx)
                 {
                     yield return MoveToPoint(phase1DropPoints[i].position, 10f);
+                    Debug.Log($"[BossC2] Phase1: 真BOSS到达点位，当前位置: {transform.position}", this);
                     TrembleStart();
                 }
                 else
                 {
                     if (clonePrefab)
                     {
-                        var c = Instantiate(clonePrefab, transform.position, Quaternion.identity);
+                        Vector3 spawnPos = transform.position;
+                        Debug.Log($"[BossC2] Phase1: 创建复制体 {i}，BOSS当前位置: {spawnPos}, 目标: {phase1DropPoints[i].position}", this);
+                        var c = Instantiate(clonePrefab, spawnPos, Quaternion.identity);
                         c.SpawnTo(phase1DropPoints[i].position, tremble: true, lifeSeconds: torchWindowSeconds);
                         clones.Add(c);
+                        Debug.Log($"[BossC2] Phase1: 复制体 {i} 创建后，BOSS位置: {transform.position}", this);
                     }
                 }
             }
@@ -1464,7 +1470,8 @@ namespace FadedDreams.Bosses
         }
         private IEnumerator MoveToHoverY(float targetY, float speed)
         {
-            Vector3 target = new Vector3(transform.position.x, targetY, transform.position.z);
+            Vector3 currentPos = transform.position;
+            Vector3 target = new Vector3(currentPos.x, targetY, currentPos.z);
             yield return MoveToPoint(target, speed);
         }
 
