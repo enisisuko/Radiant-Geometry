@@ -205,12 +205,12 @@ namespace FadedDreams.UI
             image.color = GetBlockColor(index);
             image.raycastTarget = true;
             
-            // 添加流体形状生成器
-            FluidShapeGenerator shapeGenerator = blockGO.AddComponent<FluidShapeGenerator>();
+            // 添加流体蔓延控制器
+            FluidSpreadController spreadController = blockGO.AddComponent<FluidSpreadController>();
             
-            // 设置流体纹理
-            Texture2D fluidTexture = shapeGenerator.GenerateFluidTexture();
-            image.sprite = Sprite.Create(fluidTexture, new Rect(0, 0, fluidTexture.width, fluidTexture.height), new Vector2(0.5f, 0.5f));
+            // 设置流体颜色
+            Color blockColor = GetBlockColor(index);
+            spreadController.SetFluidColor(blockColor);
             
             // 添加FluidColorBlock组件
             FluidColorBlock fluidBlock = blockGO.AddComponent<FluidColorBlock>();

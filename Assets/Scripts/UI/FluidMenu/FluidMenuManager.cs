@@ -259,6 +259,13 @@ namespace FadedDreams.UI
                 }
             }
             
+            // 启动流体蔓延效果
+            FluidSpreadController spreadController = colorBlocks[index]?.GetComponent<FluidSpreadController>();
+            if (spreadController != null)
+            {
+                spreadController.StartFluidSpread();
+            }
+            
             // 更新色块状态
             if (colorBlocks[index] != null)
             {
@@ -272,6 +279,13 @@ namespace FadedDreams.UI
             for (int i = 0; i < 5; i++)
             {
                 targetScales[i] = (i == 1) ? centerBlockSize : cornerBlockSize;
+            }
+            
+            // 停止流体蔓延效果
+            FluidSpreadController spreadController = colorBlocks[index]?.GetComponent<FluidSpreadController>();
+            if (spreadController != null)
+            {
+                spreadController.StopFluidSpread();
             }
             
             // 更新色块状态
