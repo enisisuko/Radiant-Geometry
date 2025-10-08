@@ -322,6 +322,15 @@ namespace FadedDreams.Bosses
         private void Awake()
         {
             if (!rb) rb = GetComponent<Rigidbody2D>();
+            
+            // 配置Rigidbody2D - BOSS不受重力影响，只通过代码控制移动
+            if (rb)
+            {
+                rb.bodyType = RigidbodyType2D.Kinematic;
+                rb.gravityScale = 0f;
+                rb.constraints = RigidbodyConstraints2D.FreezeRotation;
+            }
+            
             if (!player)
             {
                 var p = GameObject.FindGameObjectWithTag("Player");
