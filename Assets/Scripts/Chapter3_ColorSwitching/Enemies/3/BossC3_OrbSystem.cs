@@ -62,6 +62,7 @@ namespace FD.Bosses.C3
 
         // 环绕体管理器
         private PrefabOrbConductor _conductor;
+        private BossC3_PhaseManager _phaseManager;
         private List<GameObject> _activeOrbs = new List<GameObject>();
         private List<OrbAgent> _orbAgents = new List<OrbAgent>();
 
@@ -90,6 +91,8 @@ namespace FD.Bosses.C3
             {
                 _conductor = gameObject.AddComponent<PrefabOrbConductor>();
             }
+
+            _phaseManager = GetComponent<BossC3_PhaseManager>();
 
             _currentRadius = baseRadius;
             _targetRadius = baseRadius;
@@ -124,7 +127,19 @@ namespace FD.Bosses.C3
             if (_conductor == null) return;
 
             _conductor.Setup(orbPrefab, maxOrbs, orbSpeed, orbRadius);
-            SetOrbCount(GetCurrentOrbCount());
+            
+            // 根据PhaseManager的当前阶段设置初始环绕体数量
+            int initialOrbCount = maxOrbs;
+            if (_phaseManager != null)
+            {
+                Phase currentPhase = _phaseManager.GetCurrentPhase();
+                initialOrbCount = currentPhase == Phase.P1 ? _phaseManager.p1Orbs : _phaseManager.p2Orbs;
+                
+                if (verboseLogs)
+                    Debug.Log($"[BossC3_OrbSystem] Initializing with phase {currentPhase}: {initialOrbCount} orbs");
+            }
+            
+            SetOrbCount(initialOrbCount);
         }
 
         /// <summary>
