@@ -22,6 +22,10 @@ public class Chapter1SpaceSlashController : MonoBehaviour
     [SerializeField] private GameObject beamLinePrefab; // 横扫用的临时 LineRenderer 预制体（白色发光材质）
     [SerializeField] private GameObject explosionPrefab;// 敌人被切中时的爆炸特效
     [SerializeField] private AudioSource sfx;           // 可选：音效播放器（起手/扫击/爆炸）
+    
+    [Header("Audio")]
+    [SerializeField] private AudioClip slashSFX;        // 空间斩音效（小铃）
+    [SerializeField, Range(0f, 1f)] private float slashVolume = 0.8f;
 
     [Header("SlowMo (unscaled 驱动)")]
     [SerializeField, Range(0.01f, 1f)] private float slowTarget = 0.1f;
@@ -156,7 +160,16 @@ public class Chapter1SpaceSlashController : MonoBehaviour
             Vector3 nearW = (Vector3.Distance(_pressWorld, i0W) < Vector3.Distance(_pressWorld, i1W)) ? i0W : i1W;
             Vector3 farW = (nearW == i0W) ? i1W : i0W;
 
-            if (sfx) sfx.Play();
+            // 播放空间斩音效（小铃）
+            if (sfx && slashSFX)
+            {
+                sfx.PlayOneShot(slashSFX, slashVolume);
+            }
+            else if (sfx)
+            {
+                sfx.Play();
+            }
+            
             onSweepBlast?.Invoke();
             StartCoroutine(CoSweepAndHit(nearW, farW));
         }

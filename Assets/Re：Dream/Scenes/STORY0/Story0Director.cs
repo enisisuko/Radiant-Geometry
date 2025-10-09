@@ -68,6 +68,13 @@ namespace FadedDreams.Story
         [Tooltip("开场黑幕渐显时长")]
         public float openingFadeDuration = 4f;
         
+        [Header("=== 音效设置 ===")]
+        [Tooltip("开场音效")]
+        public AudioClip openingSFX;
+        [Tooltip("音效音量")]
+        [Range(0f, 1f)]
+        public float sfxVolume = 0.8f;
+        
         [Header("=== 加速阶段 ===")]
         [Tooltip("第7秒提升后的加速度")]
         public float boostAcceleration = 20f;
@@ -84,9 +91,26 @@ namespace FadedDreams.Story
         private bool hasLanded = false;
         private float currentAcceleration;
         private bool groundSpawned = false;
+        private AudioSource audioSource;
         
         void Start()
         {
+            // 初始化音频源
+            audioSource = gameObject.GetComponent<AudioSource>();
+            if (audioSource == null)
+            {
+                audioSource = gameObject.AddComponent<AudioSource>();
+            }
+            audioSource.playOnAwake = false;
+            audioSource.volume = sfxVolume;
+            
+            // 播放开场音效
+            if (openingSFX != null)
+            {
+                audioSource.PlayOneShot(openingSFX, sfxVolume);
+                Debug.Log("🔊 开场音效播放！");
+            }
+            
             // 初始化
             if (fallingSquare) fallingSquare.position = startPosition;
             squarePos = startPosition;
