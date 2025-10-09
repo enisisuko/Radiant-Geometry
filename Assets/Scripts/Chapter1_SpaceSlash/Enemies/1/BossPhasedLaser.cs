@@ -103,6 +103,11 @@ namespace FadedDreams.Boss
         public GameObject vfxHitGround;
         public LayerMask groundMask = -1;
 
+        [Header("Skill Audio")]
+        public AudioClip skillSFX;  // 技能音效（钢琴2）
+        [Range(0f, 1f)] public float skillVolume = 0.7f;
+        [Range(0f, 0.5f)] public float skillPitchVariation = 0.15f;
+
         [Header("Scene Transition")]
         public string storySceneOnDeath = "STORY1";
         public float deathDelaySeconds = 3f;
@@ -488,6 +493,9 @@ namespace FadedDreams.Boss
                     laser.knockupImpulse = s1KnockupImpulse;
                     laser.continuousDrain = false;
 
+                    // 播放技能音效（钢琴2）
+                    PlaySkillSound();
+
                     // 轻抖
                     CamShake.Instance?.AddTrauma(0.12f);
                 }
@@ -504,6 +512,9 @@ namespace FadedDreams.Boss
             {
                 if (_attacksEnabled && cam && laserPrefab)
                 {
+                    // 播放技能音效（钢琴2）
+                    PlaySkillSound();
+
                     // 强脉冲
                     CamShake.Instance?.OnSweepBlast();
 
@@ -527,6 +538,9 @@ namespace FadedDreams.Boss
             {
                 if (_attacksEnabled && player && laserPrefab)
                 {
+                    // 播放技能音效（钢琴2）
+                    PlaySkillSound();
+
                     var laser = Instantiate(laserPrefab);
                     laser.name = "Boss_S3_HomingBeam";
                     Vector3 origin = transform.position;
@@ -820,6 +834,25 @@ namespace FadedDreams.Boss
                 _camFollow.softZoneSize = _origSoftSize;
             }
             _camModified = false;
+        }
+
+        // == 技能音效播放 ==
+        private void PlaySkillSound()
+        {
+            if (skillSFX)
+            {
+                GameObject tempGO = new GameObject("TempSkillSFX");
+                tempGO.transform.position = transform.position;
+                AudioSource tempSource = tempGO.AddComponent<AudioSource>();
+                tempSource.clip = skillSFX;
+                tempSource.volume = skillVolume;
+                tempSource.spatialBlend = 0f;  // 2D音效
+                float randomPitch = 1f + Random.Range(-skillPitchVariation, skillPitchVariation);
+                tempSource.pitch = randomPitch;
+                tempSource.Play();
+                Destroy(tempGO, skillSFX.length + 0.1f);
+                Debug.Log($"🎹 BOSS技能音效！音调：{randomPitch:F2}");
+            }
         }
     }
 }
