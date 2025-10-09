@@ -297,8 +297,9 @@ namespace FadedDreams.Story
             // 设置彩色边框
             if (tmp)
             {
-                tmp.outlineWidth = 0.3f;
-                tmp.outlineColor = new Color32(255, 100, 255, 255);  // 彩色边框（粉紫色）
+                tmp.outlineWidth = 0.4f;
+                tmp.outlineColor = new Color32(150, 80, 255, 255);  // 彩色边框（蓝紫色）
+                tmp.fontMaterial.EnableKeyword("OUTLINE_ON");
             }
             
             // 简单的渐显效果

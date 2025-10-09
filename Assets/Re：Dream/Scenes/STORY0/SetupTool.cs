@@ -162,9 +162,21 @@ public class SetupTool : MonoBehaviour
         if (!tmp) tmp = textObj.AddComponent<TextMeshProUGUI>();
         
         tmp.text = content;
-        tmp.fontSize = textName.Contains("Title") ? 72 : 48;
+        tmp.fontSize = textName.Contains("Title") ? 150 : 100;
         tmp.alignment = TextAlignmentOptions.Center;
-        tmp.color = Color.white;
+        
+        // 设置暖色调渐变
+        tmp.enableVertexGradient = true;
+        tmp.colorGradient = new TMPro.VertexGradient(
+            new Color(1f, 1f, 0.9f),      // 上左：浅暖白
+            new Color(1f, 0.95f, 0.85f),   // 上右
+            new Color(1f, 0.9f, 0.7f),     // 下左：金黄
+            new Color(1f, 0.85f, 0.65f)    // 下右
+        );
+        
+        // 彩色边框
+        tmp.outlineWidth = 0.4f;
+        tmp.outlineColor = new Color32(150, 80, 255, 255);
         
         var textRt = textObj.GetComponent<RectTransform>();
         textRt.anchorMin = new Vector2(0.5f, 0.5f);
