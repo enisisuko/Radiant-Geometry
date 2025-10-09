@@ -132,28 +132,57 @@ namespace FD.Bosses.C3
         /// </summary>
         public void CreateHealthRing()
         {
+            if (verboseLogs)
+                Debug.Log("[BossC3_HealthRingUI] CreateHealthRing START");
+                
             if (_ring != null)
             {
                 DestroyHealthRing();
             }
 
-            // 创建StellarRing组件
-            _ring = gameObject.AddComponent<StellarRing>();
-            _ring.Setup(ringRadius, ringWidth, ringColor, ringMaterial);
-
-            // 设置材质
-            if (ringMaterial != null)
+            // 创建LineRenderer（StellarRing需要）
+            if (GetComponent<LineRenderer>() == null)
             {
-                _ring.SetMaterial(ringMaterial);
+                LineRenderer lr = gameObject.AddComponent<LineRenderer>();
+                lr.useWorldSpace = false;
+                lr.loop = false;
+                
+                if (verboseLogs)
+                    Debug.Log("[BossC3_HealthRingUI] Created LineRenderer for StellarRing");
             }
 
-            // 初始化血条
-            UpdateHealthRing(combatSystem.GetCurrentHealth(), combatSystem.GetMaxHealth());
+            // 创建StellarRing组件
+            try
+            {
+                _ring = gameObject.AddComponent<StellarRing>();
+                _ring.Setup(ringRadius, ringWidth, ringColor, ringMaterial);
+
+                // 设置材质
+                if (ringMaterial != null)
+                {
+                    _ring.SetMaterial(ringMaterial);
+                }
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"[BossC3_HealthRingUI] Error creating StellarRing: {e.Message}");
+                return;
+            }
+
+            // 初始化血条（添加空引用检查）
+            if (combatSystem != null)
+            {
+                UpdateHealthRing(combatSystem.GetCurrentHealth(), combatSystem.GetMaxHealth());
+            }
+            else
+            {
+                Debug.LogWarning("[BossC3_HealthRingUI] CombatSystem is null, skipping initial health update");
+            }
 
             OnRingCreated?.Invoke();
 
             if (verboseLogs)
-                Debug.Log("[BossC3_HealthRingUI] Health ring created");
+                Debug.Log("[BossC3_HealthRingUI] Health ring created successfully");
         }
 
         /// <summary>
