@@ -512,20 +512,25 @@ namespace FadedDreams.Boss
             {
                 if (_attacksEnabled && cam && laserPrefab)
                 {
-                    // 播放技能音效（钢琴2）
-                    PlaySkillSound();
-
-                    // 强脉冲
+                    // 强脉冲（一次波次只抖一次）
                     CamShake.Instance?.OnSweepBlast();
 
                     float zPlane = transform.position.z;
                     ScreenRect world = GetScreenRectOnPlane(zPlane, 1.2f);
+                    
+                    // 依次释放激光，每根间隔0.3秒
                     for (int i = 0; i < s2BeamsPerWave; i++)
                     {
+                        // 每根激光播放一次音效
+                        PlaySkillSound();
+                        
                         float ang = Random.Range(0f, 180f);
                         Color beamColor = (_phase == 2 ? phase2Color : phase3Color);
                         float spd = Random.Range(s2SpeedRange.x, s2SpeedRange.y) * speedMul;
                         SpawnSweepAcrossScreen(world, ang, spd, s2Thickness, s2EnergyDamage, beamColor, s2ChargeSeconds, s2KnockupImpulse, s2FadeOutSeconds);
+                        
+                        // 等待0.3秒再释放下一根
+                        yield return new WaitForSeconds(0.3f);
                     }
                 }
                 yield return new WaitForSeconds(waveInterval);
