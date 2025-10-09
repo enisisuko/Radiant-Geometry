@@ -47,6 +47,16 @@ namespace FadedDreams.Player
         [SerializeField] private Light2D playerAuraLight;
         [SerializeField] private Color redLightColor = new Color(1f, 0.25f, 0.25f, 1f);
         [SerializeField] private Color greenLightColor = new Color(0.25f, 1f, 0.25f, 1f);
+        
+        [Header("Trail Color Sync")]
+        [Tooltip("玩家的拖尾渲染器（自动查找）")]
+        [SerializeField] private TrailRenderer playerTrail;
+        [Tooltip("红色模式的拖尾渐变")]
+        [SerializeField] private Gradient redTrailGradient;
+        [Tooltip("绿色模式的拖尾渐变")]
+        [SerializeField] private Gradient greenTrailGradient;
+        [Tooltip("启用拖尾颜色同步")]
+        [SerializeField] private bool syncTrailColor = true;
 
         [System.Serializable] public class EnergyEvent : UnityEvent<float, float, float, float> { }
         public UnityEvent<ColorMode> OnModeChanged = new UnityEvent<ColorMode>();
@@ -65,8 +75,18 @@ namespace FadedDreams.Player
 
         private void Start()
         {
+            // 自动查找拖尾组件
+            if (playerTrail == null)
+            {
+                playerTrail = GetComponent<TrailRenderer>();
+            }
+            
+            // 初始化默认拖尾渐变
+            InitializeDefaultTrailGradients();
+            
             PushEnergyEvent();
             ApplyAuraColor();
+            ApplyTrailColor();
         }
 
         private void Update()
@@ -179,12 +199,69 @@ namespace FadedDreams.Player
             playerAuraLight.color = (Mode == ColorMode.Red) ? redLightColor : greenLightColor;
             playerAuraLight.intensity = Mathf.Lerp(0.6f, 1.2f, (Mode == ColorMode.Red) ? Red01 : Green01);
         }
+        
+        /// <summary>
+        /// 初始化默认拖尾渐变
+        /// </summary>
+        private void InitializeDefaultTrailGradients()
+        {
+            // 红色渐变：深红到浅红透明
+            if (redTrailGradient == null)
+            {
+                redTrailGradient = new Gradient();
+                redTrailGradient.SetKeys(
+                    new GradientColorKey[] 
+                    { 
+                        new GradientColorKey(new Color(1f, 0.2f, 0.2f), 0f),
+                        new GradientColorKey(new Color(1f, 0.5f, 0.5f), 1f)
+                    },
+                    new GradientAlphaKey[] 
+                    { 
+                        new GradientAlphaKey(1f, 0f),
+                        new GradientAlphaKey(0f, 1f)
+                    }
+                );
+            }
+            
+            // 绿色渐变：深绿到浅绿透明
+            if (greenTrailGradient == null)
+            {
+                greenTrailGradient = new Gradient();
+                greenTrailGradient.SetKeys(
+                    new GradientColorKey[] 
+                    { 
+                        new GradientColorKey(new Color(0.2f, 1f, 0.2f), 0f),
+                        new GradientColorKey(new Color(0.5f, 1f, 0.5f), 1f)
+                    },
+                    new GradientAlphaKey[] 
+                    { 
+                        new GradientAlphaKey(1f, 0f),
+                        new GradientAlphaKey(0f, 1f)
+                    }
+                );
+            }
+        }
+        
+        /// <summary>
+        /// 应用拖尾颜色
+        /// </summary>
+        private void ApplyTrailColor()
+        {
+            if (!syncTrailColor || playerTrail == null) return;
+            
+            Gradient targetGradient = (Mode == ColorMode.Red) ? redTrailGradient : greenTrailGradient;
+            if (targetGradient != null)
+            {
+                playerTrail.colorGradient = targetGradient;
+            }
+        }
 
         private void ForceSwitch(ColorMode target)
         {
             Mode = target;
             _lastSwitchTime = Time.unscaledTime;
             ApplyAuraColor();
+            ApplyTrailColor();  // 同步拖尾颜色
             OnModeChanged.Invoke(Mode);
         }
 
