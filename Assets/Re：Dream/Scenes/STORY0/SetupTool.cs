@@ -42,9 +42,23 @@ public class SetupTool : MonoBehaviour
         
         // 设置正方形
         SetupSprite(square, 0, 5);
+        var squareSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Re：Dream/Scenes/STORY0/WhiteSquare.png");
+        if (squareSprite)
+        {
+            square.GetComponent<SpriteRenderer>().sprite = squareSprite;
+            Debug.Log("✓ 设置FallingSquare的Sprite");
+        }
         
         // 设置背景
         SetupSprite(bg, 0, 0, 50);
+        if (squareSprite)
+        {
+            var bgSr = bg.GetComponent<SpriteRenderer>();
+            bgSr.sprite = squareSprite;
+            bgSr.sortingOrder = -10;
+            bgSr.color = new Color(0.1f, 0.1f, 0.15f, 1f);
+            Debug.Log("✓ 设置Background的Sprite");
+        }
         
         // 设置Director脚本
         var script = director.GetComponent<Story0Director>();
