@@ -422,13 +422,16 @@ MonoBehaviour:
   initialSpeed: 20
   acceleration: 10
   shakeIntensity: 0.2
-  groundHeight: -200
+  landingTime: 11
+  groundSpawnTime: 10
   groundSprite: {fileID: 2868101353237766674, guid: 0eabd163a5e141d47b9403ffd2baf200, type: 3}
   groundColor: {r: 1, g: 1, b: 1, a: 1}
+  groundSize: 100
   cameraOffset: {x: 0, y: 2}
-  cameraZoomStart: 5
-  cameraZoomEnd: 8
-  cameraZoomSpeed: 2
+  cameraZoomStart: 12
+  cameraZoomEnd: 18
+  cameraZoomStartTime: 5
+  cameraZoomEndTime: 8
   openingFadeDuration: 4
   boostAcceleration: 20
 --- !u!4 &436060742

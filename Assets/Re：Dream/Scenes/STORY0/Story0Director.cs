@@ -42,18 +42,27 @@ namespace FadedDreams.Story
         public float shakeIntensity = 0.2f;
         
         [Header("=== 坠地效果 ===")]
-        [Tooltip("地面高度")]
-        public float groundHeight = -200f;
+        [Tooltip("坠地时间点")]
+        public float landingTime = 11f;
+        [Tooltip("提前生成地面的时间")]
+        public float groundSpawnTime = 10f;
         [Tooltip("地面Sprite")]
         public Sprite groundSprite;
         [Tooltip("地面颜色")]
         public Color groundColor = Color.white;
+        [Tooltip("地面大小")]
+        public float groundSize = 100f;
         
         [Header("=== 相机设置 ===")]
         public Vector2 cameraOffset = new Vector2(0, 2);
-        public float cameraZoomStart = 5f;
-        public float cameraZoomEnd = 8f;
-        public float cameraZoomSpeed = 2f;
+        [Tooltip("初始相机距离（更远）")]
+        public float cameraZoomStart = 12f;
+        [Tooltip("最终相机距离")]
+        public float cameraZoomEnd = 18f;
+        [Tooltip("相机拉远开始时间")]
+        public float cameraZoomStartTime = 5f;
+        [Tooltip("相机拉远结束时间")]
+        public float cameraZoomEndTime = 8f;
         
         [Header("=== 开场设置 ===")]
         [Tooltip("开场黑幕渐显时长")]
@@ -74,6 +83,7 @@ namespace FadedDreams.Story
         private GameObject ground;
         private bool hasLanded = false;
         private float currentAcceleration;
+        private bool groundSpawned = false;
         
         void Start()
         {
@@ -116,31 +126,48 @@ namespace FadedDreams.Story
             time += Time.deltaTime;
             
             // 0-11秒：正方形下落（从0秒就开始！）
-            if (time < 11f && fallingSquare && !hasLanded)
+            if (time < landingTime && fallingSquare && !hasLanded)
             {
                 // 先用当前速度移动（保证第一帧就有初速度20）
                 squarePos += fallDirection * currentSpeed * Time.deltaTime;
                 
-                // 检测是否到达地面
-                if (squarePos.y <= groundHeight)
-                {
-                    squarePos.y = groundHeight;
-                    hasLanded = true;
-                    OnLanding();
-                }
-                
                 // 然后加速（下一帧速度会更快）
                 currentSpeed += currentAcceleration * Time.deltaTime;
                 
-                // 应用抖动（0-8秒逐渐加强）
+                // 应用抖动（0-8秒逐渐加强，8秒后逐渐减弱）
                 Vector2 finalPos = squarePos;
-                if (isShaking && !hasLanded && time <= 8f)
+                if (isShaking && !hasLanded)
                 {
-                    float shake = shakeIntensity * Mathf.Clamp01(time / 8f);  // 0-8秒逐渐增强
+                    float shake;
+                    if (time <= 8f)
+                    {
+                        // 0-8秒逐渐增强
+                        shake = shakeIntensity * Mathf.Clamp01(time / 8f);
+                    }
+                    else
+                    {
+                        // 8-11秒逐渐减弱
+                        shake = shakeIntensity * Mathf.Clamp01((landingTime - time) / (landingTime - 8f));
+                    }
                     finalPos += (Vector2)Random.insideUnitCircle * shake;
                 }
                 
                 fallingSquare.position = finalPos;
+            }
+            
+            // 10秒：提前生成地面
+            if (time >= groundSpawnTime && !groundSpawned)
+            {
+                CreateGround();
+                groundSpawned = true;
+            }
+            
+            // 11秒：撞地时刻
+            if (time >= landingTime && !hasLanded)
+            {
+                hasLanded = true;
+                currentSpeed = 0;  // 速度归零
+                OnLanding();
             }
             
             // 相机一直跟随正方形
@@ -151,22 +178,30 @@ namespace FadedDreams.Story
                 target.z = -10;
                 mainCamera.transform.position = Vector3.Lerp(
                     mainCamera.transform.position, target, Time.deltaTime * 5f);
+                
+                // 5-8秒：相机缓慢拉远
+                if (time >= cameraZoomStartTime && time <= cameraZoomEndTime)
+                {
+                    float t = (time - cameraZoomStartTime) / (cameraZoomEndTime - cameraZoomStartTime);
+                    mainCamera.orthographicSize = Mathf.Lerp(cameraZoomStart, cameraZoomEnd, t);
+                }
+                else if (time > cameraZoomEndTime)
+                {
+                    mainCamera.orthographicSize = cameraZoomEnd;
+                }
             }
         }
         
         void OnLanding()
         {
-            // 坠地时触发爆炸特效
+            // 坠地时触发爆炸特效（在正方形当前位置）
             if (explosionEffectPrefab && fallingSquare)
             {
                 explosionEffect = Instantiate(explosionEffectPrefab, 
-                    new Vector3(squarePos.x, groundHeight, 0), 
+                    fallingSquare.position, 
                     Quaternion.identity);
                 Debug.Log("💥 坠地爆炸！");
             }
-            
-            // 生成地面
-            CreateGround();
             
             // 开始黑幕渐隐（11秒开始，12秒完成）
             StartCoroutine(Fade(fadeScreen, 0, 1, 1f));
@@ -174,16 +209,17 @@ namespace FadedDreams.Story
         
         void CreateGround()
         {
+            // 在正方形当前位置下方生成超大地面
             ground = new GameObject("Ground");
-            ground.transform.position = new Vector3(0, groundHeight - 0.5f, 1);
-            ground.transform.localScale = new Vector3(30, 1, 1);
+            ground.transform.position = new Vector3(squarePos.x, squarePos.y - 1f, 1);
+            ground.transform.localScale = new Vector3(groundSize, 2, 1);  // 使用可调节的大小
             
             var sr = ground.AddComponent<SpriteRenderer>();
             sr.sprite = groundSprite;
             sr.color = groundColor;
             sr.sortingOrder = -5;
             
-            Debug.Log("🏔️ 地面生成！");
+            Debug.Log($"🏔️ 地面生成！位置：({squarePos.x}, {squarePos.y - 1})，大小：{groundSize}");
         }
         
         IEnumerator PlaySequence()
