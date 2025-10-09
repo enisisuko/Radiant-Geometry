@@ -209,17 +209,28 @@ namespace FadedDreams.Story
         
         void CreateGround()
         {
-            // 在正方形当前位置下方生成超大地面
+            // 计算从当前时间到撞地时间，正方形还会下落多少距离
+            float remainingTime = landingTime - time;  // 10秒生成，还剩1秒
+            
+            // 计算剩余下落距离：v*t + 0.5*a*t²
+            float remainingDistance = currentSpeed * remainingTime + 0.5f * currentAcceleration * remainingTime * remainingTime;
+            
+            // 计算y方向的下落距离（斜向下落）
+            float yDistance = remainingDistance * Mathf.Abs(fallDirection.y);
+            
+            // 地面应该在这个位置
+            float groundY = squarePos.y - yDistance - 0.5f;  // 减0.5让地面在正方形下方一点
+            
             ground = new GameObject("Ground");
-            ground.transform.position = new Vector3(squarePos.x, squarePos.y - 1f, 1);
-            ground.transform.localScale = new Vector3(groundSize, 2, 1);  // 使用可调节的大小
+            ground.transform.position = new Vector3(0, groundY, 1);  // x居中
+            ground.transform.localScale = new Vector3(groundSize, 2, 1);
             
             var sr = ground.AddComponent<SpriteRenderer>();
             sr.sprite = groundSprite;
             sr.color = groundColor;
             sr.sortingOrder = -5;
             
-            Debug.Log($"🏔️ 地面生成！位置：({squarePos.x}, {squarePos.y - 1})，大小：{groundSize}");
+            Debug.Log($"🏔️ 地面生成！y位置：{groundY}，大小：{groundSize}x2");
         }
         
         IEnumerator PlaySequence()
