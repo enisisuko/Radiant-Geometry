@@ -6527,7 +6527,7 @@ MonoBehaviour:
   energyDamage: 25
   damageCooldown: 0.6
   knockbackForce: 8
-  explosionPrefab: {fileID: 1887748669791527135, guid: 94d4c2a72d35cee43b8ec3d580c1dd3a, type: 3}
+  explosionPrefab: {fileID: 1887748669791527135, guid: fe3f1336c8fc40f43a62a7c7d28445a2, type: 3}
   onDeath:
     m_PersistentCalls:
       m_Calls: []
@@ -8815,7 +8815,7 @@ MonoBehaviour:
   glowLight: {fileID: 0}
   glowLightBaseIntensity: 0
   glowLightAddOnPeak: 1
-  explosionPrefab: {fileID: 1887748669791527135, guid: 94d4c2a72d35cee43b8ec3d580c1dd3a, type: 3}
+  explosionPrefab: {fileID: 1887748669791527135, guid: fe3f1336c8fc40f43a62a7c7d28445a2, type: 3}
   onDeath:
     m_PersistentCalls:
       m_Calls: []
@@ -10153,7 +10153,7 @@ MonoBehaviour:
   contactEnergyDamage: 20
   contactDamageCooldown: 0.6
   contactKnockback: 8
-  explosionPrefab: {fileID: 1887748669791527135, guid: 94d4c2a72d35cee43b8ec3d580c1dd3a, type: 3}
+  explosionPrefab: {fileID: 1887748669791527135, guid: fe3f1336c8fc40f43a62a7c7d28445a2, type: 3}
   onDeath:
     m_PersistentCalls:
       m_Calls: []
@@ -10562,7 +10562,7 @@ MonoBehaviour:
   dragLine: {fileID: 0}
   startVfxPrefab: {fileID: 0}
   beamLinePrefab: {fileID: 4506031334614135603, guid: 43ac8120d627df548b1b39f0564958b8, type: 3}
-  explosionPrefab: {fileID: 1887748669791527135, guid: 94d4c2a72d35cee43b8ec3d580c1dd3a, type: 3}
+  explosionPrefab: {fileID: 1887748669791527135, guid: fe3f1336c8fc40f43a62a7c7d28445a2, type: 3}
   sfx: {fileID: 0}
   slowTarget: 0.1
   slowInSeconds: 0.25

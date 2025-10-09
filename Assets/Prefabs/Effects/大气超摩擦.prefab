@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 6423482384468983535}
   - component: {fileID: 1116406039954894388}
   m_Layer: 0
-  m_Name: "\u5927\u6C14\u6469\u64E6"
+  m_Name: "\u5927\u6C14\u8D85\u6469\u64E6"
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -116,8 +116,8 @@ ParticleSystem:
     startLifetime:
       serializedVersion: 2
       minMaxState: 3
-      scalar: 10
-      minScalar: 3
+      scalar: 2
+      minScalar: 1
       maxCurve:
         serializedVersion: 2
         m_Curve:
@@ -169,8 +169,8 @@ ParticleSystem:
     startSpeed:
       serializedVersion: 2
       minMaxState: 3
-      scalar: 12
-      minScalar: 6
+      scalar: 14
+      minScalar: 7
       maxCurve:
         serializedVersion: 2
         m_Curve:
@@ -870,7 +870,7 @@ ParticleSystem:
     rateOverTime:
       serializedVersion: 2
       minMaxState: 0
-      scalar: 10
+      scalar: 66
       minScalar: 10
       maxCurve:
         serializedVersion: 2

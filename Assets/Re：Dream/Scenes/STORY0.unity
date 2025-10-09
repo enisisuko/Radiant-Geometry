@@ -411,7 +411,7 @@ MonoBehaviour:
   mainCamera: {fileID: 519420031}
   firstEffectPrefab: {fileID: 6287441235077433401, guid: 55cf0df904ea0834192c18250dc999a9, type: 3}
   secondEffectPrefab: {fileID: 6287441235077433401, guid: d761c3b632eac664da7573b0aeef7c22, type: 3}
-  explosionEffectPrefab: {fileID: 1887748669791527135, guid: 94d4c2a72d35cee43b8ec3d580c1dd3a, type: 3}
+  explosionEffectPrefab: {fileID: 1887748669791527135, guid: fe3f1336c8fc40f43a62a7c7d28445a2, type: 3}
   titleGroup: {fileID: 365676032}
   titleText: {fileID: 514894780}
   authorGroup: {fileID: 482698481}

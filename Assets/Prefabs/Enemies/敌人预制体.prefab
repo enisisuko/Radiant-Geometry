@@ -176,7 +176,7 @@ MonoBehaviour:
   energyDamage: 25
   damageCooldown: 0.6
   knockbackForce: 12
-  explosionPrefab: {fileID: 1887748669791527135, guid: 94d4c2a72d35cee43b8ec3d580c1dd3a, type: 3}
+  explosionPrefab: {fileID: 1887748669791527135, guid: fe3f1336c8fc40f43a62a7c7d28445a2, type: 3}
   onDeath:
     m_PersistentCalls:
       m_Calls:
