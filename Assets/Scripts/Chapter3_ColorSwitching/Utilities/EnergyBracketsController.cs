@@ -9,7 +9,9 @@ namespace FadedDreams.UI
         [Header("Prefabs / Refs")]
         public BracketVisual leftBracket;     // 左侧（默认显示红）
         public BracketVisual rightBracket;    // 右侧（默认显示绿）
+        public GameObject bracketPrefab;      // 括号预制体（用于自动创建）
         public bool leftShowsRed = true;
+        public bool autoInstantiateIfMissing = true; // 如果找不到就自动实例化
 
         [Header("Follow")]
         public Transform followTarget;        // 通常指向 Player 根
@@ -36,6 +38,12 @@ namespace FadedDreams.UI
             _pcm = GetComponentInParent<PlayerColorModeController>();
             if (_pcm) _pcm.OnEnergyChanged.AddListener(OnEnergyChanged);
 
+            // 自动查找括号对象（如果引用为空）
+            if (leftBracket == null || rightBracket == null)
+            {
+                AutoFindBrackets();
+            }
+
             if (debugLogs)
                 Debug.Log($"[EBRKT] Awake: followTarget={followTarget?.name}, pcm={(bool)_pcm}, left={(bool)leftBracket}, right={(bool)rightBracket}");
 
@@ -46,6 +54,75 @@ namespace FadedDreams.UI
             // 强制最上层排序
             ApplySorting(leftBracket);
             ApplySorting(rightBracket);
+        }
+        
+        /// <summary>
+        /// 自动查找场景中的Bracket对象
+        /// </summary>
+        private void AutoFindBrackets()
+        {
+            BracketVisual[] allBrackets = FindObjectsOfType<BracketVisual>(true);
+            
+            if (debugLogs)
+                Debug.Log($"[EBRKT] AutoFindBrackets: Found {allBrackets.Length} BracketVisual objects in scene");
+            
+            // 尝试根据名字匹配
+            foreach (var bracket in allBrackets)
+            {
+                string name = bracket.gameObject.name.ToLower();
+                
+                if (leftBracket == null && name.Contains("left"))
+                {
+                    leftBracket = bracket;
+                    if (debugLogs)
+                        Debug.Log($"[EBRKT] Auto-assigned leftBracket: {bracket.gameObject.name}");
+                }
+                else if (rightBracket == null && name.Contains("right"))
+                {
+                    rightBracket = bracket;
+                    if (debugLogs)
+                        Debug.Log($"[EBRKT] Auto-assigned rightBracket: {bracket.gameObject.name}");
+                }
+            }
+            
+            // 如果还是找不到，尝试按索引分配
+            if (allBrackets.Length >= 2)
+            {
+                if (leftBracket == null) leftBracket = allBrackets[0];
+                if (rightBracket == null) rightBracket = allBrackets[1];
+                
+                if (debugLogs)
+                    Debug.Log($"[EBRKT] Fallback: assigned by index");
+            }
+            
+            // 如果还是找不到，且允许自动实例化，则创建新的
+            if (autoInstantiateIfMissing && bracketPrefab != null)
+            {
+                if (leftBracket == null)
+                {
+                    GameObject leftObj = Instantiate(bracketPrefab, transform);
+                    leftObj.name = "Bracket_Left_Auto";
+                    leftBracket = leftObj.GetComponent<BracketVisual>();
+                    
+                    if (debugLogs)
+                        Debug.Log($"[EBRKT] Auto-instantiated leftBracket from prefab");
+                }
+                
+                if (rightBracket == null)
+                {
+                    GameObject rightObj = Instantiate(bracketPrefab, transform);
+                    rightObj.name = "Bracket_Right_Auto";
+                    rightBracket = rightObj.GetComponent<BracketVisual>();
+                    
+                    if (debugLogs)
+                        Debug.Log($"[EBRKT] Auto-instantiated rightBracket from prefab");
+                }
+            }
+            
+            if (leftBracket == null || rightBracket == null)
+            {
+                Debug.LogWarning($"[EBRKT] Failed to find or create brackets! Left={(bool)leftBracket}, Right={(bool)rightBracket}. Please assign manually or set bracketPrefab.");
+            }
         }
 
         private void Start()
