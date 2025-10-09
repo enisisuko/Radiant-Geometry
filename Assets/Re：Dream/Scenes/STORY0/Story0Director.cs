@@ -98,8 +98,7 @@ namespace FadedDreams.Story
             // 2-11秒：正方形下落（开场2秒黑幕后开始）
             if (time >= 2f && time < 11f && fallingSquare && !hasLanded)
             {
-                // 加速下落
-                currentSpeed += acceleration * Time.deltaTime;
+                // 先用当前速度移动（保证第一帧就有初速度20）
                 squarePos += fallDirection * currentSpeed * Time.deltaTime;
                 
                 // 检测是否到达地面
@@ -109,6 +108,9 @@ namespace FadedDreams.Story
                     hasLanded = true;
                     OnLanding();
                 }
+                
+                // 然后加速（下一帧速度会更快）
+                currentSpeed += acceleration * Time.deltaTime;
                 
                 // 应用抖动（4秒后）
                 Vector2 finalPos = squarePos;
