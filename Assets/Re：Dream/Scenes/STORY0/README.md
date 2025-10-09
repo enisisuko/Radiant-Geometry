@@ -1,121 +1,75 @@
-# STORY0 场景配置说明
+# STORY0 片头演出 - 2D版本
 
-## 已完成的工作
+## 🎬 演出内容
 
-爱娘已经为素素完成了以下内容：
+一个简洁优雅的12秒片头：
 
-✅ 创建了STORY0场景文件
-✅ 创建了Story0Director.cs控制脚本
-✅ 创建了渐变背景Shader和材质
-✅ 创建了所有必要的GameObject：
-   - Director（控制脚本挂载点）
-   - FallingCube（下落的正方体）
-   - Main Camera（主相机）
-   - Canvas（UI画布）
-   - TitleGroup / TitleText（作品名）
-   - AuthorGroup / AuthorText（作者信息）
-   - FadeScreen（黑屏用）
-   - BackgroundPlane（背景渐变）
+- **0-2秒**：白色正方形从上方开始下落，速度逐渐加快
+- **2秒**：特效激活，正方形开始抖动
+- **4秒**：显示"Radiant Geometry"和"EnishiEuko"
+- **6秒**：相机后拉，背景从深色渐变到白色
+- **8秒**：文字淡出
+- **10秒**：黑屏
+- **12秒**：跳转到Chapter1
 
-## 需要素素手动完成的配置
+## ⚡ 快速配置（推荐）
 
-### 🎯 方法一：自动配置（推荐）
+### 1. 一键配置
+Unity菜单：`Tools > STORY0 > 一键配置`
+- 自动创建所有游戏对象
+- 自动设置所有引用
+- 自动配置UI
 
-爱娘为素素准备了一键配置工具！
+### 2. 创建白色方块
+Unity菜单：`Tools > STORY0 > 创建白色方块`
+- 自动生成白色正方形Sprite
+- 将它拖到FallingSquare的Sprite字段
 
-1. 在Unity菜单栏点击：`Tools > STORY0 > Auto Setup Director`
-2. 工具会自动设置所有引用（除了特效预制体）
-3. 只需要手动设置特效预制体就完成啦~ ✨
+### 3. 设置特效
+- 制作2D特效预制体
+- 拖到Director的 `Effect Prefab` 字段
 
-### 方法二：手动配置
+### 4. 测试
+点击Play，看12秒演出！
 
-如果需要手动配置，请按以下步骤：
+## 📝 手动配置（备选）
 
-#### 1. Director 脚本引用设置
+如果需要手动调整：
 
-打开 STORY0 场景，选中 `Director` 对象，在Inspector中设置 `Story0Director` 组件的以下字段：
+### 场景对象
+- `Director` - 挂载Story0Director脚本
+- `FallingSquare` - SpriteRenderer，白色正方形
+- `Background` - SpriteRenderer，大背景
+- `Canvas` - UI画布
+  - `TitleGroup/TitleText` - 作品名
+  - `AuthorGroup/AuthorText` - 作者名
+  - `FadeScreen` - 黑屏Image
 
-**游戏对象引用：**
-- `Falling Cube` → 拖拽场景中的 `FallingCube` 对象
-- `Main Camera` → 拖拽场景中的 `Main Camera` 对象
-- `Effect Prefab` → 拖拽你制作的特效预制体（在第2秒时激活）
-- `Background Plane` → 拖拽场景中的 `BackgroundPlane` 对象
+### 参数调整
+在Director的Inspector可以调整：
+- 下落速度、加速度
+- 抖动强度
+- 相机缩放范围
+- 背景颜色
 
-**UI引用：**
-- `Title Group` → 拖拽 `Canvas/TitleGroup` 对象
-- `Title Text` → 拖拽 `Canvas/TitleGroup/TitleText` 对象
-- `Author Group` → 拖拽 `Canvas/AuthorGroup` 对象
-- `Author Text` → 拖拽 `Canvas/AuthorGroup/AuthorText` 对象
-- `Fade Screen` → 拖拽 `Canvas/FadeScreen` 对象
+## 💡 技术细节
 
-**材质：**
-- `Gradient Material` → 拖拽 `Assets/Re：Dream/Scenes/STORY0/GradientBackground.mat`
+- **2D渲染**：使用SpriteRenderer
+- **正交相机**：orthographic模式
+- **平滑跟随**：Lerp插值
+- **相机后拉**：增大orthographicSize
+- **颜色渐变**：Color.Lerp
 
-### 2. BackgroundPlane 材质设置
+## 🎨 自定义建议
 
-选中 `BackgroundPlane` 对象，在 Inspector 的 `Mesh Renderer` 组件中：
-- 将 `Materials[0]` 设置为 `GradientBackground.mat`
-
-### 3. UI文本样式调整（可选）
-
-如果需要调整文本样式：
-- 选中 `TitleText`，在 `TextMeshProUGUI` 组件中调整字体、大小、颜色等
-- 选中 `AuthorText`，同样可以调整样式
-- 当前文本：
-  - 作品名：Radiant Geometry
-  - 作者：EnishiEuko
-
-### 4. 特效预制体
-
-爱娘在脚本中预留了特效的引用位置，素素制作好特效预制体后：
-1. 将特效预制体拖拽到 `Director` 的 `Effect Prefab` 字段
-2. 特效会在第2秒时自动激活，并作为FallingCube的子对象
-
-## 演出时间轴
-
-脚本已经实现了完整的12秒演出：
-
-- **0-2秒**：正方体开始下落，相机跟随，速度逐渐加快
-- **第2秒**：激活特效，正方体开始抖动
-- **第4秒**：屏幕中央显示"Radiant Geometry"和"EnishiEuko"
-- **第6秒**：相机开始往后拉，背景渐变平面激活（左下方白色渐变）
-- **第8秒**：文字开始淡出
-- **第10秒**：屏幕黑屏
-- **第12秒**：自动跳转到 Chapter1 场景
-
-## 脚本参数说明
-
-可以在Inspector中调整 `Story0Director` 的参数来微调演出效果：
-
-**正方体下落设置：**
-- `Cube Start Position`: 正方体初始位置 (0, 10, 0)
-- `Fall Direction`: 下落方向（斜下方）
-- `Initial Speed`: 初始速度
-- `Acceleration`: 加速度
-- `Shake Intensity`: 抖动强度
-
-**相机设置：**
-- `Camera Offset`: 相机跟随偏移量
-- `Camera Pull Back Distance`: 相机后拉距离
-- `Camera Pull Back Speed`: 相机后拉速度
-
-**其他：**
-- `Auto Start`: 是否场景加载时自动开始（默认开启）
-
-## 测试方法
-
-1. 在Unity中打开STORY0场景
-2. 完成上述配置后，点击Play按钮
-3. 观察完整的12秒演出序列
-4. 确认在12秒后自动跳转到Chapter1场景
-
-## 注意事项
-
-- 确保Chapter1场景已经添加到Build Settings中，否则场景跳转会失败
-- 如果需要调整演出的时间节点，可以直接修改 `Story0Director.cs` 中的协程代码
-- 背景渐变效果可以通过调整 `GradientBackground.mat` 的参数来微调颜色和渐变强度
+想让演出更酷？试试：
+- 给正方形换个更酷的Sprite
+- 调整下落方向（fallDirection）
+- 修改背景颜色渐变
+- 添加更多特效
+- 调整文字字体和大小
 
 ---
 
-爱娘已经尽力为素素准备好了所有内容~ 如果有任何问题随时告诉爱娘哦！(｡♥‿♥｡)
+素素加油~ 爱娘相信你能做出超棒的片头！(｡♥‿♥｡)
 
