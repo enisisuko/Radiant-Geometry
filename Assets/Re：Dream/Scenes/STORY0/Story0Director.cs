@@ -18,10 +18,13 @@ namespace FadedDreams.Story
         [Tooltip("主相机")]
         public Camera mainCamera;
         
-        [Tooltip("抖动特效预制体（第4秒激活）")]
-        public GameObject shakeEffectPrefab;
+        [Tooltip("第一特效预制体（0秒激活）")]
+        public GameObject firstEffectPrefab;
         
-        [Tooltip("坠地爆炸特效预制体（第11秒激活）")]
+        [Tooltip("第二特效预制体（7秒激活）")]
+        public GameObject secondEffectPrefab;
+        
+        [Tooltip("坠地爆炸特效预制体（11秒激活）")]
         public GameObject explosionEffectPrefab;
         
         [Header("=== UI引用 ===")]
@@ -54,17 +57,23 @@ namespace FadedDreams.Story
         
         [Header("=== 开场设置 ===")]
         [Tooltip("开场黑幕渐显时长")]
-        public float openingFadeDuration = 2f;
+        public float openingFadeDuration = 4f;
+        
+        [Header("=== 加速阶段 ===")]
+        [Tooltip("第7秒提升后的加速度")]
+        public float boostAcceleration = 20f;
         
         // 内部变量
         private float currentSpeed;
         private Vector2 squarePos;
         private bool isShaking;
         private float time;
-        private GameObject shakeEffect;
+        private GameObject firstEffect;
+        private GameObject secondEffect;
         private GameObject explosionEffect;
         private GameObject ground;
         private bool hasLanded = false;
+        private float currentAcceleration;
         
         void Start()
         {
@@ -72,6 +81,7 @@ namespace FadedDreams.Story
             if (fallingSquare) fallingSquare.position = startPosition;
             squarePos = startPosition;
             currentSpeed = initialSpeed;
+            currentAcceleration = acceleration;
             fallDirection.Normalize();
             
             // 隐藏UI
@@ -88,6 +98,16 @@ namespace FadedDreams.Story
                 mainCamera.orthographicSize = cameraZoomStart;
             }
             
+            // 0秒立即激活第一特效
+            if (firstEffectPrefab && fallingSquare)
+            {
+                firstEffect = Instantiate(firstEffectPrefab, fallingSquare.position, Quaternion.identity, fallingSquare);
+                Debug.Log("✨ 第一特效激活（0秒）");
+            }
+            
+            // 0秒开始震颤
+            isShaking = true;
+            
             StartCoroutine(PlaySequence());
         }
         
@@ -95,8 +115,8 @@ namespace FadedDreams.Story
         {
             time += Time.deltaTime;
             
-            // 2-11秒：正方形下落（开场2秒黑幕后开始）
-            if (time >= 2f && time < 11f && fallingSquare && !hasLanded)
+            // 0-11秒：正方形下落（从0秒就开始！）
+            if (time < 11f && fallingSquare && !hasLanded)
             {
                 // 先用当前速度移动（保证第一帧就有初速度20）
                 squarePos += fallDirection * currentSpeed * Time.deltaTime;
@@ -110,20 +130,20 @@ namespace FadedDreams.Story
                 }
                 
                 // 然后加速（下一帧速度会更快）
-                currentSpeed += acceleration * Time.deltaTime;
+                currentSpeed += currentAcceleration * Time.deltaTime;
                 
-                // 应用抖动（4秒后）
+                // 应用抖动（0-8秒逐渐加强）
                 Vector2 finalPos = squarePos;
-                if (isShaking && !hasLanded)
+                if (isShaking && !hasLanded && time <= 8f)
                 {
-                    float shake = shakeIntensity * Mathf.Clamp01((time - 4f) / 2f);
+                    float shake = shakeIntensity * Mathf.Clamp01(time / 8f);  // 0-8秒逐渐增强
                     finalPos += (Vector2)Random.insideUnitCircle * shake;
                 }
                 
                 fallingSquare.position = finalPos;
             }
             
-            // 相机一直跟随正方形，8秒后开始后拉
+            // 相机一直跟随正方形
             if (mainCamera && fallingSquare)
             {
                 // 一直跟随正方形
@@ -131,13 +151,6 @@ namespace FadedDreams.Story
                 target.z = -10;
                 mainCamera.transform.position = Vector3.Lerp(
                     mainCamera.transform.position, target, Time.deltaTime * 5f);
-                
-                // 8秒后相机开始后拉
-                if (time >= 8f && time < 12f)
-                {
-                    mainCamera.orthographicSize = Mathf.Lerp(
-                        mainCamera.orthographicSize, cameraZoomEnd, Time.deltaTime * cameraZoomSpeed);
-                }
             }
         }
         
@@ -154,6 +167,9 @@ namespace FadedDreams.Story
             
             // 生成地面
             CreateGround();
+            
+            // 开始黑幕渐隐（11秒开始，12秒完成）
+            StartCoroutine(Fade(fadeScreen, 0, 1, 1f));
         }
         
         void CreateGround()
@@ -172,44 +188,34 @@ namespace FadedDreams.Story
         
         IEnumerator PlaySequence()
         {
-            // 0-2秒：开场黑幕渐显
-            yield return StartCoroutine(Fade(fadeScreen, 1, 0, openingFadeDuration));
+            // 0-4秒：黑幕渐显（同时0秒就开始下落和特效）
+            StartCoroutine(Fade(fadeScreen, 1, 0, 4f));
             
-            // 2-4秒：正方形快速下落（在Update中处理）
-            yield return new WaitForSeconds(2f);
-            
-            // 4秒：抖动特效激活
-            if (shakeEffectPrefab && fallingSquare)
-            {
-                shakeEffect = Instantiate(shakeEffectPrefab, fallingSquare.position, Quaternion.identity, fallingSquare);
-                Debug.Log("✨ 抖动特效激活！");
-            }
-            isShaking = true;
-            
-            // 6秒：显示文字
-            yield return new WaitForSeconds(2f);
+            // 5秒：文字渐显
+            yield return new WaitForSeconds(5f);
             if (titleText) titleText.text = "Radiant Geometry";
             if (authorText) authorText.text = "EnishiEuko";
             StartCoroutine(Fade(titleGroup, 0, 1, 1f));
             StartCoroutine(Fade(authorGroup, 0, 1, 1f));
             
-            // 8秒：相机开始后拉（在Update中处理）
+            // 7秒：第二特效，加速度提升
             yield return new WaitForSeconds(2f);
+            if (secondEffectPrefab && fallingSquare)
+            {
+                secondEffect = Instantiate(secondEffectPrefab, fallingSquare.position, Quaternion.identity, fallingSquare);
+                Debug.Log("⚡ 第二特效激活！加速度提升！");
+            }
+            currentAcceleration = boostAcceleration;  // 提升到20
             
-            // 10秒：文字淡出
+            // 9秒：文字渐隐
             yield return new WaitForSeconds(2f);
             StartCoroutine(Fade(titleGroup, 1, 0, 1f));
             StartCoroutine(Fade(authorGroup, 1, 0, 1f));
             
-            // 11秒：等待坠地（坠地效果在Update中的OnLanding触发）
-            // 等待到确保坠地发生
-            yield return new WaitForSeconds(1f);
+            // 11秒：等待撞地（在Update的OnLanding中触发爆炸和黑幕）
+            yield return new WaitForSeconds(2f);
             
-            // 12秒：黑屏
-            yield return new WaitForSeconds(1f);
-            yield return StartCoroutine(Fade(fadeScreen, 0, 1, 1f));
-            
-            // 14秒：跳转
+            // 12秒：确保完全黑屏后切换
             yield return new WaitForSeconds(1f);
             SceneManager.LoadScene("Chapter1");
         }

@@ -64,23 +64,26 @@ public class SetupTool : MonoBehaviour
         SetProp(script, "groundSprite", squareSprite);
         
         // 尝试自动设置特效预制体
-        var shakeEffect = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Effects/大气摩擦.prefab");
-        if (shakeEffect)
+        var effect1 = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Effects/大气摩擦.prefab");
+        if (effect1)
         {
-            SetProp(script, "shakeEffectPrefab", shakeEffect);
-            Debug.Log("✓ 自动设置抖动特效: 大气摩擦");
+            SetProp(script, "firstEffectPrefab", effect1);
+            Debug.Log("✓ 自动设置第一特效（0秒）: 大气摩擦");
         }
         
-        // 素素会手动设置爆炸特效
-        Debug.Log("⚠️ 请手动设置explosionEffectPrefab（坠地爆炸特效）");
+        // 素素需要手动设置的特效
+        Debug.Log("⚠️ 请手动设置：");
+        Debug.Log("   - secondEffectPrefab（7秒，第二特效）");
+        Debug.Log("   - explosionEffectPrefab（11秒，坠地爆炸）");
         
         // 保存
         EditorSceneManager.MarkSceneDirty(scene);
         EditorSceneManager.SaveScene(scene);
         
-        Debug.Log("✅ 配置完成！");
-        Debug.Log("📝 请手动设置：");
-        Debug.Log("   - explosionEffectPrefab（坠地爆炸特效）");
+        Debug.Log("✅ 自动配置完成！");
+        Debug.Log("📝 素素还需要手动设置特效：");
+        Debug.Log("   1. secondEffectPrefab - 第7秒播放的特效");
+        Debug.Log("   2. explosionEffectPrefab - 第11秒坠地爆炸");
     }
     
     [MenuItem("Tools/STORY0/创建白色方块")]
