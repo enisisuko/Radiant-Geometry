@@ -19,19 +19,52 @@ using UnityEngine.Android;
 
 namespace FD.Bosses.C3
 {
-    // 枚举已移至 BossC3_Enums.cs
-    // public enum Phase { P1, P2 }
-    // public enum BossColor { Red, Green, None }
-    // public enum Stage { TELL, WINDUP, ACTIVE, RECOVER }
+    /// <summary>
+    /// Boss阶段枚举
+    /// </summary>
+    public enum Phase { P1, P2 }
+    
+    /// <summary>
+    /// Boss颜色枚举
+    /// </summary>
+    public enum BossColor { Red, Green, None }
+    
+    /// <summary>
+    /// 技能阶段枚举
+    /// </summary>
+    public enum Stage { TELL, WINDUP, ACTIVE, RECOVER }
+    
+    /// <summary>
+    /// 玩家颜色状态接口
+    /// </summary>
+    public interface IColorState
+    {
+        BossColor GetColorMode();
+    }
+    
+    /// <summary>
+    /// P1阶段微技能类型
+    /// </summary>
+    public enum MicroIdP1 { RedPierce, ShatterArc, VoltNeedle, ReverseSaber, HarmonicHit }
+    
+    /// <summary>
+    /// P2阶段微技能类型
+    /// </summary>
+    public enum MicroIdP2 { TwinSpiral, MirrorRay, HunterLoop, FoldNova, GravBind, ChainDash, AerialDrop, LineSweep, RefractPulse, ChromaEcho }
+    
+    /// <summary>
+    /// P1阶段大招类型
+    /// </summary>
+    public enum BigIdP1 { RingBurst, QuadrantMerge }
+    
+    /// <summary>
+    /// P2阶段大招类型
+    /// </summary>
+    public enum BigIdP2 { PrismSymphony, FallingOrbit, ChromaReverse, FinalGeometry }
 
     [DisallowMultipleComponent]
     public class BossC3_AllInOne : MonoBehaviour
     {
-        // === 玩家颜色接口已移至 BossC3_Enums.cs ===
-        // public interface IColorState
-        // {
-        //     BossColor GetColorMode();
-        // }
 
         [Header("== Core Refs ==")]
         public Transform orbAnchor;
@@ -249,12 +282,6 @@ namespace FD.Bosses.C3
 
 
 
-
-
-        public enum MicroIdP1 { RedPierce, ShatterArc, VoltNeedle, ReverseSaber, HarmonicHit }
-        public enum MicroIdP2 { TwinSpiral, MirrorRay, HunterLoop, FoldNova, GravBind, ChainDash, AerialDrop, LineSweep, RefractPulse, ChromaEcho }
-        public enum BigIdP1 { RingBurst, QuadrantMerge }
-        public enum BigIdP2 { PrismSymphony, FallingOrbit, ChromaReverse, FinalGeometry }
 
         private StellarRing _ring;
 
