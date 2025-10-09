@@ -35,7 +35,7 @@ namespace FadedDreams.Story
         public CanvasGroup fadeScreen;
         
         [Header("=== 正方形设置 ===")]
-        public Vector2 startPosition = new Vector2(0, 8);
+        public Vector2 startPosition = new Vector2(0, 100);
         public Vector2 fallDirection = new Vector2(0.5f, -1f);
         public float initialSpeed = 20f;
         public float acceleration = 10f;
@@ -43,7 +43,7 @@ namespace FadedDreams.Story
         
         [Header("=== 坠地效果 ===")]
         [Tooltip("地面高度")]
-        public float groundHeight = -10f;
+        public float groundHeight = -200f;
         [Tooltip("地面Sprite")]
         public Sprite groundSprite;
         [Tooltip("地面颜色")]

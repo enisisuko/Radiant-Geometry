@@ -204,7 +204,7 @@ Transform:
   m_GameObject: {fileID: 34297028}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 8, z: 0}
+  m_LocalPosition: {x: 0, y: 100, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -409,26 +409,28 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::FadedDreams.Story.Story0Director
   fallingSquare: {fileID: 34297030}
   mainCamera: {fileID: 519420031}
-  shakeEffectPrefab: {fileID: 6287441235077433401, guid: 55cf0df904ea0834192c18250dc999a9, type: 3}
+  firstEffectPrefab: {fileID: 6287441235077433401, guid: 55cf0df904ea0834192c18250dc999a9, type: 3}
+  secondEffectPrefab: {fileID: 0}
   explosionEffectPrefab: {fileID: 0}
   titleGroup: {fileID: 365676032}
   titleText: {fileID: 514894780}
   authorGroup: {fileID: 482698481}
   authorText: {fileID: 797046423}
   fadeScreen: {fileID: 1213756707}
-  startPosition: {x: 0, y: 5}
+  startPosition: {x: 0, y: 100}
   fallDirection: {x: 0.5, y: -1}
-  initialSpeed: 1
-  acceleration: 2
-  shakeIntensity: 0.1
-  groundHeight: -10
+  initialSpeed: 20
+  acceleration: 10
+  shakeIntensity: 0.2
+  groundHeight: -200
   groundSprite: {fileID: 2868101353237766674, guid: 0eabd163a5e141d47b9403ffd2baf200, type: 3}
   groundColor: {r: 1, g: 1, b: 1, a: 1}
   cameraOffset: {x: 0, y: 2}
   cameraZoomStart: 5
   cameraZoomEnd: 8
   cameraZoomSpeed: 2
-  openingFadeDuration: 2
+  openingFadeDuration: 4
+  boostAcceleration: 20
 --- !u!4 &436060742
 Transform:
   m_ObjectHideFlags: 0

@@ -40,7 +40,7 @@ public class SetupTool : MonoBehaviour
         SetupFadeScreen(fadeScreen);
         
         // 设置正方形
-        SetupSprite(square, 0, 8);  // 起始高度改为8
+        SetupSprite(square, 0, 100);  // 起始高度100，确保11秒才撞地
         var squareSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Re：Dream/Scenes/STORY0/WhiteSquare.png");
         if (squareSprite)
         {
