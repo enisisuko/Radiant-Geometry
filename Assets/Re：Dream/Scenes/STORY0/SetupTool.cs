@@ -73,6 +73,23 @@ public class SetupTool : MonoBehaviour
         SetProp(script, "authorText", authorGroup.transform.Find("AuthorText").GetComponent<TextMeshProUGUI>());
         SetProp(script, "fadeScreen", fadeScreen.GetComponent<CanvasGroup>());
         
+        // 设置渐变材质
+        var gradientMat = AssetDatabase.LoadAssetAtPath<Material>("Assets/Re：Dream/Scenes/STORY0/GradientBackground.mat");
+        if (gradientMat)
+        {
+            SetProp(script, "backgroundGradientMaterial", gradientMat);
+            bg.GetComponent<SpriteRenderer>().material = gradientMat;
+            Debug.Log("✓ 设置渐变背景材质");
+        }
+        
+        // 尝试自动设置特效预制体
+        var effectPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Effects/大气摩擦.prefab");
+        if (effectPrefab)
+        {
+            SetProp(script, "effectPrefab", effectPrefab);
+            Debug.Log("✓ 自动设置特效预制体: 大气摩擦");
+        }
+        
         // 保存
         EditorSceneManager.MarkSceneDirty(scene);
         EditorSceneManager.SaveScene(scene);
