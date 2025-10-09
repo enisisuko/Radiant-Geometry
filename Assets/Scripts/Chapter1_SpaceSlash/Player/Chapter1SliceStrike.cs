@@ -162,14 +162,18 @@ public class Chapter1SpaceSlashController : MonoBehaviour
             Vector3 farW = (nearW == i0W) ? i1W : i0W;
 
             // 播放空间斩音效（小铃）- 随机音调变化
-            if (sfx && slashSFX)
+            if (slashSFX)
             {
+                // 创建临时AudioSource来播放带随机音调的音效
+                GameObject tempGO = new GameObject("TempSlashSFX");
+                AudioSource tempSource = tempGO.AddComponent<AudioSource>();
+                tempSource.clip = slashSFX;
+                tempSource.volume = slashVolume;
                 // 随机调整音调（1.0为原始音调）
-                float randomPitch = 1f + Random.Range(-pitchVariation, pitchVariation);
-                sfx.pitch = randomPitch;
-                sfx.PlayOneShot(slashSFX, slashVolume);
-                // 播放后恢复默认音调
-                sfx.pitch = 1f;
+                tempSource.pitch = 1f + Random.Range(-pitchVariation, pitchVariation);
+                tempSource.Play();
+                // 播放完毕后销毁临时对象
+                Destroy(tempGO, slashSFX.length + 0.1f);
             }
             else if (sfx)
             {
