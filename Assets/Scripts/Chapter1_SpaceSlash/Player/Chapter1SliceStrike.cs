@@ -26,6 +26,7 @@ public class Chapter1SpaceSlashController : MonoBehaviour
     [Header("Audio")]
     [SerializeField] private AudioClip slashSFX;        // 空间斩音效（小铃）
     [SerializeField, Range(0f, 1f)] private float slashVolume = 0.8f;
+    [SerializeField, Range(0f, 0.5f)] private float pitchVariation = 0.15f;  // 音调随机变化范围
 
     [Header("SlowMo (unscaled 驱动)")]
     [SerializeField, Range(0.01f, 1f)] private float slowTarget = 0.1f;
@@ -160,10 +161,15 @@ public class Chapter1SpaceSlashController : MonoBehaviour
             Vector3 nearW = (Vector3.Distance(_pressWorld, i0W) < Vector3.Distance(_pressWorld, i1W)) ? i0W : i1W;
             Vector3 farW = (nearW == i0W) ? i1W : i0W;
 
-            // 播放空间斩音效（小铃）
+            // 播放空间斩音效（小铃）- 随机音调变化
             if (sfx && slashSFX)
             {
+                // 随机调整音调（1.0为原始音调）
+                float randomPitch = 1f + Random.Range(-pitchVariation, pitchVariation);
+                sfx.pitch = randomPitch;
                 sfx.PlayOneShot(slashSFX, slashVolume);
+                // 播放后恢复默认音调
+                sfx.pitch = 1f;
             }
             else if (sfx)
             {
