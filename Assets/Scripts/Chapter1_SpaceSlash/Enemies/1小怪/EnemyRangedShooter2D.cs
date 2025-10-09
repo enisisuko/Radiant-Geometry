@@ -57,6 +57,9 @@ namespace FadedDreams.Enemies
         [Header("Death")]
         public GameObject explosionPrefab;
         public UnityEvent onDeath;
+        public AudioClip explosionSFX;  // 爆炸音效（钢琴音）
+        [Range(0f, 1f)] public float explosionVolume = 0.8f;
+        [Range(0f, 0.5f)] public float pitchVariation = 0.15f;
 
         // runtime
         public bool IsDead { get; private set; }
