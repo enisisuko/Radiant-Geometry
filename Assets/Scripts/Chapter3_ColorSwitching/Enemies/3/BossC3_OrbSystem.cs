@@ -133,12 +133,30 @@ namespace FD.Bosses.C3
                 return;
             }
 
+            // 确定使用哪个预制体
+            GameObject prefabToUse = orbPrefab;
+            
+            // 如果单个预制体是null，尝试从列表中获取第一个
+            if (prefabToUse == null && orbPrefabs != null && orbPrefabs.Count > 0)
+            {
+                prefabToUse = orbPrefabs[0];
+                if (verboseLogs)
+                    Debug.Log($"[BossC3_OrbSystem] Using first prefab from list: {prefabToUse?.name}");
+            }
+            
+            // 如果还是null，警告并跳过
+            if (prefabToUse == null)
+            {
+                Debug.LogError("[BossC3_OrbSystem] CRITICAL: No orb prefab assigned! Cannot spawn orbs. Please assign orbPrefab or add prefabs to orbPrefabs list.");
+                return;
+            }
+
             if (verboseLogs)
-                Debug.Log($"[BossC3_OrbSystem] Setting up conductor with maxOrbs={maxOrbs}");
+                Debug.Log($"[BossC3_OrbSystem] Setting up conductor with prefab={prefabToUse.name}, maxOrbs={maxOrbs}");
                 
             try
             {
-                _conductor.Setup(orbPrefab, maxOrbs, orbSpeed, orbRadius);
+                _conductor.Setup(prefabToUse, maxOrbs, orbRadius, orbSpeed);
             }
             catch (System.Exception e)
             {

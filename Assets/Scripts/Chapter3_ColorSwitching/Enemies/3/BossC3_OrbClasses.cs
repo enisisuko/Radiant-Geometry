@@ -78,12 +78,31 @@ namespace FD.Bosses.C3
                     if (orb != null)
                         Destroy(orb.gameObject);
                 }
+                else
+                {
+                    break; // 防止无限循环
+                }
             }
             
-            // 增加环绕体
+            // 增加环绕体 - 添加安全检查防止无限循环
+            if (orbPrefab == null)
+            {
+                Debug.LogError("[PrefabOrbConductor] Cannot spawn orbs: orbPrefab is null!");
+                return;
+            }
+            
+            int safetyCounter = 0;
             while (orbs.Count < count && orbs.Count < maxOrbs)
             {
                 SpawnOrb();
+                
+                // 防止无限循环的安全计数器
+                safetyCounter++;
+                if (safetyCounter > 100)
+                {
+                    Debug.LogError($"[PrefabOrbConductor] Safety break: Failed to spawn orbs after 100 attempts. Current count: {orbs.Count}, Target: {count}");
+                    break;
+                }
             }
             
             // 重新布局
