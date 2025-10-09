@@ -27,8 +27,9 @@ namespace FadedDreams.Bosses
         [Header("VFX & SFX")]
         public GameObject shockwaveRingPrefab; // ��ѡ����ɢ����Ч
         public GameObject explosionVfx;        // ��ѡ����ը����
-        public AudioClip explosionSfx;         // ��ѡ
+        public AudioClip explosionSfx;         // 爆炸音效（钢琴音）
         public float sfxVolume = 0.8f;
+        [Range(0f, 0.5f)] public float pitchVariation = 0.15f; // 音调随机变化范围
 
         private Rigidbody2D _rb;
         private Collider2D _col;
@@ -98,7 +99,20 @@ namespace FadedDreams.Bosses
             // ������Ч/��Ч
             if (explosionVfx) Instantiate(explosionVfx, transform.position, Quaternion.identity);
             if (shockwaveRingPrefab) Instantiate(shockwaveRingPrefab, transform.position, Quaternion.identity);
-            if (explosionSfx) AudioSource.PlayClipAtPoint(explosionSfx, transform.position, sfxVolume);
+            
+            // 播放爆炸音效（带随机音调）
+            if (explosionSfx)
+            {
+                GameObject tempGO = new GameObject("TempExplosionSFX");
+                tempGO.transform.position = transform.position;
+                AudioSource tempSource = tempGO.AddComponent<AudioSource>();
+                tempSource.clip = explosionSfx;
+                tempSource.volume = sfxVolume;
+                tempSource.spatialBlend = 0f; // 2D音效
+                tempSource.pitch = 1f + Random.Range(-pitchVariation, pitchVariation);
+                tempSource.Play();
+                Destroy(tempGO, explosionSfx.length + 0.1f);
+            }
 
             // �����ж�
             var hits = Physics2D.OverlapCircleAll(transform.position, radius);

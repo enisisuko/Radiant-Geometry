@@ -7,29 +7,34 @@ namespace FadedDreams.Enemies
     {
         [Header("HP")]
         public float maxHp = 60f;
-        public float spawnInvulnerableSeconds = 0.25f;   // ³öÉú¶ÌÔİÎŞµĞ£¬±ÜÃâ³õÊ¼»¯ÎóÉË
+        public float spawnInvulnerableSeconds = 0.25f;   // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ŞµĞ£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         private float _hp;
         private float _spawnTime;
 
         [Header("Death VFX / Drop")]
-        public GameObject deathVfxPrefab;                 // ËÀÍöÌØĞ§£¨¿ÉÑ¡£©
-        public GameObject dropPrefab;                     // Ö¸Ïò¹ÒÁË EnergyPickup µÄÔ¤ÖÆÌå
+        public GameObject deathVfxPrefab;                 // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ğ§ï¿½ï¿½ï¿½ï¿½Ñ¡ï¿½ï¿½
+        public GameObject dropPrefab;                     // Ö¸ï¿½ï¿½ï¿½ï¿½ï¿½ EnergyPickup ï¿½ï¿½Ô¤ï¿½ï¿½ï¿½ï¿½
 
-        [Header("Explosion Light (Ò»Ë²¼äºÜÁÁºó½¥°µ)")]
-        public bool spawnExplosionLight = true;           // ÊÇ·ñÔÚËÀÍöÊ±Éú³É±¬Õ¨¹â
-        public Color explosionLightColor = Color.red;     // ¹âµÄÑÕÉ«
-        [Min(0f)] public float explosionPeakIntensity = 8f; // ±¬Õ¨·åÖµÁÁ¶È
-        [Min(0f)] public float explosionInnerRadius = 0.5f; // ÄÚ°ë¾¶
-        [Min(0f)] public float explosionOuterRadius = 4.0f; // Íâ°ë¾¶
-        [Min(0.05f)] public float explosionFadeSeconds = 0.65f; // ´Ó·åÖµµ½0µÄÊ±³¤
+        [Header("Explosion Light (Ò»Ë²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ó½¥°ï¿½)")]
+        public bool spawnExplosionLight = true;           // ï¿½Ç·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½É±ï¿½Õ¨ï¿½ï¿½
+        public Color explosionLightColor = Color.red;     // ï¿½ï¿½ï¿½ï¿½ï¿½É«
+        [Min(0f)] public float explosionPeakIntensity = 8f; // ï¿½ï¿½Õ¨ï¿½ï¿½Öµï¿½ï¿½ï¿½ï¿½
+        [Min(0f)] public float explosionInnerRadius = 0.5f; // ï¿½Ú°ë¾¶
+        [Min(0f)] public float explosionOuterRadius = 4.0f; // ï¿½ï¿½ë¾¶
+        [Min(0.05f)] public float explosionFadeSeconds = 0.65f; // ï¿½Ó·ï¿½Öµï¿½ï¿½0ï¿½ï¿½Ê±ï¿½ï¿½
         public AnimationCurve explosionIntensityCurve = AnimationCurve.EaseInOut(0, 1, 1, 0);
-        // ÇúÏß£º0~1Ê±¼ä£¬1Îª·åÖµ£¬0ÎªÏ¨Ãğ¡£¿ÉÔÚInspectorÀï×Ô¶¨ÒåĞÎ×´£¨ÀıÈçÏÈÉÏ³åÔÙÏÂÂä£©
+        // ï¿½ï¿½ï¿½ß£ï¿½0~1Ê±ï¿½ä£¬1Îªï¿½ï¿½Öµï¿½ï¿½0ÎªÏ¨ï¿½ğ¡£¿ï¿½ï¿½ï¿½Inspectorï¿½ï¿½ï¿½Ô¶ï¿½ï¿½ï¿½ï¿½ï¿½×´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ä£©
 
-        [Header("Screen Shake (ÕğÆÁ)")]
+        [Header("Screen Shake (ï¿½ï¿½ï¿½ï¿½)")]
         public bool shakeOnDeath = true;
-        [Min(0f)] public float shakeDuration = 0.2f;     // ÕğÆÁÊ±³¤£¨Ãë£©
-        [Min(0f)] public float shakeStrength = 0.5f;     // Õğ·ù£¨ÊÀ½ç¿Õ¼äÆ«ÒÆ×î´óÖµ£©
-        public float shakeFrequency = 24f;               // Ã¿Ãë¶¶¶¯´ÎÊı
+        [Min(0f)] public float shakeDuration = 0.2f;     // ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ë£©
+        [Min(0f)] public float shakeStrength = 0.5f;     // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Õ¼ï¿½Æ«ï¿½ï¿½ï¿½ï¿½ï¿½Öµï¿½ï¿½
+        public float shakeFrequency = 24f;               // Ã¿ï¿½ë¶¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+
+        [Header("Explosion Audio")]
+        public AudioClip explosionSFX;                   // çˆ†ç‚¸éŸ³æ•ˆï¼ˆé’¢ç´éŸ³ï¼‰
+        [Range(0f, 1f)] public float explosionVolume = 0.8f;
+        [Range(0f, 0.5f)] public float pitchVariation = 0.15f; // éŸ³è°ƒéšæœºå˜åŒ–èŒƒå›´
 
         public bool IsDead { get; private set; }
 
@@ -56,20 +61,23 @@ namespace FadedDreams.Enemies
             if (IsDead) return;
             IsDead = true;
 
-            // Ò»´ÎĞÔÌØĞ§£¨Á£×ÓµÈ£©
+            // Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ğ§ï¿½ï¿½ï¿½ï¿½ï¿½ÓµÈ£ï¿½
             if (deathVfxPrefab)
             {
                 var vfx = Instantiate(deathVfxPrefab, transform.position, Quaternion.identity);
                 Destroy(vfx, 5f);
             }
 
-            // ±¬Õ¨¹âĞ§£¨Ë²ÁÁ¡ú½¥Ãğ£©
+            // ï¿½ï¿½Õ¨ï¿½ï¿½Ğ§ï¿½ï¿½Ë²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
             if (spawnExplosionLight) SpawnExplosionLight();
 
-            // ÕğÆÁ
+            // ï¿½ï¿½ï¿½ï¿½
             if (shakeOnDeath) CameraShake2D.Shake(shakeDuration, shakeStrength, shakeFrequency);
 
-            // ¸ù¾İ×ÔÉíÕóÓªµÄÏà·´É«À´µôÂä£¨±£³ÖÔ­Âß¼­£©
+            // æ’­æ”¾çˆ†ç‚¸éŸ³æ•ˆï¼ˆå¸¦éšæœºéŸ³è°ƒï¼‰
+            if (explosionSFX) PlayExplosionSound();
+
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Óªï¿½ï¿½ï¿½à·´É«ï¿½ï¿½ï¿½ï¿½ï¿½ä£¨ï¿½ï¿½ï¿½ï¿½Ô­ï¿½ß¼ï¿½ï¿½ï¿½
             if (dropPrefab)
             {
                 var go = Instantiate(dropPrefab, transform.position, Quaternion.identity);
@@ -91,15 +99,31 @@ namespace FadedDreams.Enemies
 
             var l = go.AddComponent<Light2D>();
             l.lightType = Light2D.LightType.Point;
-            l.intensity = explosionPeakIntensity; // ÏÈµ½·åÖµ
+            l.intensity = explosionPeakIntensity; // ï¿½Èµï¿½ï¿½ï¿½Öµ
             l.pointLightInnerRadius = explosionInnerRadius;
             l.pointLightOuterRadius = explosionOuterRadius;
             l.color = explosionLightColor;
-            l.shadowIntensity = 0f; // ÈçĞèÒõÓ°¿Éµ÷´ó
-            l.volumeIntensity = 0f; // ÈôÓÃÌå»ı¹â£¬¿ÉÔÚURPÆôÓÃºóµ÷Õû
+            l.shadowIntensity = 0f; // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó°ï¿½Éµï¿½ï¿½ï¿½
+            l.volumeIntensity = 0f; // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½â£¬ï¿½ï¿½ï¿½ï¿½URPï¿½ï¿½ï¿½Ãºï¿½ï¿½ï¿½ï¿½
 
-            // ½¥ÒşĞ­³Ì
+            // ï¿½ï¿½ï¿½ï¿½Ğ­ï¿½ï¿½
             go.AddComponent<ExplosionLightFader>().Begin(l, explosionFadeSeconds, explosionIntensityCurve, explosionPeakIntensity);
+        }
+
+        private void PlayExplosionSound()
+        {
+            // åˆ›å»ºä¸´æ—¶AudioSourceæ’­æ”¾å¸¦éšæœºéŸ³è°ƒçš„çˆ†ç‚¸éŸ³æ•ˆ
+            GameObject tempGO = new GameObject("TempExplosionSFX");
+            tempGO.transform.position = transform.position;
+            AudioSource tempSource = tempGO.AddComponent<AudioSource>();
+            tempSource.clip = explosionSFX;
+            tempSource.volume = explosionVolume;
+            tempSource.spatialBlend = 0f; // 2DéŸ³æ•ˆ
+            // éšæœºè°ƒæ•´éŸ³è°ƒ
+            tempSource.pitch = 1f + Random.Range(-pitchVariation, pitchVariation);
+            tempSource.Play();
+            // æ’­æ”¾å®Œæ¯•åé”€æ¯
+            Destroy(tempGO, explosionSFX.length + 0.1f);
         }
 
         private static FadedDreams.Player.ColorMode Opposite(FadedDreams.Player.ColorMode m)
@@ -109,7 +133,7 @@ namespace FadedDreams.Enemies
     }
 
     /// <summary>
-    /// ½« Light2D ´Ó·åÖµÇ¿¶ÈÑØÇúÏßÔÚÖ¸¶¨Ê±³¤ÄÚµ­³öÖÁ 0£¬²¢ÔÚ½áÊøÊ±Ïú»Ù¡£
+    /// ï¿½ï¿½ Light2D ï¿½Ó·ï¿½ÖµÇ¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½Ê±ï¿½ï¿½ï¿½Úµï¿½ï¿½ï¿½ï¿½ï¿½ 0ï¿½ï¿½ï¿½ï¿½ï¿½Ú½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½Ù¡ï¿½
     /// </summary>
     internal class ExplosionLightFader : MonoBehaviour
     {
@@ -141,9 +165,9 @@ namespace FadedDreams.Enemies
     }
 
     /// <summary>
-    /// ¼«¼ò2DÕğÆÁ£ºÔİ´æ³õÊ¼Î»ÖÃ ¡ú ÔÚÊ±³¤ÄÚÒÔPerlinÔëÉù¶¶¶¯ ¡ú »¹Ô­¡£
-    /// ½«´Ë½Å±¾·ÅÔÚÈÎÒâ³¡¾°ÎïÌåÉÏ¶¼¿É¾²Ì¬µ÷ÓÃ£¨Ëü»á×Ô¶¯Éú³ÉÒ»¸öÔËĞĞÌå£©¡£
-    /// ÈçÄãÒÑÓĞ Cinemachine Impulse£¬¿É½«ÕâÀïÌæ»»Îª·¢ImpulseµÄÊµÏÖ¡£
+    /// ï¿½ï¿½ï¿½ï¿½2Dï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½İ´ï¿½ï¿½Ê¼Î»ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Perlinï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½Ô­ï¿½ï¿½
+    /// ï¿½ï¿½ï¿½Ë½Å±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½â³¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¶ï¿½ï¿½É¾ï¿½Ì¬ï¿½ï¿½ï¿½Ã£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô¶ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½å£©ï¿½ï¿½
+    /// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Cinemachine Impulseï¿½ï¿½ï¿½É½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½æ»»Îªï¿½ï¿½Impulseï¿½ï¿½Êµï¿½Ö¡ï¿½
     /// </summary>
     public class CameraShake2D : MonoBehaviour
     {

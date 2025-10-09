@@ -1,4 +1,4 @@
-// EnemySelfExplodeOnOverheat.cs ¡ª ±¬È¼ÇúÏß + 3ÃëºóÏú»Ù + ±¬Õ¨¹â°ë¾¶Ëõ·Å
+// EnemySelfExplodeOnOverheat.cs ï¿½ï¿½ ï¿½ï¿½È¼ï¿½ï¿½ï¿½ï¿½ + 3ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ + ï¿½ï¿½Õ¨ï¿½ï¿½ë¾¶ï¿½ï¿½ï¿½ï¿½
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.Rendering.Universal;
@@ -12,37 +12,42 @@ namespace FadedDreams.Enemies
     public class EnemySelfExplodeOnOverheat : MonoBehaviour
     {
         [Header("Explosion VFX & Light")]
-        public ParticleSystem explosionVfxPrefab;     // ·ÇÑ­»·±¬Õ¨Á£×Ó
-        public Light2D explosionLightPrefab;          // ½ö°üº¬ Light2D µÄ¸É¾»Ô¤ÖÆ
-        [Tooltip("±¬Õ¨Ç¿¹â±íÏÖÊ±³¤£¨Ãë£©")]
+        public ParticleSystem explosionVfxPrefab;     // ï¿½ï¿½Ñ­ï¿½ï¿½ï¿½ï¿½Õ¨ï¿½ï¿½ï¿½ï¿½
+        public Light2D explosionLightPrefab;          // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Light2D ï¿½Ä¸É¾ï¿½Ô¤ï¿½ï¿½
+        [Tooltip("ï¿½ï¿½Õ¨Ç¿ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ë£©")]
         public float explosionLightDuration = 3f;
 
         [Header("Explosion Light Curve")]
-        [Tooltip("0~1: Ê±¼ä¹éÒ»»¯ ¡ú Ç¿¶È±¶ÂÊ")]
+        [Tooltip("0~1: Ê±ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ ï¿½ï¿½ Ç¿ï¿½È±ï¿½ï¿½ï¿½")]
         public AnimationCurve intensityCurve = AnimationCurve.EaseInOut(0, 2f, 1, 0f);
-        [Tooltip("Light2D.intensity µÄ»ù×¼Öµ")]
+        [Tooltip("Light2D.intensity ï¿½Ä»ï¿½×¼Öµ")]
         public float baseLightIntensity = 5f;
-        [Tooltip("Light2D.pointLightOuterRadius µÄ»ù×¼Öµ")]
+        [Tooltip("Light2D.pointLightOuterRadius ï¿½Ä»ï¿½×¼Öµ")]
         public float baseLightRadius = 6f;
-        [Tooltip("°ë¾¶ËæÇúÏß·Å´ó±ÈÀı£¨= baseRadius * (1 + radiusCurveMultiplier * curveEval))")]
+        [Tooltip("ï¿½ë¾¶ï¿½ï¿½ï¿½ï¿½ï¿½ß·Å´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½= baseRadius * (1 + radiusCurveMultiplier * curveEval))")]
         public float radiusCurveMultiplier = 0.25f;
-        [Tooltip("ÕûÌåËõ·Å±¬Õ¨¹â°ë¾¶£¨0.5=ËõĞ¡Ò»°ë£¬1=Ô­Ñù£©")]
+        [Tooltip("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Å±ï¿½Õ¨ï¿½ï¿½ë¾¶ï¿½ï¿½0.5=ï¿½ï¿½Ğ¡Ò»ï¿½ë£¬1=Ô­ï¿½ï¿½ï¿½ï¿½")]
         public float explosionLightRadiusScale = 0.6f;
 
         [Header("Explosion Gameplay")]
-        public float radius = 6f;      // Ó°Ïì°ë¾¶
-        public float damage = 60f;     // ÉËº¦
-        public float igniteRadius = 6f; // µãÈ¼»ğ°Ñ°ë¾¶
+        public float radius = 6f;      // Ó°ï¿½ï¿½ë¾¶
+        public float damage = 60f;     // ï¿½Ëºï¿½
+        public float igniteRadius = 6f; // ï¿½ï¿½È¼ï¿½ï¿½Ñ°ë¾¶
         public float knockbackForce = 9f;
         public LayerMask affectMask;
 
         [Header("Aftermath")]
-        [Tooltip("×Ô±¬Íê³ÉºóÑÓÊ±Ïú»Ù×ÔÉí£¨Ãë£©")]
+        [Tooltip("ï¿½Ô±ï¿½ï¿½ï¿½Éºï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ë£©")]
         public float cleanupDelay = 3f;
 
         [Header("Screen Shake")]
         public float shakeIntensity = 0.4f;
         public float shakeDuration = 0.25f;
+
+        [Header("Explosion Audio")]
+        public AudioClip explosionSFX;                   // çˆ†ç‚¸éŸ³æ•ˆï¼ˆé’¢ç´éŸ³ï¼‰
+        [Range(0f, 1f)] public float explosionVolume = 0.8f;
+        [Range(0f, 0.5f)] public float pitchVariation = 0.15f; // éŸ³è°ƒéšæœºå˜åŒ–èŒƒå›´
 
         private RedLightController _red;
         private bool _exploded;
@@ -61,7 +66,7 @@ namespace FadedDreams.Enemies
                 if (_red.onChanged == null) _red.onChanged = new UnityEvent<float, float>();
                 _onRedChangedAction = (cur, max) =>
                 {
-                    // ºìÁ¿¹àÂú ¡ú ´¥·¢×Ô±¬£¨×ßÑÓ³ÙÏú»ÙĞòÁĞ£©
+                    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ô±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ğ£ï¿½
                     if (!_exploded && max > 0f && cur >= max)
                         Explode();
                 };
@@ -76,7 +81,7 @@ namespace FadedDreams.Enemies
                 _red.onChanged.RemoveListener(_onRedChangedAction);
         }
 
-        /// <summary>¶ÔÍâ¹«¿ª´¥·¢£¨ÊÜ»÷ÖÂËÀ/½Å±¾µ÷ÓÃ£©¡£</summary>
+        /// <summary>ï¿½ï¿½ï¿½â¹«ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ü»ï¿½ï¿½ï¿½ï¿½ï¿½/ï¿½Å±ï¿½ï¿½ï¿½ï¿½Ã£ï¿½ï¿½ï¿½</summary>
         public void TriggerExplosion()
         {
             if (_exploded) return;
@@ -90,7 +95,7 @@ namespace FadedDreams.Enemies
 
             Vector3 pos = transform.position;
 
-            // 1) ±¬Õ¨Á£×Ó
+            // 1) ï¿½ï¿½Õ¨ï¿½ï¿½ï¿½ï¿½
             if (explosionVfxPrefab)
             {
                 var vfx = Instantiate(explosionVfxPrefab, pos, Quaternion.identity);
@@ -101,17 +106,17 @@ namespace FadedDreams.Enemies
                 Destroy(vfx.gameObject, main.startLifetime.constantMax + 0.5f);
             }
 
-            // 2) ±¬È¼Ç¿¹â£¨ÇúÏß+°ë¾¶Ëõ·Å£©
+            // 2) ï¿½ï¿½È¼Ç¿ï¿½â£¨ï¿½ï¿½ï¿½ï¿½+ï¿½ë¾¶ï¿½ï¿½ï¿½Å£ï¿½
             Light2D runtimeLight = null;
             if (explosionLightPrefab)
             {
                 runtimeLight = Instantiate(explosionLightPrefab, pos, Quaternion.identity);
-                runtimeLight.enabled = true; // Ç¿ÖÆÆôÓÃ
+                runtimeLight.enabled = true; // Ç¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                 runtimeLight.intensity = baseLightIntensity;
                 runtimeLight.pointLightOuterRadius = baseLightRadius * Mathf.Max(0.01f, explosionLightRadiusScale);
             }
 
-            // 3) µãÈ¼ÖÜÎ§»ğ°Ñ
+            // 3) ï¿½ï¿½È¼ï¿½ï¿½Î§ï¿½ï¿½ï¿½
             var colsTorch = Physics2D.OverlapCircleAll(pos, igniteRadius);
             foreach (var c in colsTorch)
             {
@@ -119,7 +124,7 @@ namespace FadedDreams.Enemies
                 if (torch) torch.OnLaserFirstHit();
             }
 
-            // 4) ·¶Î§ÉËº¦ + »÷ÍË£¨¿É´¥·¢Á¬Ëø£©
+            // 4) ï¿½ï¿½Î§ï¿½Ëºï¿½ + ï¿½ï¿½ï¿½Ë£ï¿½ï¿½É´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
             var cols = Physics2D.OverlapCircleAll(pos, radius, affectMask);
             foreach (var c in cols)
             {
@@ -134,10 +139,24 @@ namespace FadedDreams.Enemies
                 }
             }
 
-            // 5) ÆÁÄ»Õğ¶¯
+            // 5) ï¿½ï¿½Ä»ï¿½ï¿½
             if (Camera.main) StartCoroutine(DoShake(Camera.main.transform));
 
-            // 6) ¹âĞ§¶¯»­ + ÑÓ³ÙÏú»Ù
+            // 5.5) æ’­æ”¾çˆ†ç‚¸éŸ³æ•ˆï¼ˆå¸¦éšæœºéŸ³è°ƒï¼‰
+            if (explosionSFX)
+            {
+                GameObject tempGO = new GameObject("TempExplosionSFX");
+                tempGO.transform.position = pos;
+                AudioSource tempSource = tempGO.AddComponent<AudioSource>();
+                tempSource.clip = explosionSFX;
+                tempSource.volume = explosionVolume;
+                tempSource.spatialBlend = 0f; // 2DéŸ³æ•ˆ
+                tempSource.pitch = 1f + Random.Range(-pitchVariation, pitchVariation);
+                tempSource.Play();
+                Destroy(tempGO, explosionSFX.length + 0.1f);
+            }
+
+            // 6) ï¿½ï¿½Ğ§ï¿½ï¿½ï¿½ï¿½ + ï¿½Ó³ï¿½ï¿½ï¿½ï¿½ï¿½
             if (_explodeCo != null) StopCoroutine(_explodeCo);
             _explodeCo = StartCoroutine(ExplodeSequence(runtimeLight));
         }
@@ -164,7 +183,7 @@ namespace FadedDreams.Enemies
             }
 
             if (l) Destroy(l.gameObject);
-            Destroy(gameObject); // 3Ãë£¨»ò explosionLightDuration/cleanupDelay ½Ï´óÕß£©ºóÏú»Ù
+            Destroy(gameObject); // 3ï¿½ë£¨ï¿½ï¿½ explosionLightDuration/cleanupDelay ï¿½Ï´ï¿½ï¿½ß£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         }
 
         private IEnumerator DoShake(Transform cam)
