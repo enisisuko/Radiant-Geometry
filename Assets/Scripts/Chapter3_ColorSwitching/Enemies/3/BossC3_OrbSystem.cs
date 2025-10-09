@@ -124,22 +124,58 @@ namespace FD.Bosses.C3
         /// </summary>
         private void InitializeOrbs()
         {
-            if (_conductor == null) return;
-
-            _conductor.Setup(orbPrefab, maxOrbs, orbSpeed, orbRadius);
-            
-            // 根据PhaseManager的当前阶段设置初始环绕体数量
-            int initialOrbCount = maxOrbs;
-            if (_phaseManager != null)
-            {
-                Phase currentPhase = _phaseManager.GetCurrentPhase();
-                initialOrbCount = currentPhase == Phase.P1 ? _phaseManager.p1Orbs : _phaseManager.p2Orbs;
+            if (verboseLogs)
+                Debug.Log("[BossC3_OrbSystem] InitializeOrbs START");
                 
-                if (verboseLogs)
-                    Debug.Log($"[BossC3_OrbSystem] Initializing with phase {currentPhase}: {initialOrbCount} orbs");
+            if (_conductor == null)
+            {
+                Debug.LogWarning("[BossC3_OrbSystem] Conductor is null, skipping initialization");
+                return;
+            }
+
+            if (verboseLogs)
+                Debug.Log($"[BossC3_OrbSystem] Setting up conductor with maxOrbs={maxOrbs}");
+                
+            try
+            {
+                _conductor.Setup(orbPrefab, maxOrbs, orbSpeed, orbRadius);
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"[BossC3_OrbSystem] Error in conductor setup: {e.Message}");
+                return;
             }
             
+            // 根据PhaseManager的当前阶段设置初始环绕体数量
+            int initialOrbCount = 4; // 默认P1阶段4个
+            if (_phaseManager != null)
+            {
+                try
+                {
+                    Phase currentPhase = _phaseManager.GetCurrentPhase();
+                    initialOrbCount = currentPhase == Phase.P1 ? _phaseManager.p1Orbs : _phaseManager.p2Orbs;
+                    
+                    if (verboseLogs)
+                        Debug.Log($"[BossC3_OrbSystem] Initializing with phase {currentPhase}: {initialOrbCount} orbs");
+                }
+                catch (System.Exception e)
+                {
+                    Debug.LogError($"[BossC3_OrbSystem] Error getting phase: {e.Message}");
+                }
+            }
+            else
+            {
+                if (verboseLogs)
+                    Debug.LogWarning("[BossC3_OrbSystem] PhaseManager is null, using default count");
+            }
+            
+            if (verboseLogs)
+                Debug.Log($"[BossC3_OrbSystem] Calling SetOrbCount({initialOrbCount})");
+                
             SetOrbCount(initialOrbCount);
+            
+            if (verboseLogs)
+                Debug.Log("[BossC3_OrbSystem] InitializeOrbs COMPLETE");
         }
 
         /// <summary>
