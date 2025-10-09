@@ -146,7 +146,7 @@ Rigidbody2D:
   m_Mass: 1
   m_LinearDamping: 0
   m_AngularDamping: 0.05
-  m_GravityScale: 1
+  m_GravityScale: 0.4
   m_Material: {fileID: 0}
   m_IncludeLayers:
     serializedVersion: 2
@@ -167,19 +167,17 @@ MonoBehaviour:
   m_GameObject: {fileID: 2796742354370396487}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0fa9b06251d82954e913dc61933a3f9b, type: 3}
+  m_Script: {fileID: 11500000, guid: 344a1c565406e25479ef85913def7f13, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speed: 12
-  damage: 8
-  lifeTime: 4
+  speed: 10
+  lifeTime: 6
+  gravity: 0
+  locked: 0
+  redDamage: 15
   playerMask:
     serializedVersion: 2
     m_Bits: 1024
-  obstacleMask:
-    serializedVersion: 2
-    m_Bits: 8
-  destroyOnHit: 1
 --- !u!1 &3601947397591860835
 GameObject:
   m_ObjectHideFlags: 0

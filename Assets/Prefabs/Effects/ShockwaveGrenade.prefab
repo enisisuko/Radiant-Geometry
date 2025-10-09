@@ -167,20 +167,27 @@ MonoBehaviour:
   m_GameObject: {fileID: 2796742354370396487}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7e3a0c0d72cf0f04a85b532b9e6f5917, type: 3}
+  m_Script: {fileID: 11500000, guid: 6432e08e30205804fa70abe250ca6eae, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speed: 6
-  damage: 16
-  radius: 2.8
-  lifeTime: 6
+  speed: 7
+  gravityScale: 1.2
+  maxBounces: 0
+  explodeOnCollision: 1
+  fuseSeconds: 1.2
+  radius: 3.6
+  maxForce: 18
+  redDamage: 40
   playerMask:
     serializedVersion: 2
     m_Bits: 1024
   obstacleMask:
     serializedVersion: 2
     m_Bits: 8
-  explosionVfx: {fileID: 3136156099678939535, guid: 5ad60c7d4108a36429eaddb578b83cf8, type: 3}
+  shockwaveRingPrefab: {fileID: 0}
+  explosionVfx: {fileID: 3136156099678939535, guid: 9947f30e7ddf8ad4a85d579cca0e75f5, type: 3}
+  explosionSfx: {fileID: 0}
+  sfxVolume: 0.8
 --- !u!1 &5709876678208213682
 GameObject:
   m_ObjectHideFlags: 0

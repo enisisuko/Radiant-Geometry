@@ -34,9 +34,9 @@ namespace FadedDreams.Story
         [Header("=== 正方形设置 ===")]
         public Vector2 startPosition = new Vector2(0, 5);
         public Vector2 fallDirection = new Vector2(0.5f, -1f);
-        public float initialSpeed = 1f;
-        public float acceleration = 2f;
-        public float shakeIntensity = 0.1f;
+        public float initialSpeed = 2f;
+        public float acceleration = 5f;
+        public float shakeIntensity = 0.15f;
         
         [Header("=== 相机设置 ===")]
         public Vector2 cameraOffset = new Vector2(0, 2);
@@ -45,8 +45,8 @@ namespace FadedDreams.Story
         public float cameraZoomSpeed = 2f;
         
         [Header("=== 背景设置 ===")]
-        public Color backgroundStartColor = new Color(0.1f, 0.1f, 0.15f, 1f);
-        public Color backgroundEndColor = Color.white;
+        [Tooltip("背景材质（左下方白色渐变效果）")]
+        public Material backgroundGradientMaterial;
         
         // 内部变量
         private float currentSpeed;
@@ -103,20 +103,18 @@ namespace FadedDreams.Story
                 fallingSquare.position = finalPos;
             }
             
-            // 相机跟随 (0-6秒) 和后拉 (6-10秒)
+            // 相机一直跟随正方形，并在6秒后开始后拉
             if (mainCamera && fallingSquare)
             {
-                if (time < 6f)
+                // 一直跟随正方形
+                Vector3 target = (Vector2)fallingSquare.position + cameraOffset;
+                target.z = -10;
+                mainCamera.transform.position = Vector3.Lerp(
+                    mainCamera.transform.position, target, Time.deltaTime * 5f);
+                
+                // 6秒后相机开始后拉
+                if (time >= 6f && time < 10f)
                 {
-                    // 跟随正方形
-                    Vector3 target = (Vector2)fallingSquare.position + cameraOffset;
-                    target.z = -10;
-                    mainCamera.transform.position = Vector3.Lerp(
-                        mainCamera.transform.position, target, Time.deltaTime * 5f);
-                }
-                else if (time < 10f)
-                {
-                    // 相机后拉
                     mainCamera.orthographicSize = Mathf.Lerp(
                         mainCamera.orthographicSize, cameraZoomEnd, Time.deltaTime * cameraZoomSpeed);
                 }
@@ -140,13 +138,17 @@ namespace FadedDreams.Story
             StartCoroutine(Fade(titleGroup, 0, 1, 1f));
             StartCoroutine(Fade(authorGroup, 0, 1, 1f));
             
-            // 6秒：背景激活
+            // 6秒：背景激活（显示渐变背景）
             yield return new WaitForSeconds(2f);
             if (background)
             {
+                // 如果有渐变材质就使用，否则用纯白色
+                if (backgroundGradientMaterial != null)
+                {
+                    background.material = backgroundGradientMaterial;
+                }
+                background.color = Color.white;
                 background.enabled = true;
-                background.color = backgroundStartColor;
-                StartCoroutine(FadeBackground());
             }
             
             // 8秒：文字淡出
@@ -176,17 +178,6 @@ namespace FadedDreams.Story
             group.alpha = to;
         }
         
-        IEnumerator FadeBackground()
-        {
-            if (!background) yield break;
-            float t = 0;
-            while (t < 2f)
-            {
-                t += Time.deltaTime;
-                background.color = Color.Lerp(backgroundStartColor, backgroundEndColor, t / 2f);
-                yield return null;
-            }
-        }
     }
 }
 
