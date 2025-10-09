@@ -7,9 +7,9 @@ namespace FadedDreams.UI
     public class BracketVisual : MonoBehaviour
     {
         [Header("Refs")]
-        public SpriteRenderer shellRenderer;    // À¨ºÅ¿ÇÌå
-        public SpriteRenderer liquidRenderer;   // ÒºÌå£¨ÊÜ SpriteMask Ó°Ïì£©
-        public Light2D rimLight;                // ¿ÉÑ¡£º±ßÔµÈá¹â
+        public SpriteRenderer shellRenderer;    // ï¿½ï¿½ï¿½Å¿ï¿½ï¿½ï¿½
+        public SpriteRenderer liquidRenderer;   // Òºï¿½å£¨ï¿½ï¿½ SpriteMask Ó°ï¿½ì£©
+        public Light2D rimLight;                // ï¿½ï¿½Ñ¡ï¿½ï¿½ï¿½ï¿½Ôµï¿½ï¿½ï¿½
 
         [Header("Appearance")]
         [Range(0f, 1f)] public float shellAlpha = 0.6f;
@@ -21,8 +21,8 @@ namespace FadedDreams.UI
         [Header("Anim (Fill)")]
         public float fillLerpSpeed = 3.0f;
         public float minFillY = 0.02f;
-        private float _targetFill01;            // Ä¿±ê 0..1
-        private float _currentFill01;           // µ±Ç° 0..1
+        private float _targetFill01;            // Ä¿ï¿½ï¿½ 0..1
+        private float _currentFill01;           // ï¿½ï¿½Ç° 0..1
 
         [Header("Feedback")]
         public float usePulseScale = 1.08f;
@@ -31,20 +31,28 @@ namespace FadedDreams.UI
         public float gainFlashTime = 0.15f;
 
         [Header("Use Highlight (New)")]
-        [Tooltip("Ê¹ÓÃÊ±µÄ¸ßÁÁÊ±³¤")]
+        [Tooltip("Ê¹ï¿½ï¿½Ê±ï¿½Ä¸ï¿½ï¿½ï¿½Ê±ï¿½ï¿½")]
         public float useHighlightTime = 0.18f;
-        [Tooltip("Ê¹ÓÃÊ±±ßÔµ¹âÇ¿¶ÈµÄ¶îÍâ±¶Ôö£¨ÔÚrimLight»ù´¡ÉÏ³ËÉÏÕâ¸öÏµÊı·åÖµ£©")]
+        [Tooltip("Ê¹ï¿½ï¿½Ê±ï¿½ï¿½Ôµï¿½ï¿½Ç¿ï¿½ÈµÄ¶ï¿½ï¿½â±¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½rimLightï¿½ï¿½ï¿½ï¿½ï¿½Ï³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ïµï¿½ï¿½ï¿½ï¿½Öµï¿½ï¿½")]
         public float useHighlightBoost = 1.8f;
-        [Tooltip("Ê¹ÓÃÊ±ÊÇ·ñ°ÑÒºÌåÑÕÉ«¶ÌÔİÌáÁÁ£¨³ËÉÏÁÁ¶ÈÏµÊı£©")]
+        [Tooltip("Ê¹ï¿½ï¿½Ê±ï¿½Ç·ï¿½ï¿½Òºï¿½ï¿½ï¿½ï¿½É«ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ïµï¿½ï¿½ï¿½ï¿½")]
         public bool brightenLiquidOnUse = true;
         [Range(1f, 2.5f)] public float liquidBrightenMul = 1.4f;
+        
+        [Header("Active Breathing")]
+        [Tooltip("å‘¼å¸åŠ¨ç”»é€Ÿåº¦")]
+        public float breathSpeed = 0.8f;
+        [Tooltip("å‘¼å¸ç¼©æ”¾å¹…åº¦")]
+        [Range(0f, 0.2f)] public float breathScaleAmount = 0.05f;
+        [Tooltip("å‘¼å¸å…‰ç…§å¼ºåº¦å€ç‡")]
+        [Range(1f, 2f)] public float breathLightMul = 1.3f;
 
         [Header("FX (Optional)")]
-        [Tooltip("Ê¹ÓÃÊ±²¥·ÅµÄÁ£×ÓÌØĞ§£¨¿ÉÑ¡£©¡£½¨Òé×ö¸öĞ¡ĞÍÏòÍâÅçµÄÉÁ¹â/ËéÆ¬ÌØĞ§")]
+        [Tooltip("Ê¹ï¿½ï¿½Ê±ï¿½ï¿½ï¿½Åµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ğ§ï¿½ï¿½ï¿½ï¿½Ñ¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ğ¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½/ï¿½ï¿½Æ¬ï¿½ï¿½Ğ§")]
         public ParticleSystem useFX;
-        [Tooltip("Ôö¼ÓÄÜÁ¿Ê±²¥·ÅµÄÁ£×ÓÌØĞ§£¨¿ÉÑ¡£©")]
+        [Tooltip("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½Åµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ğ§ï¿½ï¿½ï¿½ï¿½Ñ¡ï¿½ï¿½")]
         public ParticleSystem gainFX;
-        [Tooltip("FXÊµÀıµÄ¸¸ÎïÌå£¬Èç¹ûÁô¿Õ¾Í¹ÒÔÚ±¾ÎïÌåÏÂ")]
+        [Tooltip("FXÊµï¿½ï¿½ï¿½Ä¸ï¿½ï¿½ï¿½ï¿½å£¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Õ¾Í¹ï¿½ï¿½Ú±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½")]
         public Transform fxAnchor;
 
         [Header("Debug")]
@@ -58,6 +66,11 @@ namespace FadedDreams.UI
         private bool _flashing;
         private bool _useHighlighting;
         private float _nextDebugTime;
+        
+        // å‘¼å¸æ•ˆæœçŠ¶æ€
+        private bool _isActive = false;  // å½“å‰æ˜¯å¦ä¸ºæ¿€æ´»çš„é¢œè‰²æ¨¡å¼
+        private Vector3 _shellBaseScale;
+        private float _breathPhase = 0f;
 
         private void Awake()
         {
@@ -66,6 +79,7 @@ namespace FadedDreams.UI
                 var c = shellRenderer.color; c.a = shellAlpha; shellRenderer.color = c;
                 shellRenderer.sortingLayerName = sortingLayerName;
                 shellRenderer.sortingOrder = sortingOrder;
+                _shellBaseScale = shellRenderer.transform.localScale;
             }
             if (liquidRenderer)
             {
@@ -107,14 +121,20 @@ namespace FadedDreams.UI
 
             if (_useHighlighting && rimLight)
             {
-                // ÈÃ¸ßÁÁÆÚ¼äµÄ¹âÇ¿ÖğÖ¡Ë¥¼õ£¨ÎÈÒ»µã£©
+                // ï¿½Ã¸ï¿½ï¿½ï¿½ï¿½Ú¼ï¿½Ä¹ï¿½Ç¿ï¿½ï¿½Ö¡Ë¥ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ã£©
                 rimLight.intensity = Mathf.MoveTowards(rimLight.intensity, _lightBaseIntensity, dt * (useHighlightBoost / useHighlightTime));
+            }
+            
+            // å¦‚æœæ˜¯æ¿€æ´»çŠ¶æ€ï¼Œåº”ç”¨å‘¼å¸æ•ˆæœ
+            if (_isActive)
+            {
+                ApplyBreathingEffect(dt);
             }
 
             if (debugLogs && Time.unscaledTime >= _nextDebugTime)
             {
                 _nextDebugTime = Time.unscaledTime + debugInterval;
-                Debug.Log($"[BKT] TickFill({name}): cur={_currentFill01:F3}, tgt={_targetFill01:F3}, scaleY={liquidRenderer?.transform.localScale.y}");
+                Debug.Log($"[BKT] TickFill({name}): cur={_currentFill01:F3}, tgt={_targetFill01:F3}, scaleY={liquidRenderer?.transform.localScale.y}, active={_isActive}");
             }
         }
 
@@ -134,15 +154,80 @@ namespace FadedDreams.UI
 
         public void PulseUse() { if (!_pulsing) StartCoroutine(CoPulse()); }
         public void FlashGain() { if (!_flashing) StartCoroutine(CoFlash()); }
+        
+        /// <summary>
+        /// è®¾ç½®æ˜¯å¦ä¸ºå½“å‰æ¿€æ´»çš„é¢œè‰²æ¨¡å¼ï¼ˆæ¿€æ´»æ—¶ä¼šæœ‰å‘¼å¸æ•ˆæœï¼‰
+        /// </summary>
+        public void SetActive(bool active)
+        {
+            if (_isActive != active)
+            {
+                _isActive = active;
+                
+                if (!active)
+                {
+                    // å–æ¶ˆæ¿€æ´»æ—¶æ¢å¤åŸå§‹ç¼©æ”¾å’Œå…‰ç…§
+                    ResetBreathingEffect();
+                }
+                
+                if (debugLogs)
+                    Debug.Log($"[BKT] SetActive({name}): {active}");
+            }
+        }
+        
+        /// <summary>
+        /// åº”ç”¨å‘¼å¸æ•ˆæœï¼ˆç¼©æ”¾+å…‰ç…§ï¼‰
+        /// </summary>
+        private void ApplyBreathingEffect(float dt)
+        {
+            // æ›´æ–°å‘¼å¸ç›¸ä½
+            _breathPhase += dt * breathSpeed * Mathf.PI * 2f;
+            if (_breathPhase > Mathf.PI * 2f) _breathPhase -= Mathf.PI * 2f;
+            
+            // è®¡ç®—å‘¼å¸å€¼ (0.5 ~ 1.0ï¼Œå¹³æ»‘çš„æ­£å¼¦æ³¢)
+            float breathValue = 0.5f + 0.5f * Mathf.Sin(_breathPhase);
+            
+            // åº”ç”¨åˆ°å¤–å£³ç¼©æ”¾
+            if (shellRenderer != null)
+            {
+                float scaleMultiplier = 1f + (breathScaleAmount * breathValue);
+                shellRenderer.transform.localScale = _shellBaseScale * scaleMultiplier;
+            }
+            
+            // åº”ç”¨åˆ°å…‰ç…§å¼ºåº¦
+            if (rimLight != null)
+            {
+                float lightMultiplier = Mathf.Lerp(1f, breathLightMul, breathValue);
+                rimLight.intensity = _lightBaseIntensity * lightMultiplier;
+            }
+        }
+        
+        /// <summary>
+        /// é‡ç½®å‘¼å¸æ•ˆæœåˆ°åŸºç¡€çŠ¶æ€
+        /// </summary>
+        private void ResetBreathingEffect()
+        {
+            if (shellRenderer != null)
+            {
+                shellRenderer.transform.localScale = _shellBaseScale;
+            }
+            
+            if (rimLight != null)
+            {
+                rimLight.intensity = _lightBaseIntensity;
+            }
+            
+            _breathPhase = 0f;
+        }
 
-        /// <summary>Ê¹ÓÃÊ±µÄ¡°¸ßÁÁ+FX¡±Í³Ò»Èë¿Ú£¨ĞÂ£©</summary>
+        /// <summary>Ê¹ï¿½ï¿½Ê±ï¿½Ä¡ï¿½ï¿½ï¿½ï¿½ï¿½+FXï¿½ï¿½Í³Ò»ï¿½ï¿½Ú£ï¿½ï¿½Â£ï¿½</summary>
         public void PlayUseHighlightAndFX()
         {
             if (useHighlightTime > 0f) StartCoroutine(CoUseHighlight());
             if (useFX) SpawnOneShot(useFX);
         }
 
-        /// <summary>Ôö¼ÓÄÜÁ¿Ê±µÄFX£¨±£ÁôÔ­ÏÈFlashGain£¬Í¬Ê±Ö§³Ö¶îÍâFX£©</summary>
+        /// <summary>ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½FXï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô­ï¿½ï¿½FlashGainï¿½ï¿½Í¬Ê±Ö§ï¿½Ö¶ï¿½ï¿½ï¿½FXï¿½ï¿½</summary>
         public void PlayGainFX()
         {
             if (gainFX) SpawnOneShot(gainFX);
@@ -179,7 +264,7 @@ namespace FadedDreams.UI
             if (rimLight) rimLight.intensity = _lightBaseIntensity;
             _flashing = false;
 
-            // ²¹³ä£ºÔöÒæÊ±µÄ¿ÉÑ¡Á£×Ó
+            // ï¿½ï¿½ï¿½ä£ºï¿½ï¿½ï¿½ï¿½Ê±ï¿½Ä¿ï¿½Ñ¡ï¿½ï¿½ï¿½ï¿½
             PlayGainFX();
         }
 
@@ -187,23 +272,23 @@ namespace FadedDreams.UI
         {
             _useHighlighting = true;
 
-            // 1) ±ßÔµ¹âË²Ê±¼ÓÇ¿
+            // 1) ï¿½ï¿½Ôµï¿½ï¿½Ë²Ê±ï¿½ï¿½Ç¿
             if (rimLight)
                 rimLight.intensity = _lightBaseIntensity * useHighlightBoost;
 
-            // 2) ÒºÌåÑÕÉ«¶ÌÔİÌáÁÁ£¨¿ÉÑ¡£©
+            // 2) Òºï¿½ï¿½ï¿½ï¿½É«ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ñ¡ï¿½ï¿½
             Color recover = _liquidBaseColor;
             if (brightenLiquidOnUse && liquidRenderer)
             {
                 Color c = _liquidBaseColor;
-                // ÏßĞÔÌáÁÁ£¨±ÜÃâ¸Äalpha£©
+                // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½alphaï¿½ï¿½
                 c.r = Mathf.Min(1f, c.r * liquidBrightenMul);
                 c.g = Mathf.Min(1f, c.g * liquidBrightenMul);
                 c.b = Mathf.Min(1f, c.b * liquidBrightenMul);
                 liquidRenderer.color = c;
             }
 
-            // 3) Ê±³¤½áÊøºó»Ö¸´
+            // 3) Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¸ï¿½
             float t = 0f;
             while (t < useHighlightTime)
             {

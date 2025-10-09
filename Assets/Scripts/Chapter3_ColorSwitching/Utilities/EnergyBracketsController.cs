@@ -147,24 +147,44 @@ namespace FadedDreams.UI
             if (!followTarget) return;
 
             float dt = Time.deltaTime;
+            
+            // 检测当前激活的颜色模式
+            bool redIsActive = false;
+            bool greenIsActive = false;
+            
+            if (_pcm != null)
+            {
+                // 假设ColorMode.Red = 0, ColorMode.Green = 1
+                redIsActive = ((int)_pcm.Mode == 0);
+                greenIsActive = ((int)_pcm.Mode == 1);
+            }
 
             if (leftBracket)
             {
                 Vector3 target = followTarget.position + (Vector3)leftOffset;
                 leftBracket.transform.position = Vector3.Lerp(leftBracket.transform.position, target, 1f - Mathf.Exp(-followSmooth * dt));
                 leftBracket.TickFill(dt);
+                
+                // 设置激活状态（左侧显示红色）
+                bool shouldBeActive = leftShowsRed ? redIsActive : greenIsActive;
+                leftBracket.SetActive(shouldBeActive);
             }
             if (rightBracket)
             {
                 Vector3 target = followTarget.position + (Vector3)rightOffset;
                 rightBracket.transform.position = Vector3.Lerp(rightBracket.transform.position, target, 1f - Mathf.Exp(-followSmooth * dt));
                 rightBracket.TickFill(dt);
+                
+                // 设置激活状态（右侧显示绿色）
+                bool shouldBeActive = leftShowsRed ? greenIsActive : redIsActive;
+                rightBracket.SetActive(shouldBeActive);
             }
 
             if (debugLogs && Time.unscaledTime >= _nextDebugTime)
             {
                 _nextDebugTime = Time.unscaledTime + debugInterval;
-                Debug.Log($"[EBRKT] Update: red01={_pcm?.Red01:F3}, green01={_pcm?.Green01:F3}, " +
+                Debug.Log($"[EBRKT] Update: red01={_pcm?.Red01:F3}, green01={_pcm?.Green01:F3}, mode={_pcm?.Mode}, " +
+                          $"redActive={redIsActive}, greenActive={greenIsActive}, " +
                           $"leftPos={leftBracket?.transform.position}, rightPos={rightBracket?.transform.position}");
             }
         }
