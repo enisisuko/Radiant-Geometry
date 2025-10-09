@@ -129,8 +129,20 @@ namespace FD.Bosses.C3
         {
             if (autoRun)
             {
-                StartBattle();
+                // 延迟启动，确保其他组件都已初始化
+                StartCoroutine(DelayedStart());
             }
+        }
+        
+        private IEnumerator DelayedStart()
+        {
+            // 等待一帧，让所有组件的Start都执行完
+            yield return null;
+            
+            if (verboseLogs)
+                Debug.Log("[BossC3_Core] Delayed start - beginning battle");
+            
+            StartBattle();
         }
 
         private void Update()

@@ -63,6 +63,18 @@ namespace FD.Bosses.C3
 
         private void Start()
         {
+            // 延迟一帧确保OrbSystem已经初始化
+            StartCoroutine(DelayedInitialization());
+        }
+        
+        private IEnumerator DelayedInitialization()
+        {
+            // 等待一帧，确保所有Start方法都执行完毕
+            yield return null;
+            
+            if (verboseLogs)
+                Debug.Log("[BossC3_PhaseManager] Delayed initialization starting");
+            
             // 初始化阶段设置
             ApplyPhaseSettings(phase, true);
         }
