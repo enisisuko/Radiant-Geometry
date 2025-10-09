@@ -101,12 +101,24 @@ public class SetupTool : MonoBehaviour
     
     static void SetupCanvas(GameObject canvas)
     {
-        if (!canvas.GetComponent<Canvas>())
+        var c = canvas.GetComponent<Canvas>();
+        if (!c)
         {
-            var c = canvas.AddComponent<Canvas>();
+            c = canvas.AddComponent<Canvas>();
             c.renderMode = RenderMode.ScreenSpaceOverlay;
-            canvas.AddComponent<UnityEngine.UI.CanvasScaler>();
+            var scaler = canvas.AddComponent<UnityEngine.UI.CanvasScaler>();
+            scaler.uiScaleMode = UnityEngine.UI.CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(1920, 1080);
             canvas.AddComponent<UnityEngine.UI.GraphicRaycaster>();
+        }
+        // 确保Canvas的RectTransform设置正确
+        var rt = canvas.GetComponent<RectTransform>();
+        if (rt)
+        {
+            rt.anchorMin = Vector2.zero;
+            rt.anchorMax = Vector2.one;
+            rt.sizeDelta = Vector2.zero;
+            rt.anchoredPosition = Vector2.zero;
         }
     }
     
@@ -117,6 +129,13 @@ public class SetupTool : MonoBehaviour
         
         var rt = group.GetComponent<RectTransform>();
         if (!rt) rt = group.AddComponent<RectTransform>();
+        
+        // Group在屏幕中心
+        rt.anchorMin = new Vector2(0.5f, 0.5f);
+        rt.anchorMax = new Vector2(0.5f, 0.5f);
+        rt.anchoredPosition = Vector2.zero;
+        rt.sizeDelta = new Vector2(800, 100);
+        rt.pivot = new Vector2(0.5f, 0.5f);
         
         var textObj = FindOrCreate(textName, group.transform);
         var tmp = textObj.GetComponent<TextMeshProUGUI>();
@@ -132,6 +151,7 @@ public class SetupTool : MonoBehaviour
         textRt.anchorMax = new Vector2(0.5f, 0.5f);
         textRt.anchoredPosition = new Vector2(x, y);
         textRt.sizeDelta = new Vector2(800, 100);
+        textRt.pivot = new Vector2(0.5f, 0.5f);
     }
     
     static void SetupFadeScreen(GameObject obj)
@@ -144,9 +164,14 @@ public class SetupTool : MonoBehaviour
         img.color = Color.black;
         
         var rt = obj.GetComponent<RectTransform>();
+        if (!rt) rt = obj.AddComponent<RectTransform>();
+        
+        // 铺满整个屏幕
         rt.anchorMin = Vector2.zero;
         rt.anchorMax = Vector2.one;
+        rt.anchoredPosition = Vector2.zero;
         rt.sizeDelta = Vector2.zero;
+        rt.pivot = new Vector2(0.5f, 0.5f);
     }
     
     static void SetupSprite(GameObject obj, float x, float y, float scale = 1)
