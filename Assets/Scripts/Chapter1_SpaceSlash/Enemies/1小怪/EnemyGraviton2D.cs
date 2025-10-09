@@ -1,5 +1,5 @@
 // Assets/Scripts/Enemies/Chapter1/EnemyGraviton2D.cs
-// ÒıÁ¦Ğ¡¹Ö£¨Hover-Over-Head °æ£©£ºÔÚÍæ¼ÒÍ·¶¥¸½½üĞüÍ££¬ÊÍ·Å 3 Ãë·¶Î§ÒıÁ¦Îü¸½ÖÜÎ§¸ÕÌå£¨º¬Íæ¼Ò/µÀ¾ß£©¡£
+// ï¿½ï¿½ï¿½ï¿½Ğ¡ï¿½Ö£ï¿½Hover-Over-Head ï¿½æ£©ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í£ï¿½ï¿½ï¿½Í·ï¿½ 3 ï¿½ë·¶Î§ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î§ï¿½ï¿½ï¿½å£¨ï¿½ï¿½ï¿½ï¿½ï¿½/ï¿½ï¿½ï¿½ß£ï¿½ï¿½ï¿½
 using System.Collections;
 using UnityEngine;
 using UnityEngine.Events;
@@ -31,15 +31,15 @@ namespace FadedDreams.Enemies
 
         [Header("Gravity Skill")]
         public float gravityRadius = 8f;
-        public float pullForcePerSecond = 40f;    // Ã¿ÃëÏòĞÄÁ¦
+        public float pullForcePerSecond = 40f;    // Ã¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         public float attractDuration = 3.0f;
         public float skillCooldown = 5.0f;
-        public LayerMask affectMask = ~0;         // ÎüÒı¸ÕÌåµÄ²ã£¨º¬Íæ¼Ò£©
+        public LayerMask affectMask = ~0;         // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä²ã£¨ï¿½ï¿½ï¿½ï¿½Ò£ï¿½
         public UnityEvent onGravityStart;
         public UnityEvent onGravityStop;
-        public GameObject vfxAttractLoop;         // Ñ­»·ÌØĞ§£¨¿ÉÑ¡£©
-        public GameObject vfxAttractBurst;        // Æô¶¯±¬·¢ÌØĞ§£¨¿ÉÑ¡£©
-        public Light2D pulseLight;                // Âö³å¹â£¨URP ¿ÉÑ¡£©
+        public GameObject vfxAttractLoop;         // Ñ­ï¿½ï¿½ï¿½ï¿½Ğ§ï¿½ï¿½ï¿½ï¿½Ñ¡ï¿½ï¿½
+        public GameObject vfxAttractBurst;        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ğ§ï¿½ï¿½ï¿½ï¿½Ñ¡ï¿½ï¿½
+        public Light2D pulseLight;                // ï¿½ï¿½ï¿½ï¿½â£¨URP ï¿½ï¿½Ñ¡ï¿½ï¿½
 
         [Header("Contact Damage")]
         public float energyDamage = 25f;
@@ -49,6 +49,11 @@ namespace FadedDreams.Enemies
         [Header("Death")]
         public GameObject explosionPrefab;
         public UnityEvent onDeath;
+
+        [Header("Explosion Audio")]
+        public AudioClip explosionSFX;  // çˆ†ç‚¸éŸ³æ•ˆï¼ˆé’¢ç´éŸ³ï¼‰
+        [Range(0f, 1f)] public float explosionVolume = 0.8f;
+        [Range(0f, 0.5f)] public float pitchVariation = 0.15f;
 
         // runtime
         public bool IsDead { get; private set; }
@@ -226,6 +231,21 @@ namespace FadedDreams.Enemies
             IsDead = true;
             if (_loopFxInst) Destroy(_loopFxInst);
             if (explosionPrefab) Instantiate(explosionPrefab, transform.position, Quaternion.identity);
+            
+            // æ’­æ”¾çˆ†ç‚¸éŸ³æ•ˆï¼ˆå¸¦éšæœºéŸ³è°ƒï¼‰
+            if (explosionSFX)
+            {
+                GameObject tempGO = new GameObject("TempExplosionSFX");
+                tempGO.transform.position = transform.position;
+                AudioSource tempSource = tempGO.AddComponent<AudioSource>();
+                tempSource.clip = explosionSFX;
+                tempSource.volume = explosionVolume;
+                tempSource.spatialBlend = 0f;
+                tempSource.pitch = 1f + Random.Range(-pitchVariation, pitchVariation);
+                tempSource.Play();
+                Destroy(tempGO, explosionSFX.length + 0.1f);
+            }
+            
             onDeath?.Invoke();
             Destroy(gameObject);
         }

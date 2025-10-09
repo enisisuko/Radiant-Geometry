@@ -1,5 +1,5 @@
 // Assets/Scripts/Enemies/Chapter1/EnemyPseudoSlash2D.cs
-// Î±¿Õ¼äÕ¶Ð¡¹Ö£¨Hover-Over-Head °æ£©£ºÔÚÍæ¼ÒÍ·¶¥¸½½üÐüÍ££»Ã¿´ÎÏÈ 2 ÃëÐîÁ¦£¨¿É±»Íæ¼Ò¿Õ¼äÕ¶´ò¶Ï£©£¬ËæºóÊÍ·ÅÒ»Ìõ¹á´©ÆÁÄ»µÄ¡°Õ¶Ïß¡±£¨LaserBeamSegment2D£©¡£
+// Î±ï¿½Õ¼ï¿½Õ¶Ð¡ï¿½Ö£ï¿½Hover-Over-Head ï¿½æ£©ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í£ï¿½ï¿½Ã¿ï¿½ï¿½ï¿½ï¿½ 2 ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É±ï¿½ï¿½ï¿½Ò¿Õ¼ï¿½Õ¶ï¿½ï¿½Ï£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í·ï¿½Ò»ï¿½ï¿½ï¿½á´©ï¿½ï¿½Ä»ï¿½Ä¡ï¿½Õ¶ï¿½ß¡ï¿½ï¿½ï¿½LaserBeamSegment2Dï¿½ï¿½ï¿½ï¿½
 using System.Collections;
 using UnityEngine;
 using UnityEngine.Events;
@@ -28,11 +28,11 @@ namespace FadedDreams.Enemies
         public LayerMask separationMask;
 
         [Header("Pseudo Space-Slash")]
-        public LaserBeamSegment2D slashPrefab;    // ÓÃÍ¨ÓÃ¼¤¹â¶Î×ö¡°Õ¶Ïß¡±
-        public Camera cam;                        // Ö÷Ïà»ú£¨Ä¬ÈÏ Camera.main£©
-        public float chargeSeconds = 2.0f;        // ÐîÁ¦£¨¿É±»´ò¶Ï£©
-        public float lethalSeconds = 0.15f;       // ÖÂÃüÖ´ÐÐ´°¿Ú
-        public float fadeOutSeconds = 0.35f;      // ½¥Òþ
+        public LaserBeamSegment2D slashPrefab;    // ï¿½ï¿½Í¨ï¿½Ã¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Õ¶ï¿½ß¡ï¿½
+        public Camera cam;                        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¬ï¿½ï¿½ Camera.mainï¿½ï¿½
+        public float chargeSeconds = 2.0f;        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É±ï¿½ï¿½ï¿½Ï£ï¿½
+        public float lethalSeconds = 0.15f;       // ï¿½ï¿½ï¿½ï¿½Ö´ï¿½Ð´ï¿½ï¿½ï¿½
+        public float fadeOutSeconds = 0.35f;      // ï¿½ï¿½ï¿½ï¿½
         public float cooldownSeconds = 5.0f;
         public float thickness = 0.16f;
         public Color slashColor = Color.white;
@@ -56,6 +56,11 @@ namespace FadedDreams.Enemies
         [Header("Death")]
         public GameObject explosionPrefab;
         public UnityEvent onDeath;
+
+        [Header("Explosion Audio")]
+        public AudioClip explosionSFX;  // çˆ†ç‚¸éŸ³æ•ˆï¼ˆé’¢ç´éŸ³ï¼‰
+        [Range(0f, 1f)] public float explosionVolume = 0.8f;
+        [Range(0f, 0.5f)] public float pitchVariation = 0.15f;
 
         // runtime
         public bool IsDead { get; private set; }
@@ -135,7 +140,7 @@ namespace FadedDreams.Enemies
             _rb.velocity = Vector2.Lerp(_rb.velocity, desiredVel, Time.deltaTime * 8f);
 #endif
 
-            // ·ÖÀëÁ¦
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
             if (separationRadius > 0f && separationPush > 0f)
             {
                 Vector2 sep = Vector2.zero;
@@ -162,7 +167,7 @@ namespace FadedDreams.Enemies
             _inCharge = true;
             onChargeBegin?.Invoke();
 
-            // Ã÷ÏÔÐîÁ¦£¨¿ÉÅäºÏÍâ²¿VFX£©
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½â²¿VFXï¿½ï¿½
             float t = 0f;
             while (t < chargeSeconds && !IsDead)
             {
@@ -177,7 +182,7 @@ namespace FadedDreams.Enemies
             _inCharge = false;
             if (_state == State.Stunned || IsDead) yield break;
 
-            // ÊÍ·Å¡°Õ¶Ïß¡±
+            // ï¿½Í·Å¡ï¿½Õ¶ï¿½ß¡ï¿½
             _state = State.Firing;
             onSlashFire?.Invoke();
 
@@ -186,7 +191,7 @@ namespace FadedDreams.Enemies
                 Vector3 origin = transform.position;
                 Vector2 dir = (_player.position - origin).normalized;
 
-                // È¡Ïà»ú¿É¼ûÇøÓò¶Ô½ÇÏß³¤¶È£¬±£Ö¤¹á´©ÆÁÄ»
+                // È¡ï¿½ï¿½ï¿½ï¿½É¼ï¿½ï¿½ï¿½ï¿½ï¿½Ô½ï¿½ï¿½ß³ï¿½ï¿½È£ï¿½ï¿½ï¿½Ö¤ï¿½á´©ï¿½ï¿½Ä»
                 GetWorldViewportRect(cam, origin.z, out Vector3 bl, out Vector3 br, out Vector3 tl, out Vector3 tr);
                 float diag = Vector3.Distance(bl, tr) + 6f;
                 Vector3 A = origin - (Vector3)dir * (diag * 0.5f);
@@ -197,7 +202,7 @@ namespace FadedDreams.Enemies
                 // Initialize: (A, B, color, thickness, chargeSeconds, lethalSeconds, lifeSeconds, sweeping, velocity)
                 beam.Initialize(A, B, slashColor, thickness, 0f, lethalSeconds, lethalSeconds + fadeOutSeconds, false, Vector2.zero);
 
-                // Ï¸½Ú²ÎÊý£¨½Å±¾ÄÚÖÃ£º¿É±»¿Õ¼äÕ¶ÇÐ¿ª£¬ÃüÖÐÑÝ³öµÈ£©
+                // Ï¸ï¿½Ú²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Å±ï¿½ï¿½ï¿½ï¿½Ã£ï¿½ï¿½É±ï¿½ï¿½Õ¼ï¿½Õ¶ï¿½Ð¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý³ï¿½ï¿½È£ï¿½
                 beam.useChargeColorLerp = false;
                 beam.thickenOnLethal = true;
                 beam.thickenMul = thickenMul;
@@ -214,7 +219,7 @@ namespace FadedDreams.Enemies
             _state = State.Orbit;
         }
 
-        // ÊÓ¿Ú¾ØÐÎ£¨ÊÀ½ç×ø±ê£©
+        // ï¿½Ó¿Ú¾ï¿½ï¿½Î£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ê£©
         private static void GetWorldViewportRect(Camera c, float z, out Vector3 bl, out Vector3 br, out Vector3 tl, out Vector3 tr)
         {
             if (c.orthographic)
@@ -235,7 +240,7 @@ namespace FadedDreams.Enemies
             }
         }
 
-        // ±»Íæ¼Ò¿Õ¼äÕ¶µÈÃüÖÐ£ºÐîÁ¦ÆÚ ¡ú ´ò¶Ï£¬²»ËÀ£»ÆäËûÊ±¶Î ¡ú ³£¹æËÀÍö
+        // ï¿½ï¿½ï¿½ï¿½Ò¿Õ¼ï¿½Õ¶ï¿½ï¿½ï¿½ï¿½ï¿½Ð£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½Ï£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         public void TakeDamage(float amount)
         {
             if (IsDead) return;
@@ -274,6 +279,21 @@ namespace FadedDreams.Enemies
         {
             IsDead = true;
             if (explosionPrefab) Instantiate(explosionPrefab, transform.position, Quaternion.identity);
+            
+            // æ’­æ”¾çˆ†ç‚¸éŸ³æ•ˆï¼ˆå¸¦éšæœºéŸ³è°ƒï¼‰
+            if (explosionSFX)
+            {
+                GameObject tempGO = new GameObject("TempExplosionSFX");
+                tempGO.transform.position = transform.position;
+                AudioSource tempSource = tempGO.AddComponent<AudioSource>();
+                tempSource.clip = explosionSFX;
+                tempSource.volume = explosionVolume;
+                tempSource.spatialBlend = 0f;
+                tempSource.pitch = 1f + Random.Range(-pitchVariation, pitchVariation);
+                tempSource.Play();
+                Destroy(tempGO, explosionSFX.length + 0.1f);
+            }
+            
             onDeath?.Invoke();
             Destroy(gameObject);
         }

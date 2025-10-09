@@ -58,6 +58,11 @@ namespace FadedDreams.Enemies
         public GameObject explosionPrefab;
         public UnityEvent onDeath;
 
+        [Header("Explosion Audio")]
+        public AudioClip explosionSFX;  // 爆炸音效（钢琴音）
+        [Range(0f, 1f)] public float explosionVolume = 0.8f;
+        [Range(0f, 0.5f)] public float pitchVariation = 0.15f;
+
         // runtime
         public bool IsDead { get; private set; }
         private enum State { Idle, Orbit, Windup, Firing, Recover }
@@ -250,6 +255,21 @@ namespace FadedDreams.Enemies
         {
             IsDead = true;
             if (explosionPrefab) Instantiate(explosionPrefab, transform.position, Quaternion.identity);
+            
+            // 播放爆炸音效（带随机音调）
+            if (explosionSFX)
+            {
+                GameObject tempGO = new GameObject("TempExplosionSFX");
+                tempGO.transform.position = transform.position;
+                AudioSource tempSource = tempGO.AddComponent<AudioSource>();
+                tempSource.clip = explosionSFX;
+                tempSource.volume = explosionVolume;
+                tempSource.spatialBlend = 0f;
+                tempSource.pitch = 1f + Random.Range(-pitchVariation, pitchVariation);
+                tempSource.Play();
+                Destroy(tempGO, explosionSFX.length + 0.1f);
+            }
+            
             onDeath?.Invoke();
             Destroy(gameObject);
         }
