@@ -238,12 +238,12 @@ namespace FadedDreams.Story
             // 0-4秒：黑幕渐显（同时0秒就开始下落和特效）
             StartCoroutine(Fade(fadeScreen, 1, 0, 4f));
             
-            // 5秒：文字渐显
+            // 5秒：文字华丽登场
             yield return new WaitForSeconds(5f);
             if (titleText) titleText.text = "Radiant Geometry";
             if (authorText) authorText.text = "EnishiEuko";
-            StartCoroutine(Fade(titleGroup, 0, 1, 1f));
-            StartCoroutine(Fade(authorGroup, 0, 1, 1f));
+            StartCoroutine(FancyTextAppear(titleGroup, 0f));
+            StartCoroutine(FancyTextAppear(authorGroup, 0.3f));
             
             // 7秒：第二特效，加速度提升
             yield return new WaitForSeconds(2f);
@@ -262,8 +262,12 @@ namespace FadedDreams.Story
             // 11秒：等待撞地（在Update的OnLanding中触发爆炸和黑幕）
             yield return new WaitForSeconds(2f);
             
-            // 12秒：确保完全黑屏后切换
+            // 12秒：完全黑屏，多等2秒再切换
             yield return new WaitForSeconds(1f);
+            
+            // 额外等待2秒黑屏
+            yield return new WaitForSeconds(2f);
+            
             SceneManager.LoadScene("Chapter1");
         }
         
@@ -278,6 +282,67 @@ namespace FadedDreams.Story
                 yield return null;
             }
             group.alpha = to;
+        }
+        
+        IEnumerator FancyTextAppear(CanvasGroup group, float delay)
+        {
+            if (!group) yield break;
+            
+            // 延迟（让两个文字错开出现）
+            if (delay > 0) yield return new WaitForSeconds(delay);
+            
+            var rect = group.GetComponent<RectTransform>();
+            if (!rect) yield break;
+            
+            // 保存原始位置和缩放
+            Vector2 originalPos = rect.anchoredPosition;
+            Vector3 originalScale = rect.localScale;
+            
+            // 设置初始状态：从下方，缩小，透明
+            rect.anchoredPosition = originalPos + new Vector2(0, -100);
+            rect.localScale = Vector3.zero;
+            group.alpha = 0;
+            
+            float duration = 1.2f;
+            float t = 0;
+            
+            while (t < duration)
+            {
+                t += Time.deltaTime;
+                float progress = t / duration;
+                
+                // 使用弹性缓动曲线
+                float eased = EaseOutElastic(progress);
+                
+                // 位置：从下方飞入
+                rect.anchoredPosition = Vector2.Lerp(
+                    originalPos + new Vector2(0, -100),
+                    originalPos,
+                    eased
+                );
+                
+                // 缩放：从0放大到1，带弹性
+                rect.localScale = Vector3.Lerp(Vector3.zero, originalScale, eased);
+                
+                // 透明度：渐显
+                group.alpha = Mathf.Lerp(0, 1, progress);
+                
+                yield return null;
+            }
+            
+            // 确保最终状态
+            rect.anchoredPosition = originalPos;
+            rect.localScale = originalScale;
+            group.alpha = 1;
+        }
+        
+        // 弹性缓动函数（让动画更有弹性感）
+        float EaseOutElastic(float t)
+        {
+            float c4 = (2f * Mathf.PI) / 3f;
+            if (t == 0) return 0;
+            if (t == 1) return 1;
+            return Mathf.Pow(2f, -10f * t) * Mathf.Sin((t * 10f - 0.75f) * c4) + 1f;
         }
         
     }
