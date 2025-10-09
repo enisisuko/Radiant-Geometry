@@ -25,7 +25,6 @@ public class SetupTool : MonoBehaviour
         // 创建/查找对象
         var director = FindOrCreate("Director");
         var square = FindOrCreate("FallingSquare");
-        var bg = FindOrCreate("Background");
         var canvas = FindOrCreate("Canvas");
         
         // 设置Canvas
@@ -41,23 +40,12 @@ public class SetupTool : MonoBehaviour
         SetupFadeScreen(fadeScreen);
         
         // 设置正方形
-        SetupSprite(square, 0, 5);
+        SetupSprite(square, 0, 8);  // 起始高度改为8
         var squareSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Re：Dream/Scenes/STORY0/WhiteSquare.png");
         if (squareSprite)
         {
             square.GetComponent<SpriteRenderer>().sprite = squareSprite;
             Debug.Log("✓ 设置FallingSquare的Sprite");
-        }
-        
-        // 设置背景
-        SetupSprite(bg, 0, 0, 50);
-        if (squareSprite)
-        {
-            var bgSr = bg.GetComponent<SpriteRenderer>();
-            bgSr.sprite = squareSprite;
-            bgSr.sortingOrder = -10;
-            bgSr.color = new Color(0.1f, 0.1f, 0.15f, 1f);
-            Debug.Log("✓ 设置Background的Sprite");
         }
         
         // 设置Director脚本
@@ -66,35 +54,33 @@ public class SetupTool : MonoBehaviour
         
         SetProp(script, "fallingSquare", square.transform);
         SetProp(script, "mainCamera", Camera.main);
-        SetProp(script, "background", bg.GetComponent<SpriteRenderer>());
         SetProp(script, "titleGroup", titleGroup.GetComponent<CanvasGroup>());
         SetProp(script, "titleText", titleGroup.transform.Find("TitleText").GetComponent<TextMeshProUGUI>());
         SetProp(script, "authorGroup", authorGroup.GetComponent<CanvasGroup>());
         SetProp(script, "authorText", authorGroup.transform.Find("AuthorText").GetComponent<TextMeshProUGUI>());
         SetProp(script, "fadeScreen", fadeScreen.GetComponent<CanvasGroup>());
         
-        // 设置渐变材质
-        var gradientMat = AssetDatabase.LoadAssetAtPath<Material>("Assets/Re：Dream/Scenes/STORY0/GradientBackground.mat");
-        if (gradientMat)
-        {
-            SetProp(script, "backgroundGradientMaterial", gradientMat);
-            bg.GetComponent<SpriteRenderer>().material = gradientMat;
-            Debug.Log("✓ 设置渐变背景材质");
-        }
+        // 设置地面Sprite（使用白色方块）
+        SetProp(script, "groundSprite", squareSprite);
         
         // 尝试自动设置特效预制体
-        var effectPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Effects/大气摩擦.prefab");
-        if (effectPrefab)
+        var shakeEffect = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Effects/大气摩擦.prefab");
+        if (shakeEffect)
         {
-            SetProp(script, "effectPrefab", effectPrefab);
-            Debug.Log("✓ 自动设置特效预制体: 大气摩擦");
+            SetProp(script, "shakeEffectPrefab", shakeEffect);
+            Debug.Log("✓ 自动设置抖动特效: 大气摩擦");
         }
+        
+        // 素素会手动设置爆炸特效
+        Debug.Log("⚠️ 请手动设置explosionEffectPrefab（坠地爆炸特效）");
         
         // 保存
         EditorSceneManager.MarkSceneDirty(scene);
         EditorSceneManager.SaveScene(scene);
         
-        Debug.Log("✅ 配置完成！别忘了设置特效预制体~");
+        Debug.Log("✅ 配置完成！");
+        Debug.Log("📝 请手动设置：");
+        Debug.Log("   - explosionEffectPrefab（坠地爆炸特效）");
     }
     
     [MenuItem("Tools/STORY0/创建白色方块")]
