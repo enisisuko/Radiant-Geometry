@@ -294,16 +294,27 @@ namespace FadedDreams.Story
             var rect = group.GetComponent<RectTransform>();
             if (!rect) yield break;
             
+            // 获取TextMeshPro组件来设置边框
+            var tmp = group.GetComponentInChildren<TextMeshProUGUI>();
+            
+            // 设置彩色边框
+            if (tmp)
+            {
+                tmp.outlineWidth = 0.3f;
+                tmp.outlineColor = new Color32(255, 100, 255, 255);  // 彩色边框（粉紫色）
+            }
+            
             // 保存原始位置和缩放
             Vector2 originalPos = rect.anchoredPosition;
             Vector3 originalScale = rect.localScale;
             
-            // 设置初始状态：从下方，缩小，透明
-            rect.anchoredPosition = originalPos + new Vector2(0, -100);
+            // 设置初始状态：从上方远处，旋转，缩小，透明
+            rect.anchoredPosition = originalPos + new Vector2(0, 200);
             rect.localScale = Vector3.zero;
+            rect.localRotation = Quaternion.Euler(0, 0, 360);
             group.alpha = 0;
             
-            float duration = 1.2f;
+            float duration = 1.5f;
             float t = 0;
             
             while (t < duration)
@@ -314,18 +325,30 @@ namespace FadedDreams.Story
                 // 使用弹性缓动曲线
                 float eased = EaseOutElastic(progress);
                 
-                // 位置：从下方飞入
+                // 位置：从上方飞入（更远的距离）
                 rect.anchoredPosition = Vector2.Lerp(
-                    originalPos + new Vector2(0, -100),
+                    originalPos + new Vector2(0, 200),
                     originalPos,
                     eased
                 );
                 
-                // 缩放：从0放大到1，带弹性
-                rect.localScale = Vector3.Lerp(Vector3.zero, originalScale, eased);
+                // 缩放：从0放大到1.2再回到1，带弹性过冲
+                float scaleEased = EaseOutBack(progress);
+                rect.localScale = Vector3.Lerp(Vector3.zero, originalScale, scaleEased);
+                
+                // 旋转：从360度旋转到0度
+                float rotation = Mathf.Lerp(360, 0, EaseOutCubic(progress));
+                rect.localRotation = Quaternion.Euler(0, 0, rotation);
                 
                 // 透明度：渐显
                 group.alpha = Mathf.Lerp(0, 1, progress);
+                
+                // 彩色边框颜色动画（彩虹效果）
+                if (tmp)
+                {
+                    float hue = (progress * 0.3f) % 1f;  // 颜色变化
+                    tmp.outlineColor = Color.HSVToRGB(hue + 0.7f, 0.8f, 1f);
+                }
                 
                 yield return null;
             }
@@ -333,7 +356,14 @@ namespace FadedDreams.Story
             // 确保最终状态
             rect.anchoredPosition = originalPos;
             rect.localScale = originalScale;
+            rect.localRotation = Quaternion.identity;
             group.alpha = 1;
+            
+            // 最终边框颜色（粉紫色）
+            if (tmp)
+            {
+                tmp.outlineColor = new Color32(255, 100, 255, 255);
+            }
         }
         
         // 弹性缓动函数（让动画更有弹性感）
@@ -343,6 +373,20 @@ namespace FadedDreams.Story
             if (t == 0) return 0;
             if (t == 1) return 1;
             return Mathf.Pow(2f, -10f * t) * Mathf.Sin((t * 10f - 0.75f) * c4) + 1f;
+        }
+        
+        // 回弹缓动函数（超过目标再回弹）
+        float EaseOutBack(float t)
+        {
+            float c1 = 1.70158f;
+            float c3 = c1 + 1f;
+            return 1f + c3 * Mathf.Pow(t - 1f, 3f) + c1 * Mathf.Pow(t - 1f, 2f);
+        }
+        
+        // 三次方缓动（平滑减速）
+        float EaseOutCubic(float t)
+        {
+            return 1f - Mathf.Pow(1f - t, 3f);
         }
         
     }
