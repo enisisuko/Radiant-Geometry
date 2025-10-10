@@ -13,6 +13,18 @@ namespace FadedDreams.Bosses
     /// </summary>
     public class BossC2_AttackSystem : MonoBehaviour
     {
+        private void Awake()
+        {
+            // 获取或添加音频组件
+            _audioSource = GetComponent<AudioSource>();
+            if (_audioSource == null)
+            {
+                _audioSource = gameObject.AddComponent<AudioSource>();
+                _audioSource.playOnAwake = false;
+                _audioSource.spatialBlend = 0f; // 2D音效
+                _audioSource.volume = soundVolume;
+            }
+        }
         [Header("== Laser Settings ==")]
         [Tooltip("追踪激光预制体")]
         public GameObject homingLaserPrefab;
@@ -31,6 +43,21 @@ namespace FadedDreams.Bosses
         [Tooltip("旋镰扫射冷却时间")]
         public float scytheSweepCooldown = 4f;
 
+        [Header("== Audio ==")]
+        [Tooltip("激光发射音效")]
+        public AudioClip laserShootSound;
+        [Tooltip("扫射音效")]
+        public AudioClip sweepSound;
+        [Tooltip("子弹发射音效")]
+        public AudioClip bulletShootSound;
+        [Tooltip("手榴弹投掷音效")]
+        public AudioClip grenadeThrowSound;
+        [Tooltip("音效音量")]
+        [Range(0f, 1f)] public float soundVolume = 0.8f;
+
+        // 音频组件
+        private AudioSource _audioSource;
+
         // 内部状态
         private float _lastHomingLaserTime = 0f;
         private float _lastScytheSweepTime = 0f;
@@ -44,6 +71,12 @@ namespace FadedDreams.Bosses
                 return;
 
             _lastHomingLaserTime = Time.time;
+            
+            // 播放激光音效
+            if (laserShootSound != null && _audioSource != null)
+            {
+                _audioSource.PlayOneShot(laserShootSound, soundVolume);
+            }
             
             if (homingLaserPrefab != null)
             {
@@ -66,6 +99,12 @@ namespace FadedDreams.Bosses
                 return;
 
             _lastScytheSweepTime = Time.time;
+            
+            // 播放扫射音效
+            if (sweepSound != null && _audioSource != null)
+            {
+                _audioSource.PlayOneShot(sweepSound, soundVolume);
+            }
             
             if (scytheSweepPrefab != null)
             {
@@ -97,6 +136,12 @@ namespace FadedDreams.Bosses
         /// </summary>
         public void SpawnBullet(Vector3 position, Vector3 direction, float speed, float damage)
         {
+            // 播放子弹发射音效
+            if (bulletShootSound != null && _audioSource != null)
+            {
+                _audioSource.PlayOneShot(bulletShootSound, soundVolume * 0.7f); // 子弹音效稍微小一点
+            }
+            
             if (homingLaserPrefab != null)
             {
                 GameObject bullet = Instantiate(homingLaserPrefab, position, Quaternion.LookRotation(Vector3.forward, direction));
@@ -121,6 +166,12 @@ namespace FadedDreams.Bosses
         /// </summary>
         public void SpawnGrenade(Vector3 position, Vector3 direction, float speed)
         {
+            // 播放手榴弹投掷音效
+            if (grenadeThrowSound != null && _audioSource != null)
+            {
+                _audioSource.PlayOneShot(grenadeThrowSound, soundVolume);
+            }
+            
             if (scytheSweepPrefab != null)
             {
                 GameObject grenade = Instantiate(scytheSweepPrefab, position, Quaternion.LookRotation(Vector3.forward, direction));

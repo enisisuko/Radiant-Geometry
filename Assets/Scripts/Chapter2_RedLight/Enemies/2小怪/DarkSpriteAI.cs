@@ -75,6 +75,19 @@ namespace FadedDreams.Enemies
         public Color bodyColorMin = new Color(0.6f, 0.6f, 0.6f, 1f);
         public Color bodyColorMax = new Color(1f, 0.4f, 0.4f, 1f);
 
+        [Header("音效配置")]
+        [Tooltip("俯冲攻击音效")]
+        public AudioClip attackSound;
+        [Tooltip("受击音效")]
+        public AudioClip hitSound;
+        [Tooltip("死亡爆炸音效")]
+        public AudioClip deathSound;
+        [Tooltip("音效音量")]
+        [Range(0f, 1f)] public float soundVolume = 0.8f;
+
+        // 音频组件
+        private AudioSource _audioSource;
+
         private float auraTargetIntensity, auraTargetRadius;
         private Color auraTargetColor, bodyTargetColor;
 
@@ -103,6 +116,16 @@ namespace FadedDreams.Enemies
 
             if (!auraLight) auraLight = GetComponentInChildren<Light2D>(includeInactive: true);
             if (auraLight) auraLight.enabled = true; // 常驻显示
+
+            // 获取或添加音频组件
+            _audioSource = GetComponent<AudioSource>();
+            if (_audioSource == null)
+            {
+                _audioSource = gameObject.AddComponent<AudioSource>();
+            }
+            _audioSource.playOnAwake = false;
+            _audioSource.spatialBlend = 0f; // 2D音效
+            _audioSource.volume = soundVolume;
         }
 
         private void OnEnable()
@@ -226,6 +249,12 @@ namespace FadedDreams.Enemies
             {
                 diveDir = ((Vector2)player.position - (Vector2)transform.position).normalized;
                 state = State.Dive;
+                
+                // 播放攻击音效
+                if (attackSound != null && _audioSource != null)
+                {
+                    _audioSource.PlayOneShot(attackSound, soundVolume);
+                }
             }
         }
 
@@ -277,6 +306,13 @@ namespace FadedDreams.Enemies
         public void TakeDamage(float amount)
         {
             if (IsDead || state == State.Exploding) return;
+            
+            // 播放受击音效
+            if (hitSound != null && _audioSource != null)
+            {
+                _audioSource.PlayOneShot(hitSound, soundVolume * 0.6f); // 受击音效稍微小一点
+            }
+            
             hp -= amount;
             if (hp <= 0f) SelfExplode();
         }
@@ -318,6 +354,12 @@ namespace FadedDreams.Enemies
         {
             if (state == State.Exploding || state == State.Dead) return;
             state = State.Exploding;
+
+            // 播放死亡音效
+            if (deathSound != null && _audioSource != null)
+            {
+                _audioSource.PlayOneShot(deathSound, soundVolume);
+            }
 
             // 自爆瞬间：取消可视化反馈（只保留爆炸光）
             if (disableAuraAfterExplode && auraLight) auraLight.enabled = false;

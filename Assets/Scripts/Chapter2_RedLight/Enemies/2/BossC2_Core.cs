@@ -47,6 +47,17 @@ namespace FadedDreams.Bosses
         public bool verboseLogs = true;
         public bool drawGizmos = true;
 
+        [Header("== Audio ==")]
+        [Tooltip("受击音效")]
+        public AudioClip hitSound;
+        [Tooltip("死亡音效")]
+        public AudioClip deathSound;
+        [Tooltip("音效音量")]
+        [Range(0f, 1f)] public float soundVolume = 0.8f;
+
+        // 音频组件
+        private AudioSource _audioSource;
+
         // 状态变量
         private bool _isPlayerDetected = false;
         private bool _isInAggro = false;
@@ -71,6 +82,16 @@ namespace FadedDreams.Bosses
             if (rb == null) rb = GetComponent<Rigidbody2D>();
             if (model == null) model = GetComponent<SpriteRenderer>();
             if (auraLight == null) auraLight = GetComponent<UnityEngine.Rendering.Universal.Light2D>();
+
+            // 获取或添加音频组件
+            _audioSource = GetComponent<AudioSource>();
+            if (_audioSource == null)
+            {
+                _audioSource = gameObject.AddComponent<AudioSource>();
+                _audioSource.playOnAwake = false;
+                _audioSource.spatialBlend = 0f; // 2D音效
+                _audioSource.volume = soundVolume;
+            }
 
             // 设置物理属性
             if (rb != null)
@@ -333,6 +354,12 @@ namespace FadedDreams.Bosses
             currentHP = Mathf.Max(0f, currentHP - damage);
             OnDamageTaken?.Invoke(damage);
 
+            // 播放受击音效
+            if (hitSound != null && _audioSource != null)
+            {
+                _audioSource.PlayOneShot(hitSound, soundVolume);
+            }
+
             if (verboseLogs)
                 Debug.Log($"[BossC2_Core] Took {damage} damage. HP: {currentHP}/{maxHP}");
 
@@ -352,6 +379,12 @@ namespace FadedDreams.Bosses
             _isDead = true;
             currentHP = 0f;
             StopMovement();
+
+            // 播放死亡音效
+            if (deathSound != null && _audioSource != null)
+            {
+                _audioSource.PlayOneShot(deathSound, soundVolume);
+            }
 
             OnDeath?.Invoke();
 

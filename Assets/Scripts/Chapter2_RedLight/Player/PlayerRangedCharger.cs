@@ -127,6 +127,22 @@ namespace FadedDreams.Player
         public GameObject vfxExplosion;
         public float vfxExplosionLife = 1.2f;
         
+        [Header("音效配置")]
+        [Tooltip("单发斩击音效")]
+        public AudioClip slashSound;
+        [Tooltip("护刃展开音效")]
+        public AudioClip shieldSound;
+        [Tooltip("剑光蛋发射音效")]
+        public AudioClip eggShootSound;
+        [Tooltip("剑光蛋爆炸音效")]
+        public AudioClip eggExplosionSound;
+        [Tooltip("超级大斩音效")]
+        public AudioClip ultraSlashSound;
+        [Tooltip("命中音效")]
+        public AudioClip hitSound;
+        [Tooltip("音效音量")]
+        [Range(0f, 1f)] public float soundVolume = 0.8f;
+        
 
         // ================= Runtime =================
         private PlayerColorModeController _mode;
@@ -142,6 +158,8 @@ namespace FadedDreams.Player
         // S2 runtime handle（护盾可跨出②段继续存在）
         private GameObject _s2ActiveRing;
         private Coroutine _s2Runner;
+        // 音频组件
+        private AudioSource _audioSource;
 
 
 
@@ -203,6 +221,16 @@ namespace FadedDreams.Player
             _mode = GetComponentInParent<PlayerColorModeController>();
             _rb = GetComponentInParent<Rigidbody2D>();
             _cam = Camera.main != null ? Camera.main : FindFirstObjectByType<Camera>();
+
+            // 获取或添加音频组件
+            _audioSource = GetComponent<AudioSource>();
+            if (_audioSource == null)
+            {
+                _audioSource = gameObject.AddComponent<AudioSource>();
+            }
+            _audioSource.playOnAwake = false;
+            _audioSource.spatialBlend = 0f; // 2D音效
+            _audioSource.volume = soundVolume;
 
             _lrCore = GetComponent<LineRenderer>(); SetupLR(_lrCore, sortingOrderCore);
             _lrGlow1 = CreateChildLR("_Glow1", sortingOrderGlow1);
@@ -282,6 +310,12 @@ namespace FadedDreams.Player
             _busy = true;
             Vector2 dir = SoftLockDir(_smoothedAim, softLockAngle, softLockRadius);
 
+            // 播放斩击音效
+            if (slashSound != null && _audioSource != null)
+            {
+                _audioSource.PlayOneShot(slashSound, soundVolume);
+            }
+
             EnableBeams(true);
             int stick = Mathf.Max(1, Mathf.RoundToInt(s1_preflashFrames));
             for (int i = 0; i < stick; i++)
@@ -309,6 +343,12 @@ namespace FadedDreams.Player
         {
             _busy = true;
             Vector2 baseDir = SoftLockDir(_smoothedAim, softLockAngle, softLockRadius);
+
+            // 播放护刃音效
+            if (shieldSound != null && _audioSource != null)
+            {
+                _audioSource.PlayOneShot(shieldSound, soundVolume);
+            }
 
             // --- 短预览（旋转线） ---
             EnableBeams(true);
@@ -446,7 +486,13 @@ namespace FadedDreams.Player
             // 方向（含软锁）
             Vector2 aim = SoftLockDir(_smoothedAim, softLockAngle, softLockRadius);
 
-            // —— 简短预览（用三根 LineRenderer 画一道“预备线”）——
+            // 播放剑光蛋发射音效
+            if (eggShootSound != null && _audioSource != null)
+            {
+                _audioSource.PlayOneShot(eggShootSound, soundVolume);
+            }
+
+            // —— 简短预览（用三根 LineRenderer 画一道"预备线"）——
             EnableBeams(true);
             int stick = Mathf.Max(1, Mathf.RoundToInt(s3_preflashFrames));
             for (int i = 0; i < stick; i++)
@@ -503,6 +549,12 @@ namespace FadedDreams.Player
         {
             _busy = true;
             Vector2 baseDir = SoftLockDir(_smoothedAim, softLockAngle, softLockRadius);
+
+            // 播放超级大斩音效
+            if (ultraSlashSound != null && _audioSource != null)
+            {
+                _audioSource.PlayOneShot(ultraSlashSound, soundVolume * 1.2f); // 大招音效稍微大一些
+            }
 
             // 短预备
             EnableBeams(true);
@@ -1006,6 +1058,24 @@ namespace FadedDreams.Player
             {
                 if (_done) return;
                 _done = true;
+
+                // 播放爆炸音效（直接在这里播放，因为SwordEggProjectile是内部类）
+                var audioSource = GetComponent<AudioSource>();
+                if (audioSource == null)
+                {
+                    var tempGO = new GameObject("TempExplosionSFX");
+                    tempGO.transform.position = center;
+                    audioSource = tempGO.AddComponent<AudioSource>();
+                    audioSource.spatialBlend = 0f; // 2D音效
+                    
+                    // 从父类获取爆炸音效和音量
+                    var rangedCharger = FindFirstObjectByType<PlayerRangedCharger>();
+                    if (rangedCharger != null && rangedCharger.eggExplosionSound != null)
+                    {
+                        audioSource.PlayOneShot(rangedCharger.eggExplosionSound, rangedCharger.soundVolume);
+                    }
+                    Destroy(tempGO, 2f);
+                }
 
                 int n = Physics2D.OverlapCircleNonAlloc((Vector2)center, explosionRadius, _buf, enemyMask);
                 for (int i = 0; i < n; i++)
