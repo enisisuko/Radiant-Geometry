@@ -102,6 +102,15 @@ namespace FadedDreams.UI
                 Vector2 canvasCenter = Vector2.zero;
                 currentDirection = (canvasCenter - spotlightScreenPos).normalized;
                 targetDirection = currentDirection;
+                
+                // 初始化maxDistance为归一化的值（0-1范围）
+                // 计算从聚光灯位置到Canvas中心的距离
+                float distanceToCenter = Vector2.Distance(spotlightScreenPos, canvasCenter);
+                Vector2 canvasSize = canvasRect.sizeDelta;
+                // 将像素距离转换为归一化距离（相对于Canvas最大尺寸）
+                float normalizedDistance = distanceToCenter / Mathf.Max(canvasSize.x, canvasSize.y);
+                // 设置maxDistance，增加一些余量确保光束能到达目标
+                maxDistance = Mathf.Max(normalizedDistance * 1.5f, 0.8f); // 至少0.8，确保光束可见
             }
             
             UpdateShaderProperties();
