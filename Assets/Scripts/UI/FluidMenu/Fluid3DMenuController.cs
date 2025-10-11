@@ -33,6 +33,9 @@ namespace FadedDreams.UI
         [Header("流体交互")]
         [Tooltip("流体模拟器")]
         public Fluid3DSimulator fluidSimulator;
+        
+        [Tooltip("彩色流体模拟器（优先使用）")]
+        public ColorfulFluid3DSimulator colorfulFluidSimulator;
 
         [Tooltip("悬停时的流体作用力")]
         public float hoverFluidForce = 50f;
@@ -82,8 +85,13 @@ namespace FadedDreams.UI
                 menuCamera = Camera.main;
             }
 
-            // 自动查找组件
-            if (fluidSimulator == null)
+            // 自动查找组件（优先查找彩色流体）
+            if (colorfulFluidSimulator == null)
+            {
+                colorfulFluidSimulator = FindFirstObjectByType<ColorfulFluid3DSimulator>();
+            }
+            
+            if (fluidSimulator == null && colorfulFluidSimulator == null)
             {
                 fluidSimulator = FindFirstObjectByType<Fluid3DSimulator>();
             }
@@ -220,7 +228,7 @@ namespace FadedDreams.UI
                 PlaySound(hoverSound);
 
                 // 触发流体交互
-                TriggerFluidInteraction(lastMouseWorldPos, hoverFluidForce);
+                TriggerFluidInteraction(lastMouseWorldPos, hoverFluidForce, currentHoveredIndex);
             }
         }
 
@@ -250,7 +258,7 @@ namespace FadedDreams.UI
             PlaySound(clickSound);
 
             // 触发强力流体交互
-            TriggerFluidInteraction(lastMouseWorldPos, clickFluidForce);
+            TriggerFluidInteraction(lastMouseWorldPos, clickFluidForce, index);
 
             // 延迟执行动作（让动画播放）
             StartCoroutine(ExecuteMenuActionDelayed(index, 0.5f));
@@ -259,14 +267,36 @@ namespace FadedDreams.UI
         /// <summary>
         /// 触发流体交互
         /// </summary>
-        private void TriggerFluidInteraction(Vector3 worldPos, float force)
+        private void TriggerFluidInteraction(Vector3 worldPos, float force, int menuIndex = -1)
         {
-            if (fluidSimulator == null) return;
-
-            // 在点击位置添加向下的力（造成波纹）
-            Vector3 forceDir = Vector3.down + Vector3.forward * 0.3f;
-            fluidSimulator.AddForceAtPosition(worldPos, forceDir.normalized * force);
-            fluidSimulator.AddDensityAtPosition(worldPos, 0.5f);
+            // 优先使用彩色流体模拟器
+            if (colorfulFluidSimulator != null)
+            {
+                // 在点击位置添加向下的力（造成波纹）
+                Vector3 forceDir = Vector3.down + Vector3.forward * 0.3f;
+                Vector3 gridPos = colorfulFluidSimulator.transform.InverseTransformPoint(worldPos);
+                colorfulFluidSimulator.AddForceAtPosition(gridPos, forceDir.normalized * force);
+                
+                // 如果有菜单索引，注入对应颜色
+                if (menuIndex >= 0)
+                {
+                    if (force > hoverFluidForce * 1.5f) // 点击时
+                    {
+                        colorfulFluidSimulator.OnMenuItemClicked(menuIndex, worldPos);
+                    }
+                    else // 悬停时
+                    {
+                        colorfulFluidSimulator.OnMenuItemHovered(menuIndex, worldPos);
+                    }
+                }
+            }
+            else if (fluidSimulator != null)
+            {
+                // 使用普通流体模拟器
+                Vector3 forceDir = Vector3.down + Vector3.forward * 0.3f;
+                fluidSimulator.AddForceAtPosition(worldPos, forceDir.normalized * force);
+                fluidSimulator.AddDensityAtPosition(worldPos, 0.5f);
+            }
         }
 
         /// <summary>
