@@ -47,7 +47,10 @@ namespace FadedDreams.UI
         private Material spotlightMaterial;
         private Vector2 currentDirection;
         private Vector2 targetDirection;
-        private Vector2 spotlightScreenPos;
+        private Vector2 spotlightScreenPos; // Canvas本地坐标
+        private Vector2 spotlightUVPos; // UV坐标（0-1范围）
+        private float currentMaxDistance; // 当前距离（用于平滑过渡）
+        private float targetMaxDistance; // 目标距离
         private Canvas canvas;
         private RectTransform canvasRect;
         
@@ -87,30 +90,36 @@ namespace FadedDreams.UI
 
             // 初始化位置
             InitializePosition();
+            
+            // 将Canvas本地坐标转换为UV坐标
+            spotlightUVPos = CanvasToUV(spotlightScreenPos);
 
-            // 初始化方向（指向屏幕中心）
-            Vector2 canvasCenter = Vector2.zero;
-            currentDirection = (canvasCenter - spotlightScreenPos).normalized;
+            // 初始化方向（指向屏幕中心，UV坐标系）
+            Vector2 centerUV = new Vector2(0.5f, 0.5f);
+            currentDirection = (centerUV - spotlightUVPos).normalized;
             targetDirection = currentDirection;
         }
 
         private void Start()
         {
-            // 初始化方向（指向屏幕中心）
+            // 初始化方向和距离（UV坐标系）
             if (canvasRect != null)
             {
-                Vector2 canvasCenter = Vector2.zero;
-                currentDirection = (canvasCenter - spotlightScreenPos).normalized;
+                // UV坐标系中心点
+                Vector2 centerUV = new Vector2(0.5f, 0.5f);
+                currentDirection = (centerUV - spotlightUVPos).normalized;
                 targetDirection = currentDirection;
                 
-                // 初始化maxDistance为归一化的值（0-1范围）
-                // 计算从聚光灯位置到Canvas中心的距离
-                float distanceToCenter = Vector2.Distance(spotlightScreenPos, canvasCenter);
-                Vector2 canvasSize = canvasRect.sizeDelta;
-                // 将像素距离转换为归一化距离（相对于Canvas最大尺寸）
-                float normalizedDistance = distanceToCenter / Mathf.Max(canvasSize.x, canvasSize.y);
-                // 设置maxDistance，增加一些余量确保光束能到达目标
-                maxDistance = Mathf.Max(normalizedDistance * 1.5f, 0.8f); // 至少0.8，确保光束可见
+                // 初始化maxDistance为UV坐标系中的距离
+                // 计算从聚光灯位置到中心的UV距离
+                float initialDistance = Vector2.Distance(spotlightUVPos, centerUV);
+                // 增加一些余量确保光束能完全到达目标
+                initialDistance = Mathf.Max(initialDistance * 1.2f, 0.5f);
+                
+                // 初始化当前距离和目标距离
+                currentMaxDistance = initialDistance;
+                targetMaxDistance = initialDistance;
+                maxDistance = currentMaxDistance;
             }
             
             UpdateShaderProperties();
@@ -120,6 +129,9 @@ namespace FadedDreams.UI
         {
             // 更新方向
             UpdateDirection();
+            
+            // 平滑过渡距离（防止频闪）
+            UpdateDistance();
 
             // 更新Shader参数
             UpdateShaderProperties();
@@ -136,6 +148,12 @@ namespace FadedDreams.UI
             float halfWidth = canvasSize.x * 0.5f;
             float halfHeight = canvasSize.y * 0.5f;
 
+            // 统一发射点：所有聚光灯从顶部中心稍高的位置发出
+            // 这样看起来像一个聚光灯阵列从上方照射
+            spotlightScreenPos = new Vector2(0f, halfHeight + 150f);
+            
+            // 注释掉原来的多点发射逻辑
+            /*
             // 根据起始位置设置屏幕坐标
             switch (startPosition)
             {
@@ -164,6 +182,7 @@ namespace FadedDreams.UI
                     spotlightScreenPos = new Vector2(-halfWidth - 100f, halfHeight + 100f);
                     break;
             }
+            */
         }
 
         /// <summary>
@@ -186,6 +205,19 @@ namespace FadedDreams.UI
             // 确保方向归一化
             currentDirection = currentDirection.normalized;
         }
+        
+        /// <summary>
+        /// 更新距离（平滑过渡，防止频闪）
+        /// </summary>
+        private void UpdateDistance()
+        {
+            // 使用缓动插值平滑过渡距离
+            // 使用与方向相同的缓动速度确保视觉一致性
+            currentMaxDistance = Mathf.Lerp(currentMaxDistance, targetMaxDistance, Time.deltaTime * easingSpeed);
+            
+            // 更新maxDistance供Shader使用
+            maxDistance = currentMaxDistance;
+        }
 
         /// <summary>
         /// 更新Shader属性
@@ -194,47 +226,40 @@ namespace FadedDreams.UI
         {
             if (spotlightMaterial == null || canvasRect == null) return;
 
-            // 转换屏幕坐标到归一化坐标（0-1）
-            Vector2 canvasSize = canvasRect.sizeDelta;
-            Vector2 normalizedPos = new Vector2(
-                (spotlightScreenPos.x / canvasSize.x) + 0.5f,
-                (spotlightScreenPos.y / canvasSize.y) + 0.5f
-            );
+            // 直接使用UV坐标（0-1范围）
+            // 不需要转换，spotlightUVPos已经是UV坐标
 
             // 更新Shader参数
             spotlightMaterial.SetColor(ColorID, spotlightColor * intensity);
             spotlightMaterial.SetFloat(IntensityID, intensity);
             spotlightMaterial.SetFloat(ConeAngleID, coneAngle);
             spotlightMaterial.SetVector(DirectionID, new Vector4(currentDirection.x, currentDirection.y, 0, 0));
-            spotlightMaterial.SetVector(PositionID, new Vector4(normalizedPos.x, normalizedPos.y, 0, 0));
+            spotlightMaterial.SetVector(PositionID, new Vector4(spotlightUVPos.x, spotlightUVPos.y, 0, 0));
             spotlightMaterial.SetFloat(MaxDistanceID, maxDistance);
         }
 
         /// <summary>
         /// 设置目标按键（聚光灯将转向该按键）
         /// </summary>
-        /// <param name="targetPosition">目标位置（屏幕空间）</param>
+        /// <param name="targetPosition">目标位置（Canvas本地坐标）</param>
         public void SetTarget(Vector2 targetPosition)
         {
-            // 计算方向
-            Vector2 direction = (targetPosition - spotlightScreenPos).normalized;
+            if (canvasRect == null) return;
+            
+            // 将目标位置从Canvas本地坐标转换为UV坐标
+            Vector2 targetUV = CanvasToUV(targetPosition);
+            
+            // 在UV坐标系中计算方向
+            Vector2 direction = (targetUV - spotlightUVPos).normalized;
             targetDirection = direction;
             
-            // 计算到目标的实际距离，并动态调整MaxDistance
-            // 这样光束就会精确地延伸到目标位置
-            float distanceToTarget = Vector2.Distance(spotlightScreenPos, targetPosition);
+            // 在UV坐标系中计算到目标的精确距离
+            // 这样光束末端就会正好到达目标位置
+            float distanceToTarget = Vector2.Distance(spotlightUVPos, targetUV);
             
-            // 转换到Shader空间（归一化屏幕坐标，需要缩放）
-            if (canvasRect != null)
-            {
-                Vector2 canvasSize = canvasRect.sizeDelta;
-                // 将像素距离转换为归一化距离
-                // 注意：需要确保距离足够大，否则光束会很短或看不见
-                float normalizedDistance = distanceToTarget / Mathf.Max(canvasSize.x, canvasSize.y);
-                
-                // 增加一些余量，确保光束能完全到达目标
-                maxDistance = Mathf.Max(normalizedDistance * 1.2f, 0.5f); // 至少0.5，防止太短
-            }
+            // 设置目标距离（通过平滑过渡更新，防止频闪）
+            // 不直接修改maxDistance，而是通过targetMaxDistance平滑过渡
+            targetMaxDistance = distanceToTarget;
         }
 
         /// <summary>
@@ -266,11 +291,32 @@ namespace FadedDreams.UI
         }
 
         /// <summary>
-        /// 获取聚光灯位置
+        /// 获取聚光灯位置（Canvas本地坐标）
         /// </summary>
         public Vector2 GetPosition()
         {
             return spotlightScreenPos;
+        }
+        
+        /// <summary>
+        /// 将Canvas本地坐标转换为UV坐标（0-1范围）
+        /// Canvas本地坐标：中心为原点，范围 ±halfWidth, ±halfHeight
+        /// UV坐标：左下角为原点，范围 0-1
+        /// </summary>
+        private Vector2 CanvasToUV(Vector2 canvasPos)
+        {
+            if (canvasRect == null) return Vector2.zero;
+            
+            Vector2 canvasSize = canvasRect.sizeDelta;
+            
+            // 转换公式：将Canvas中心坐标系转换为UV坐标系
+            // UV = (Canvas / CanvasSize) + 0.5
+            Vector2 uv = new Vector2(
+                (canvasPos.x / canvasSize.x) + 0.5f,
+                (canvasPos.y / canvasSize.y) + 0.5f
+            );
+            
+            return uv;
         }
 
         /// <summary>
