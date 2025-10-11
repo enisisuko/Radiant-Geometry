@@ -67,24 +67,8 @@ namespace FadedDreams.UI
 
         private void Update()
         {
-            // 如果开局分配了聚光灯，且没有悬停任何按键，持续更新聚光灯位置（因为按键会移动）
-            if (assignSpotlightsToButtons && !isHoveringAnyButton && spotlightManager != null)
-            {
-                UpdateSpotlightsToButtons();
-            }
-        }
-
-        /// <summary>
-        /// 更新聚光灯位置（跟随移动的按键）
-        /// </summary>
-        private void UpdateSpotlightsToButtons()
-        {
-            // 按钮移动时，通过ClearTarget让聚光灯更新位置
-            // ClearTarget会让每个聚光灯回到自己负责的按钮位置
-            if (spotlightManager != null)
-            {
-                spotlightManager.ClearTarget();
-            }
+            // SpotlightManager自己会在Update中处理聚光灯跟踪
+            // 这里不需要额外调用了
         }
 
         /// <summary>
@@ -132,15 +116,36 @@ namespace FadedDreams.UI
             // 检查存档状态
             CheckSaveState();
 
-            // 开局时让每个聚光灯锁定对应的按钮
+            // 延迟分配聚光灯，确保按钮布局已完成
             if (assignSpotlightsToButtons)
             {
-                AssignSpotlightsToButtons();
+                if (showDebugInfo)
+                {
+                    Debug.Log("[DynamicMenuManager] 启动延迟分配协程");
+                }
+                StartCoroutine(DelayedAssignSpotlights());
             }
 
             if (showDebugInfo)
             {
                 Debug.Log($"[DynamicMenuManager] 菜单初始化完成，{menuButtons.Count} 个按键");
+            }
+        }
+        
+        /// <summary>
+        /// 延迟分配聚光灯（等待按钮布局和初始化完成）
+        /// </summary>
+        private System.Collections.IEnumerator DelayedAssignSpotlights()
+        {
+            // 等待0.1秒，确保所有按钮的Start和位置设置都已完成
+            yield return new UnityEngine.WaitForSeconds(0.1f);
+            
+            // 现在分配聚光灯
+            AssignSpotlightsToButtons();
+            
+            if (showDebugInfo)
+            {
+                Debug.Log("[DynamicMenuManager] 延迟分配完成");
             }
         }
 
@@ -198,10 +203,11 @@ namespace FadedDreams.UI
         {
             isHoveringAnyButton = false;
 
-            // 退出悬停后，恢复聚光灯到对应的按键（一对一）
-            if (assignSpotlightsToButtons && spotlightManager != null)
+            // 退出悬停后，清除悬停目标
+            // SpotlightManager的Update会自动让聚光灯回到各自负责的按钮
+            if (spotlightManager != null)
             {
-                AssignSpotlightsToButtons();
+                spotlightManager.ClearTarget();
             }
             
             if (showDebugInfo)

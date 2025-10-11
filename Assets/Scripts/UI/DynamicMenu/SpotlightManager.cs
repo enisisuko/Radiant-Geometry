@@ -42,11 +42,16 @@ namespace FadedDreams.UI
         
         // 每个聚光灯负责的按钮（初始分配）
         private FloatingMenuButton[] assignedButtons;
+        // 记录每个按钮的上一帧位置，用于检测移动
+        private Vector2[] lastAssignedButtonPositions;
+        // 标记是否已经完成初始分配
+        private bool hasInitializedAssignments = false;
 
         private void Start()
         {
             // 初始化按钮分配数组
             assignedButtons = new FloatingMenuButton[spotlights.Count];
+            lastAssignedButtonPositions = new Vector2[spotlights.Count];
             
             // 应用默认颜色
             ApplyDefaultColors();
@@ -54,10 +59,16 @@ namespace FadedDreams.UI
 
         private void Update()
         {
-            // 持续更新所有聚光灯（即使没有目标，也确保它们指向正确的位置）
+            // 根据是否有悬停目标，更新聚光灯指向
             if (currentTarget != null)
             {
+                // 有悬停目标：所有聚光灯指向悬停的按钮
                 UpdateSpotlightsToTarget();
+            }
+            else
+            {
+                // 无悬停目标：每个聚光灯跟踪自己负责的按钮
+                UpdateSpotlightsToAssignedButtons();
             }
         }
 
@@ -106,7 +117,7 @@ namespace FadedDreams.UI
         }
 
         /// <summary>
-        /// 更新聚光灯到目标位置（处理移动的按键）
+        /// 更新聚光灯到悬停目标位置（处理移动的按键）
         /// </summary>
         private void UpdateSpotlightsToTarget()
         {
@@ -127,6 +138,42 @@ namespace FadedDreams.UI
                         spotlight.SetTarget(targetPos);
                     }
                 }
+            }
+        }
+        
+        /// <summary>
+        /// 更新聚光灯到各自负责的按钮（只在按钮位置变化时才更新）
+        /// </summary>
+        private void UpdateSpotlightsToAssignedButtons()
+        {
+            if (assignedButtons == null || lastAssignedButtonPositions == null) return;
+
+            // 每个聚光灯跟踪自己负责的按钮
+            // 只在按钮位置变化时才调用SetTarget，避免频繁重置
+            for (int i = 0; i < spotlights.Count; i++)
+            {
+                if (i < assignedButtons.Length && spotlights[i] != null && assignedButtons[i] != null)
+                {
+                    Vector2 buttonPos = assignedButtons[i].GetPosition();
+                    
+                    // 第一次更新或者位置变化超过阈值时才更新
+                    if (!hasInitializedAssignments || Vector2.Distance(buttonPos, lastAssignedButtonPositions[i]) > 0.1f)
+                    {
+                        spotlights[i].SetTarget(buttonPos);
+                        lastAssignedButtonPositions[i] = buttonPos;
+                        
+                        if (showDebugInfo && !hasInitializedAssignments)
+                        {
+                            Debug.Log($"[SpotlightManager] 第一帧更新：聚光灯 {i} 指向按钮位置: {buttonPos}");
+                        }
+                    }
+                }
+            }
+            
+            // 标记已完成初始化
+            if (!hasInitializedAssignments)
+            {
+                hasInitializedAssignments = true;
             }
         }
 
@@ -260,17 +307,26 @@ namespace FadedDreams.UI
                 {
                     assignedButtons = new FloatingMenuButton[spotlights.Count];
                 }
+                if (lastAssignedButtonPositions == null)
+                {
+                    lastAssignedButtonPositions = new Vector2[spotlights.Count];
+                }
+                
                 assignedButtons[spotlightIndex] = button;
+                
+                // 记录按钮初始位置
+                Vector2 buttonPos = button.GetPosition();
+                lastAssignedButtonPositions[spotlightIndex] = buttonPos;
                 
                 // 设置初始目标
                 if (spotlights[spotlightIndex] != null)
                 {
-                    spotlights[spotlightIndex].SetTarget(button.GetPosition());
+                    spotlights[spotlightIndex].SetTarget(buttonPos);
                 }
                 
                 if (showDebugInfo)
                 {
-                    Debug.Log($"[SpotlightManager] 聚光灯 {spotlightIndex} 分配给按钮: {button.buttonType}");
+                    Debug.Log($"[SpotlightManager] 聚光灯 {spotlightIndex} 分配给按钮: {button.buttonType}，位置: {buttonPos}");
                 }
             }
         }
