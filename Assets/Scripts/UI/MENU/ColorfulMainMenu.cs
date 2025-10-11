@@ -15,9 +15,9 @@ namespace FadedDreams.UI
         [Header("UI References")]
         public Camera mainCamera;
         public Transform centerBall;
-        public Transform[] menuSections = new Transform[5]; // 五个分区
-        public Image[] sectionImages = new Image[5]; // 分区背景图片
-        public Text[] sectionTexts = new Text[5]; // 分区文字
+        public Transform[] menuSections = new Transform[6]; // 六个分区（新增设置）
+        public Image[] sectionImages = new Image[6]; // 分区背景图片
+        public Text[] sectionTexts = new Text[6]; // 分区文字
         
         [Header("Ball Animation")]
         public float ballRotationSpeed = 30f;
@@ -25,19 +25,20 @@ namespace FadedDreams.UI
         public float ballPulseAmplitude = 0.1f;
         
         [Header("Lighting System")]
-        public Light[] sectionLights = new Light[5]; // 每个分区的光源
+        public Light[] sectionLights = new Light[6]; // 每个分区的光源
         public float normalLightIntensity = 0.5f;
         public float hoverLightIntensity = 1.5f;
         public float lightTransitionSpeed = 5f;
         
         [Header("Color System")]
-        public Color[] sectionColors = new Color[5] 
+        public Color[] sectionColors = new Color[6] 
         {
-            new Color(1f, 0.2f, 0.2f, 0.8f), // 新游戏 - 红色
-            new Color(0.2f, 0.8f, 1f, 0.8f), // 继续游戏 - 蓝色
-            new Color(0.8f, 0.2f, 1f, 0.8f), // 双人模式 - 紫色
-            new Color(1f, 0.8f, 0.2f, 0.8f), // 退出游戏 - 黄色
-            new Color(0.2f, 1f, 0.2f, 0.8f)  // 支持我 - 绿色
+            new Color(1f, 0.2f, 0.2f, 0.8f),   // 新游戏 - 红色
+            new Color(0.2f, 0.8f, 1f, 0.8f),   // 继续游戏 - 蓝色
+            new Color(0.8f, 0.2f, 1f, 0.8f),   // 双人模式 - 紫色
+            new Color(1f, 0.5f, 0f, 0.8f),     // 设置 - 橙色
+            new Color(0.2f, 1f, 0.2f, 0.8f),   // 支持我 - 绿色
+            new Color(1f, 0.8f, 0.2f, 0.8f)    // 退出游戏 - 黄色
         };
         
         [Header("Color Spread Effect")]
@@ -48,18 +49,28 @@ namespace FadedDreams.UI
         public string newGameScene = "STORY0";
         public string firstCheckpointId = "101";
         
+        [Header("Settings Panel")]
+        [Tooltip("设置面板（包含音量控制）")]
+        public GameObject settingsPanel;
+        
         private int currentHoveredSection = -1;
         private int currentSpreadSection = -1;
         private bool isSpreading = false;
         private Coroutine spreadCoroutine;
         
         // 菜单项名称
-        private readonly string[] menuNames = { "新游戏", "继续游戏", "双人模式", "退出游戏", "支持我" };
+        private readonly string[] menuNames = { "新游戏", "继续游戏", "双人模式", "设置", "支持我", "退出游戏" };
         
         void Start()
         {
             InitializeMenu();
             SetupSectionColors();
+            
+            // 初始化时隐藏设置面板
+            if (settingsPanel != null)
+            {
+                settingsPanel.SetActive(false);
+            }
         }
         
         void Update()
@@ -236,11 +247,14 @@ namespace FadedDreams.UI
                 case 2: // 双人模式
                     CoopMode();
                     break;
-                case 3: // 退出游戏
-                    QuitGame();
+                case 3: // 设置
+                    OpenSettings();
                     break;
                 case 4: // 支持我
                     SupportMe();
+                    break;
+                case 5: // 退出游戏
+                    QuitGame();
                     break;
             }
         }
@@ -284,6 +298,34 @@ namespace FadedDreams.UI
         {
             Debug.Log("感谢素素的支持！爱娘会继续努力的～(｡◕‿◕｡)");
             // TODO: 可以添加支持页面或链接
+        }
+        
+        /// <summary>
+        /// 打开设置面板
+        /// </summary>
+        public void OpenSettings()
+        {
+            if (settingsPanel != null)
+            {
+                settingsPanel.SetActive(true);
+                Debug.Log("设置面板已打开 (◕‿◕✿)");
+            }
+            else
+            {
+                Debug.LogWarning("[ColorfulMainMenu] 设置面板未配置！请在Inspector中指定settingsPanel");
+            }
+        }
+        
+        /// <summary>
+        /// 关闭设置面板
+        /// </summary>
+        public void CloseSettings()
+        {
+            if (settingsPanel != null)
+            {
+                settingsPanel.SetActive(false);
+                Debug.Log("设置面板已关闭");
+            }
         }
     }
 }
