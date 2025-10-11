@@ -105,15 +105,16 @@ Shader "FadedDreams/Spotlight2D"
                 o.vertex = UnityObjectToClipPos(v.vertex);
                 o.uv = v.uv;
                 
-                // 计算屏幕空间位置
-                o.screenPos = ComputeScreenPos(o.vertex).xy / ComputeScreenPos(o.vertex).w;
+                // 计算屏幕空间位置 - 对于UI Canvas，直接使用UV坐标更准确
+                // UV坐标范围：左下角(0,0)到右上角(1,1)
+                o.screenPos = v.uv;
                 
                 return o;
             }
             
             fixed4 frag (v2f i) : SV_Target
             {
-                // 获取当前像素位置（屏幕空间）
+                // 获取当前像素位置（使用UV坐标，范围0-1）
                 float2 pixelPos = i.screenPos;
                 
                 // 聚光灯位置（归一化屏幕坐标）
@@ -127,7 +128,8 @@ Shader "FadedDreams/Spotlight2D"
                 float distanceToSpot = length(toPixel);
                 
                 // 如果距离太远，直接返回透明
-                if (distanceToSpot > _MaxDistance * 0.001)
+                // _MaxDistance已经是归一化的距离（0-1范围）
+                if (distanceToSpot > _MaxDistance)
                 {
                     return fixed4(0, 0, 0, 0);
                 }
@@ -148,7 +150,8 @@ Shader "FadedDreams/Spotlight2D"
                 if (angleInDegrees < halfConeAngle)
                 {
                     // 距离因子（改进：让光束在整个长度上保持较强的强度）
-                    float normalizedDist = distanceToSpot / (_MaxDistance * 0.001);
+                    // _MaxDistance已经是归一化的距离（0-1范围）
+                    float normalizedDist = distanceToSpot / _MaxDistance;
                     float distanceFactor = 1.0 - saturate(normalizedDist);
                     
                     // 使用更平缓的衰减曲线，让光束整体更明亮
