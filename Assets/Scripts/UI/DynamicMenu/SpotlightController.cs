@@ -96,6 +96,14 @@ namespace FadedDreams.UI
 
         private void Start()
         {
+            // 初始化方向（指向屏幕中心）
+            if (canvasRect != null)
+            {
+                Vector2 canvasCenter = Vector2.zero;
+                currentDirection = (canvasCenter - spotlightScreenPos).normalized;
+                targetDirection = currentDirection;
+            }
+            
             UpdateShaderProperties();
         }
 

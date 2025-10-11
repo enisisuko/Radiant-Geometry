@@ -83,7 +83,10 @@ namespace FadedDreams.UI
             rectTransform = GetComponent<RectTransform>();
             buttonImage = GetComponent<Image>();
             canvas = GetComponentInParent<Canvas>();
-            canvasRect = canvas.GetComponent<RectTransform>();
+            if (canvas != null)
+            {
+                canvasRect = canvas.GetComponent<RectTransform>();
+            }
 
             // 初始化随机方向
             float angle = Random.Range(0f, 360f) * Mathf.Deg2Rad;
@@ -107,6 +110,12 @@ namespace FadedDreams.UI
 
             // 注册到全局列表
             allButtons.Add(this);
+        }
+
+        private void Start()
+        {
+            // 在Start中设置初始位置，确保Canvas已经完全初始化
+            SetRandomPosition();
         }
 
         private void OnDestroy()

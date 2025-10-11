@@ -48,7 +48,7 @@ namespace FadedDreams.UI
 
         private void Update()
         {
-            // 更新所有聚光灯
+            // 持续更新所有聚光灯（即使没有目标，也确保它们指向正确的位置）
             if (currentTarget != null)
             {
                 UpdateSpotlightsToTarget();

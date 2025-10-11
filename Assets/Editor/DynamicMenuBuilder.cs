@@ -240,6 +240,7 @@ namespace FadedDreams.Editor
                 // Image
                 Image btnImage = btnGo.AddComponent<Image>();
                 btnImage.color = buttonColors[i];
+                btnImage.raycastTarget = true; // 确保可以接收鼠标事件
 
                 // FloatingMenuButton组件
                 FloatingMenuButton button = btnGo.AddComponent<FloatingMenuButton>();
@@ -249,10 +250,10 @@ namespace FadedDreams.Editor
                 button.minDistance = 150f;
                 button.baseScale = 1f;
                 button.hoverScale = 1.2f;
+                button.boundaryMargin = 100f; // 增大边界边距
 
-                // 设置随机初始位置
-                button.SetRandomPosition();
-
+                // 注意：不在这里调用SetRandomPosition，让它在Start中自动调用
+                
                 buttons[i] = button;
             }
 
@@ -310,12 +311,19 @@ namespace FadedDreams.Editor
 
                 // Image
                 Image spotImage = spotGo.AddComponent<Image>();
+                spotImage.raycastTarget = false; // 聚光灯不需要接收鼠标事件
                 
                 // 创建材质
                 if (spotlightShader != null)
                 {
                     Material mat = new Material(spotlightShader);
+                    mat.name = $"SpotlightMaterial_{i}";
                     spotImage.material = mat;
+                    // 设置默认参数
+                    mat.SetColor("_SpotlightColor", spotlightColors[i]);
+                    mat.SetFloat("_Intensity", 3f);
+                    mat.SetFloat("_ConeAngle", 30f);
+                    mat.SetFloat("_MaxDistance", 1000f);
                 }
 
                 // SpotlightController组件
