@@ -200,14 +200,7 @@ namespace FadedDreams.UI
             }
 
             // 加载场景
-            if (SceneLoader.Instance != null)
-            {
-                SceneLoader.LoadScene(newGameScene, firstCheckpointId);
-            }
-            else
-            {
-                SceneManager.LoadScene(newGameScene);
-            }
+            SceneLoader.LoadScene(newGameScene, firstCheckpointId);
 
             Debug.Log("[DynamicMenuManager] 开始新游戏");
         }
@@ -238,14 +231,7 @@ namespace FadedDreams.UI
             }
 
             // 加载场景
-            if (SceneLoader.Instance != null)
-            {
-                SceneLoader.LoadScene(scene, checkpoint);
-            }
-            else
-            {
-                SceneManager.LoadScene(scene);
-            }
+            SceneLoader.LoadScene(scene, checkpoint);
 
             Debug.Log($"[DynamicMenuManager] 继续游戏: {scene} @ {checkpoint}");
         }
