@@ -18,21 +18,27 @@ namespace FadedDreams.UI
         [Tooltip("音量滑块")]
         public Slider volumeSlider;
 
-        [Tooltip("音量百分比文本")]
+        [Tooltip("音量百分比文本（可选，无文字设计可不用）")]
         public Text volumePercentText;
 
         [Tooltip("静音按钮")]
         public Button muteButton;
 
-        [Tooltip("静音按钮图标（可选）")]
+        [Tooltip("静音按钮图标")]
         public Image muteButtonImage;
 
-        [Header("图标设置")]
-        [Tooltip("正常音量图标")]
+        [Header("图标设置（无文字设计）")]
+        [Tooltip("正常音量图标（🔊符号）")]
         public Sprite normalVolumeIcon;
 
-        [Tooltip("静音图标")]
+        [Tooltip("静音图标（🔇符号）")]
         public Sprite mutedVolumeIcon;
+
+        [Tooltip("低音量图标（🔉符号，可选）")]
+        public Sprite lowVolumeIcon;
+
+        [Tooltip("中音量图标（🔉符号，可选）")]
+        public Sprite mediumVolumeIcon;
 
         [Header("音效反馈")]
         [Tooltip("滑块调整时的音效")]
@@ -46,11 +52,17 @@ namespace FadedDreams.UI
         public float soundVolume = 0.5f;
 
         [Header("显示设置")]
+        [Tooltip("是否显示百分比文本（无文字设计建议关闭）")]
+        public bool showPercentText = false;
+
         [Tooltip("显示百分比符号")]
         public bool showPercentSign = true;
 
         [Tooltip("百分比格式（例如：0、0.0）")]
         public string percentFormat = "0";
+
+        [Tooltip("使用动态图标（根据音量显示不同图标）")]
+        public bool useDynamicVolumeIcon = true;
 
         [Header("调试")]
         [SerializeField] private bool verboseLogs = false;
@@ -174,7 +186,8 @@ namespace FadedDreams.UI
         /// <param name="volume">音量值（0-1）</param>
         private void UpdateVolumeDisplay(float volume)
         {
-            if (volumePercentText != null)
+            // 只在启用文本显示时更新（适配无文字设计）
+            if (showPercentText && volumePercentText != null)
             {
                 int percent = Mathf.RoundToInt(volume * 100f);
                 string percentStr = percent.ToString(percentFormat);
@@ -183,21 +196,48 @@ namespace FadedDreams.UI
         }
 
         /// <summary>
-        /// 更新静音按钮图标
+        /// 更新静音按钮图标（无文字设计：纯符号）
         /// </summary>
         private void UpdateMuteButtonVisual()
         {
             _isMuted = GlobalAudioManager.Instance.IsMuted();
+            float volume = GlobalAudioManager.Instance.MasterVolume;
 
             if (muteButtonImage != null)
             {
-                if (_isMuted && mutedVolumeIcon != null)
+                Sprite targetIcon = null;
+
+                // 静音状态
+                if (_isMuted || volume <= 0.01f)
                 {
-                    muteButtonImage.sprite = mutedVolumeIcon;
+                    targetIcon = mutedVolumeIcon; // 🔇
                 }
-                else if (!_isMuted && normalVolumeIcon != null)
+                // 动态音量图标（可选）
+                else if (useDynamicVolumeIcon)
                 {
-                    muteButtonImage.sprite = normalVolumeIcon;
+                    if (volume < 0.33f && lowVolumeIcon != null)
+                    {
+                        targetIcon = lowVolumeIcon; // 🔈
+                    }
+                    else if (volume < 0.66f && mediumVolumeIcon != null)
+                    {
+                        targetIcon = mediumVolumeIcon; // 🔉
+                    }
+                    else
+                    {
+                        targetIcon = normalVolumeIcon; // 🔊
+                    }
+                }
+                // 固定图标
+                else
+                {
+                    targetIcon = normalVolumeIcon; // 🔊
+                }
+
+                // 应用图标
+                if (targetIcon != null)
+                {
+                    muteButtonImage.sprite = targetIcon;
                 }
             }
         }
