@@ -58,6 +58,19 @@ namespace FadedDreams.Player
         [Tooltip("启用拖尾颜色同步")]
         [SerializeField] private bool syncTrailColor = true;
 
+        [Header("音效配置")]
+        [Tooltip("颜色切换音效")]
+        public AudioClip modeSwitchSound;
+        [Tooltip("能量耗尽警告音效")]
+        public AudioClip energyDepleteSound;
+        [Tooltip("攻击音效")]
+        public AudioClip attackSound;
+        [Tooltip("音效音量")]
+        [Range(0f, 1f)] public float soundVolume = 0.8f;
+
+        // 音频组件
+        private AudioSource _audioSource;
+
         [System.Serializable] public class EnergyEvent : UnityEvent<float, float, float, float> { }
         public UnityEvent<ColorMode> OnModeChanged = new UnityEvent<ColorMode>();
         public EnergyEvent OnEnergyChanged = new EnergyEvent();
@@ -80,6 +93,16 @@ namespace FadedDreams.Player
             {
                 playerTrail = GetComponent<TrailRenderer>();
             }
+            
+            // 获取或添加音频组件
+            _audioSource = GetComponent<AudioSource>();
+            if (_audioSource == null)
+            {
+                _audioSource = gameObject.AddComponent<AudioSource>();
+            }
+            _audioSource.playOnAwake = false;
+            _audioSource.spatialBlend = 0f; // 2D音效
+            _audioSource.volume = soundVolume;
             
             // 初始化默认拖尾渐变
             InitializeDefaultTrailGradients();
@@ -119,6 +142,13 @@ namespace FadedDreams.Player
 
             SpendEnergy(Mode, switchCost);
             ForceSwitch(target);
+            
+            // 播放模式切换音效
+            if (modeSwitchSound != null && _audioSource != null)
+            {
+                _audioSource.PlayOneShot(modeSwitchSound, soundVolume);
+            }
+            
             return true;
         }
 
@@ -181,7 +211,15 @@ namespace FadedDreams.Player
         public bool TrySpendAttackCost()
         {
             float c = (Mode == ColorMode.Red) ? redAttackCost : greenAttackCost;
-            return SpendEnergy(Mode, c);
+            bool success = SpendEnergy(Mode, c);
+            
+            // 播放攻击音效
+            if (success && attackSound != null && _audioSource != null)
+            {
+                _audioSource.PlayOneShot(attackSound, soundVolume * 0.7f);
+            }
+            
+            return success;
         }
 
         private void ClampEnergies()
@@ -273,6 +311,13 @@ namespace FadedDreams.Player
             if (autoRespawnOnBothEmpty && redEmpty && greenEmpty && !_pendingRespawn)
             {
                 _pendingRespawn = true;
+                
+                // 播放能量耗尽音效
+                if (energyDepleteSound != null && _audioSource != null)
+                {
+                    _audioSource.PlayOneShot(energyDepleteSound, soundVolume);
+                }
+                
                 Invoke(nameof(DoRespawn), respawnDelay);
                 return;
             }

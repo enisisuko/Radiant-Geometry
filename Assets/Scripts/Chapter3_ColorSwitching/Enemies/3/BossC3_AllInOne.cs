@@ -129,6 +129,25 @@ namespace FD.Bosses.C3
         public bool verboseLogs = true;
         public bool drawGizmos = true;
 
+        [Header("== 音效配置 ==")]
+        [Tooltip("Boss受击音效")]
+        public AudioClip hitSound;
+        [Tooltip("Boss死亡音效")]
+        public AudioClip deathSound;
+        [Tooltip("颜色切换音效")]
+        public AudioClip colorSwitchSound;
+        [Tooltip("技能释放音效")]
+        public AudioClip skillCastSound;
+        [Tooltip("大招音效")]
+        public AudioClip bigSkillSound;
+        [Tooltip("脉冲音效")]
+        public AudioClip pulseSound;
+        [Tooltip("音效音量")]
+        [Range(0f, 1f)] public float soundVolume = 0.8f;
+
+        // 音频组件
+        private AudioSource _audioSource;
+
         [Header("== Big Skill Scheduler ==")]
         public float bigSkillCooldownP1 = 22f;
         public float bigSkillCooldownP2 = 16f;
@@ -673,6 +692,16 @@ namespace FD.Bosses.C3
                 var go = GameObject.FindGameObjectWithTag(playerTag);
                 if (go) player = go.transform;
             }
+
+            // 获取或添加音频组件
+            _audioSource = GetComponent<AudioSource>();
+            if (_audioSource == null)
+            {
+                _audioSource = gameObject.AddComponent<AudioSource>();
+            }
+            _audioSource.playOnAwake = false;
+            _audioSource.spatialBlend = 0f; // 2D音效
+            _audioSource.volume = soundVolume;
 
             _rb2 = GetComponent<Rigidbody2D>();
             _rb3 = GetComponent<Rigidbody>();
@@ -1973,7 +2002,13 @@ namespace FD.Bosses.C3
             currentHP = Mathf.Max(0f, currentHP - dmg);
             _ring?.OnDamagePulse(dmg / Mathf.Max(1f, maxHP));
 
-            // 掉落：若拿到“玩家当前颜色”，就按“异色”掉落；拿不到则不掉（可按需改为默认某色）
+            // 播放受击音效
+            if (hitSound != null && _audioSource != null)
+            {
+                _audioSource.PlayOneShot(hitSound, soundVolume * 0.8f);
+            }
+
+            // 掉落：若拿到"玩家当前颜色"，就按"异色"掉落；拿不到则不掉（可按需改为默认某色）
             if (dropEnergyOnPlayerHit && dmg > 0.01f && sourcePlayerColor.HasValue)
             {
                 DropOppositeEnergyPickup(dmg, transform.position, sourcePlayerColor.Value);
@@ -2006,6 +2041,13 @@ namespace FD.Bosses.C3
         private IEnumerator DeathSequence()
         {
             _suppressMicros = true;
+            
+            // 播放死亡音效
+            if (deathSound != null && _audioSource != null)
+            {
+                _audioSource.PlayOneShot(deathSound, soundVolume);
+            }
+            
             _conductor.RecallAll(0.5f, null);
             _ring?.Collapse();
             yield return new WaitForSeconds(1.5f);

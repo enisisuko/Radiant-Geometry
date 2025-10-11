@@ -41,6 +41,19 @@ namespace FadedDreams.Enemies
         public float avoidTurn = 20f;
         public float obstacleProbe = 1.0f;
 
+        [Header("音效配置")]
+        [Tooltip("子弹发射音效")]
+        public AudioClip bulletShootSound;
+        [Tooltip("震爆弹蓄力音效")]
+        public AudioClip grenadeChargeSound;
+        [Tooltip("震爆弹发射音效")]
+        public AudioClip grenadeShootSound;
+        [Tooltip("音效音量")]
+        [Range(0f, 1f)] public float soundVolume = 0.8f;
+
+        // 音频组件
+        private AudioSource _audioSource;
+
         private Transform _player;
         private Rigidbody2D _rb;
         private bool _busy;
@@ -54,6 +67,16 @@ namespace FadedDreams.Enemies
             _rb.constraints = RigidbodyConstraints2D.FreezeRotation;
             _selfLight = GetComponentInChildren<Light2D>();
             if (_selfLight) _baseIntensity = _selfLight.intensity;
+
+            // 获取或添加音频组件
+            _audioSource = GetComponent<AudioSource>();
+            if (_audioSource == null)
+            {
+                _audioSource = gameObject.AddComponent<AudioSource>();
+            }
+            _audioSource.playOnAwake = false;
+            _audioSource.spatialBlend = 0f; // 2D音效
+            _audioSource.volume = soundVolume;
         }
 
         private void Update()
@@ -90,6 +113,13 @@ namespace FadedDreams.Enemies
             for (int i = 0; i < count; i++)
             {
                 if (!bulletPrefab) break;
+                
+                // 播放子弹发射音效
+                if (bulletShootSound != null && _audioSource != null)
+                {
+                    _audioSource.PlayOneShot(bulletShootSound, soundVolume * 0.6f); // 连发音效稍小
+                }
+                
                 var b = Instantiate(bulletPrefab, firePos, Quaternion.identity);
                 b.playerMask = playerMask;
                 b.obstacleMask = obstacleMask;
@@ -109,6 +139,12 @@ namespace FadedDreams.Enemies
 
         private IEnumerator CoGrenade()
         {
+            // 播放蓄力音效
+            if (grenadeChargeSound != null && _audioSource != null)
+            {
+                _audioSource.PlayOneShot(grenadeChargeSound, soundVolume);
+            }
+
             // 蓄力：2秒，自身Light2D强度×2
             float t = 0f;
             if (_selfLight) _selfLight.intensity = _baseIntensity * glowIntensityMul;
@@ -121,6 +157,12 @@ namespace FadedDreams.Enemies
             }
 
             if (_selfLight) _selfLight.intensity = _baseIntensity;
+
+            // 播放发射音效
+            if (grenadeShootSound != null && _audioSource != null)
+            {
+                _audioSource.PlayOneShot(grenadeShootSound, soundVolume);
+            }
 
             // 发射
             if (grenadePrefab)

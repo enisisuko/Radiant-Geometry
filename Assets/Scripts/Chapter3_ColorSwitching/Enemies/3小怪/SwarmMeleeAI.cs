@@ -46,6 +46,21 @@ namespace FadedDreams.Enemies
         public float dashCooldown = 1.1f;
         public AfterimageTrail2D dashAfterimage; // 挂同物体或子物体上
 
+        [Header("音效配置")]
+        [Tooltip("横扫攻击音效")]
+        public AudioClip sweepSound;
+        [Tooltip("跳劈音效")]
+        public AudioClip jumpCleaveSound;
+        [Tooltip("冲撞音效")]
+        public AudioClip dashSound;
+        [Tooltip("命中音效")]
+        public AudioClip hitSound;
+        [Tooltip("音效音量")]
+        [Range(0f, 1f)] public float soundVolume = 0.8f;
+
+        // 音频组件
+        private AudioSource _audioSource;
+
         private Transform _player;
         private Rigidbody2D _rb;
         private Collider2D _col;
@@ -67,6 +82,16 @@ namespace FadedDreams.Enemies
             _rb.gravityScale = gravityScale;
             _rb.constraints = RigidbodyConstraints2D.FreezeRotation;
             _rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
+
+            // 获取或添加音频组件
+            _audioSource = GetComponent<AudioSource>();
+            if (_audioSource == null)
+            {
+                _audioSource = gameObject.AddComponent<AudioSource>();
+            }
+            _audioSource.playOnAwake = false;
+            _audioSource.spatialBlend = 0f; // 2D音效
+            _audioSource.volume = soundVolume;
 
             _spawn = transform.position;
             _wanderTarget = _spawn;
@@ -174,6 +199,12 @@ namespace FadedDreams.Enemies
         {
             _busy = true;
 
+            // 播放横扫音效
+            if (sweepSound != null && _audioSource != null)
+            {
+                _audioSource.PlayOneShot(sweepSound, soundVolume);
+            }
+
             float t0 = 0f;
             _lr.enabled = true;
             Vector2 toPlayer = (_player.position - transform.position).normalized;
@@ -223,7 +254,15 @@ namespace FadedDreams.Enemies
             foreach (var c in cols)
             {
                 var light = c.GetComponent<FadedDreams.Player.PlayerHealthLight>();
-                if (light) light.TakeDamage(damage);
+                if (light)
+                {
+                    // 播放命中音效
+                    if (hitSound != null && _audioSource != null)
+                    {
+                        _audioSource.PlayOneShot(hitSound, soundVolume * 0.7f);
+                    }
+                    light.TakeDamage(damage);
+                }
             }
         }
 
@@ -231,6 +270,12 @@ namespace FadedDreams.Enemies
         private IEnumerator CoJumpCleave()
         {
             _busy = true;
+
+            // 播放跳劈音效
+            if (jumpCleaveSound != null && _audioSource != null)
+            {
+                _audioSource.PlayOneShot(jumpCleaveSound, soundVolume);
+            }
 
             // 起跳
             _rb.AddForce(Vector2.up * jumpImpulse, ForceMode2D.Impulse);
@@ -263,6 +308,12 @@ namespace FadedDreams.Enemies
         private IEnumerator CoDashAttack()
         {
             _busy = true;
+
+            // 播放冲撞音效
+            if (dashSound != null && _audioSource != null)
+            {
+                _audioSource.PlayOneShot(dashSound, soundVolume);
+            }
 
             // 朝玩家方向 dashDistance，在 dashTime 内线性插值（禁用X摩擦）
             Vector3 start = transform.position;
