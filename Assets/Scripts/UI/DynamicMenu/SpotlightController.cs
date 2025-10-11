@@ -210,6 +210,19 @@ namespace FadedDreams.UI
             // 计算方向
             Vector2 direction = (targetPosition - spotlightScreenPos).normalized;
             targetDirection = direction;
+            
+            // 计算到目标的实际距离，并动态调整MaxDistance
+            // 这样光束就会精确地延伸到目标位置
+            float distanceToTarget = Vector2.Distance(spotlightScreenPos, targetPosition);
+            
+            // 转换到Shader空间（归一化屏幕坐标，需要缩放）
+            if (canvasRect != null)
+            {
+                Vector2 canvasSize = canvasRect.sizeDelta;
+                // 将像素距离转换为归一化距离
+                float normalizedDistance = distanceToTarget / Mathf.Max(canvasSize.x, canvasSize.y);
+                maxDistance = normalizedDistance;
+            }
         }
 
         /// <summary>

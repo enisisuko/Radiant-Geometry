@@ -321,17 +321,20 @@ namespace FadedDreams.Editor
                     spotImage.material = mat;
                     // 设置默认参数
                     mat.SetColor("_SpotlightColor", spotlightColors[i]);
-                    mat.SetFloat("_Intensity", 3f);
-                    mat.SetFloat("_ConeAngle", 30f);
+                    mat.SetFloat("_Intensity", 4f); // 增加强度
+                    mat.SetFloat("_ConeAngle", 15f); // 减小光锥角度让光束更集中
                     mat.SetFloat("_MaxDistance", 1000f);
+                    mat.SetFloat("_FalloffPower", 1.5f); // 设置衰减
+                    mat.SetFloat("_BeamWidth", 0.3f); // 光束宽度
+                    mat.SetFloat("_BeamIntensity", 2.0f); // 光束中心强度
                 }
 
                 // SpotlightController组件
                 SpotlightController spotlight = spotGo.AddComponent<SpotlightController>();
                 spotlight.spotlightColor = spotlightColors[i];
-                spotlight.intensity = 3f;
-                spotlight.coneAngle = 30f;
-                spotlight.maxDistance = 1000f;
+                spotlight.intensity = 4f; // 增加强度让光束更明显
+                spotlight.coneAngle = 15f; // 减小角度让光束更集中（从30改为15）
+                spotlight.maxDistance = 1000f; // 初始值，会被动态调整
                 spotlight.rotationSpeed = 120f;
                 spotlight.useEasing = true;
                 spotlight.easingSpeed = 6f;

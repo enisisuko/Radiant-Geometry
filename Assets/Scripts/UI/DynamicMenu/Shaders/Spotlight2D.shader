@@ -119,36 +119,35 @@ Shader "FadedDreams/Spotlight2D"
                 // 在光锥内
                 if (angleInDegrees < halfConeAngle)
                 {
-                    // 距离衰减（从聚光灯中心向外衰减）
-                    float distanceFactor = 1.0 - saturate(distanceToSpot / (_MaxDistance * 0.001));
-                    distanceFactor = pow(distanceFactor, _FalloffPower);
+                    // 距离因子（改进：让光束在整个长度上保持较强的强度）
+                    float normalizedDist = distanceToSpot / (_MaxDistance * 0.001);
+                    float distanceFactor = 1.0 - saturate(normalizedDist);
                     
-                    // 角度衰减（从中心向边缘衰减）
+                    // 使用更平缓的衰减曲线，让光束整体更明亮
+                    distanceFactor = pow(distanceFactor, _FalloffPower * 0.5);
+                    
+                    // 在终点附近增加亮度（聚焦效果）
+                    float focusPoint = 1.0 - normalizedDist;
+                    float focusBoost = 1.0 + smoothstep(0.8, 1.0, focusPoint) * 2.0; // 在接近终点时亮度提升
+                    
+                    // 角度衰减（从中心向边缘衰减）- 让光束更集中
                     float angleFactor = 1.0 - (angleInDegrees / halfConeAngle);
+                    angleFactor = pow(angleFactor, 2.0); // 增加指数让边缘更暗
                     
-                    // 边缘柔和
-                    float edgeStart = 1.0 - _EdgeSoftness;
-                    if (angleFactor < edgeStart)
-                    {
-                        // 在边缘区域，应用平滑过渡
-                        float edgeFactor = (angleFactor - edgeStart) / _EdgeSoftness + 1.0;
-                        angleFactor = smoothstep(0.0, 1.0, edgeFactor);
-                    }
-                    
-                    // 光束中心增强
+                    // 光束中心增强（更强的中心效果）
                     float beamCenterFactor = 1.0;
                     if (angleFactor > (1.0 - _BeamWidth))
                     {
                         float beamCenter = (angleFactor - (1.0 - _BeamWidth)) / _BeamWidth;
-                        beamCenterFactor = lerp(1.0, _BeamIntensity, beamCenter);
+                        beamCenterFactor = lerp(1.0, _BeamIntensity * 2.0, beamCenter); // 加倍中心强度
                     }
                     
-                    // 综合强度
-                    float finalIntensity = distanceFactor * angleFactor * _Intensity * beamCenterFactor;
+                    // 综合强度（包含聚焦增强）
+                    float finalIntensity = distanceFactor * angleFactor * _Intensity * beamCenterFactor * focusBoost;
                     
                     // 最终颜色（HDR）
                     fixed4 color = _SpotlightColor * finalIntensity;
-                    color.a = saturate(finalIntensity); // 透明度也受强度影响
+                    color.a = saturate(finalIntensity * 0.8); // 透明度也受强度影响
                     
                     return color;
                 }
