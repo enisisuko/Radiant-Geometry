@@ -6,6 +6,9 @@ Shader "FadedDreams/Spotlight2D"
 {
     Properties
     {
+        [PerRendererData] _MainTex ("Sprite Texture", 2D) = "white" {}
+        _Color ("Tint", Color) = (1,1,1,1)
+        
         [Header(Spotlight Settings)]
         _SpotlightColor ("聚光灯颜色", Color) = (1, 1, 1, 1)
         _Intensity ("强度", Float) = 3.0
@@ -21,6 +24,14 @@ Shader "FadedDreams/Spotlight2D"
         [Header(Visual)]
         _BeamWidth ("光束宽度", Range(0.01, 1)) = 0.1
         _BeamIntensity ("光束内部强度", Range(1, 3)) = 1.5
+        
+        [Header(UI Settings)]
+        _StencilComp ("Stencil Comparison", Float) = 8
+        _Stencil ("Stencil ID", Float) = 0
+        _StencilOp ("Stencil Operation", Float) = 0
+        _StencilWriteMask ("Stencil Write Mask", Float) = 255
+        _StencilReadMask ("Stencil Read Mask", Float) = 255
+        _ColorMask ("Color Mask", Float) = 15
     }
     
     SubShader
@@ -36,6 +47,17 @@ Shader "FadedDreams/Spotlight2D"
         Blend SrcAlpha One // 叠加混合
         ZWrite Off
         Cull Off
+        
+        Stencil
+        {
+            Ref [_Stencil]
+            Comp [_StencilComp]
+            Pass [_StencilOp]
+            ReadMask [_StencilReadMask]
+            WriteMask [_StencilWriteMask]
+        }
+        
+        ColorMask [_ColorMask]
         
         Pass
         {
@@ -59,7 +81,13 @@ Shader "FadedDreams/Spotlight2D"
                 float2 screenPos : TEXCOORD1;
             };
             
-            // 属性
+            // UI必需的属性
+            sampler2D _MainTex;
+            fixed4 _Color;
+            fixed4 _TextureSampleAdd;
+            float4 _ClipRect;
+            
+            // 聚光灯属性
             float4 _SpotlightColor;
             float _Intensity;
             float _ConeAngle;
@@ -146,7 +174,7 @@ Shader "FadedDreams/Spotlight2D"
                     float finalIntensity = distanceFactor * angleFactor * _Intensity * beamCenterFactor * focusBoost;
                     
                     // 最终颜色（HDR）
-                    fixed4 color = _SpotlightColor * finalIntensity;
+                    fixed4 color = _SpotlightColor * finalIntensity * _Color;
                     color.a = saturate(finalIntensity * 0.8); // 透明度也受强度影响
                     
                     return color;
