@@ -4,6 +4,7 @@
 
 #if UNITY_EDITOR
 using UnityEditor;
+using UnityEditor.SceneManagement;
 using UnityEngine;
 
 namespace FadedDreams.Editor
@@ -55,8 +56,8 @@ namespace FadedDreams.Editor
                     "太好了！");
                     
                 // 标记场景为已修改
-                EditorSceneManagement.EditorSceneManager.MarkSceneDirty(
-                    EditorSceneManagement.EditorSceneManager.GetActiveScene()
+                EditorSceneManager.MarkSceneDirty(
+                    EditorSceneManager.GetActiveScene()
                 );
             }
             else
@@ -124,8 +125,8 @@ namespace FadedDreams.Editor
                 }
             }
 
-            EditorSceneManagement.EditorSceneManager.MarkSceneDirty(
-                EditorSceneManagement.EditorSceneManager.GetActiveScene()
+            EditorSceneManager.MarkSceneDirty(
+                EditorSceneManager.GetActiveScene()
             );
         }
     }
