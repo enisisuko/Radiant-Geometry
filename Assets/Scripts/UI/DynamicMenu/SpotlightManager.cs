@@ -39,9 +39,15 @@ namespace FadedDreams.UI
         // 私有状态
         private FloatingMenuButton currentTarget = null;
         private Vector2 currentTargetPosition;
+        
+        // 每个聚光灯负责的按钮（初始分配）
+        private FloatingMenuButton[] assignedButtons;
 
         private void Start()
         {
+            // 初始化按钮分配数组
+            assignedButtons = new FloatingMenuButton[spotlights.Count];
+            
             // 应用默认颜色
             ApplyDefaultColors();
         }
@@ -125,26 +131,30 @@ namespace FadedDreams.UI
         }
 
         /// <summary>
-        /// 清除目标（聚光灯回到默认状态）
+        /// 清除目标（聚光灯回到各自负责的按钮）
         /// </summary>
         public void ClearTarget()
         {
             currentTarget = null;
 
-            // 可以在这里添加聚光灯回到初始方向的逻辑
-            // 例如：指向屏幕中心
-            foreach (var spotlight in spotlights)
+            // 每个聚光灯回到自己负责的按钮位置
+            // 这样光束始终在按钮之间平滑切换，不会收拢或闪烁
+            for (int i = 0; i < spotlights.Count; i++)
             {
-                if (spotlight != null)
+                if (spotlights[i] != null && assignedButtons != null && i < assignedButtons.Length)
                 {
-                    Vector2 centerDirection = (Vector2.zero - spotlight.GetPosition()).normalized;
-                    spotlight.SetTargetDirection(centerDirection);
+                    FloatingMenuButton assignedButton = assignedButtons[i];
+                    if (assignedButton != null)
+                    {
+                        // 回到自己负责的按钮位置
+                        spotlights[i].SetTarget(assignedButton.GetPosition());
+                    }
                 }
             }
 
             if (showDebugInfo)
             {
-                Debug.Log("[SpotlightManager] 目标已清除");
+                Debug.Log("[SpotlightManager] 目标已清除，聚光灯回到各自负责的按钮");
             }
         }
 
@@ -232,6 +242,35 @@ namespace FadedDreams.UI
                 if (showDebugInfo)
                 {
                     Debug.Log($"[SpotlightManager] 聚光灯 {spotlightIndex} 锁定位置: {targetPosition}");
+                }
+            }
+        }
+        
+        /// <summary>
+        /// 分配聚光灯到按钮（记住分配关系，用于回正）
+        /// </summary>
+        /// <param name="spotlightIndex">聚光灯索引</param>
+        /// <param name="button">负责的按钮</param>
+        public void AssignSpotlightToButton(int spotlightIndex, FloatingMenuButton button)
+        {
+            if (spotlightIndex >= 0 && spotlightIndex < spotlights.Count && button != null)
+            {
+                // 记住分配关系
+                if (assignedButtons == null)
+                {
+                    assignedButtons = new FloatingMenuButton[spotlights.Count];
+                }
+                assignedButtons[spotlightIndex] = button;
+                
+                // 设置初始目标
+                if (spotlights[spotlightIndex] != null)
+                {
+                    spotlights[spotlightIndex].SetTarget(button.GetPosition());
+                }
+                
+                if (showDebugInfo)
+                {
+                    Debug.Log($"[SpotlightManager] 聚光灯 {spotlightIndex} 分配给按钮: {button.buttonType}");
                 }
             }
         }

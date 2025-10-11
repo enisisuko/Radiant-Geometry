@@ -79,15 +79,11 @@ namespace FadedDreams.UI
         /// </summary>
         private void UpdateSpotlightsToButtons()
         {
-            int count = Mathf.Min(menuButtons.Count, spotlightManager.GetSpotlightCount());
-            
-            for (int i = 0; i < count; i++)
+            // 按钮移动时，通过ClearTarget让聚光灯更新位置
+            // ClearTarget会让每个聚光灯回到自己负责的按钮位置
+            if (spotlightManager != null)
             {
-                if (menuButtons[i] != null)
-                {
-                    Vector2 buttonPos = menuButtons[i].GetPosition();
-                    spotlightManager.SetSpotlightTarget(i, buttonPos);
-                }
+                spotlightManager.ClearTarget();
             }
         }
 
@@ -161,8 +157,9 @@ namespace FadedDreams.UI
             {
                 if (menuButtons[i] != null)
                 {
-                    Vector2 buttonPos = menuButtons[i].GetPosition();
-                    spotlightManager.SetSpotlightTarget(i, buttonPos);
+                    // 使用新的AssignSpotlightToButton方法
+                    // 这样SpotlightManager会记住分配关系，回正时能回到自己负责的按钮
+                    spotlightManager.AssignSpotlightToButton(i, menuButtons[i]);
                 }
             }
 
