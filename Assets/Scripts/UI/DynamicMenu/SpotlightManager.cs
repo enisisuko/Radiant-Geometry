@@ -218,6 +218,24 @@ namespace FadedDreams.UI
             return spotlights.Count;
         }
 
+        /// <summary>
+        /// 设置单个聚光灯的目标（用于开局时一对一分配）
+        /// </summary>
+        /// <param name="spotlightIndex">聚光灯索引</param>
+        /// <param name="targetPosition">目标位置</param>
+        public void SetSpotlightTarget(int spotlightIndex, Vector2 targetPosition)
+        {
+            if (spotlightIndex >= 0 && spotlightIndex < spotlights.Count && spotlights[spotlightIndex] != null)
+            {
+                spotlights[spotlightIndex].SetTarget(targetPosition);
+                
+                if (showDebugInfo)
+                {
+                    Debug.Log($"[SpotlightManager] 聚光灯 {spotlightIndex} 锁定位置: {targetPosition}");
+                }
+            }
+        }
+
 #if UNITY_EDITOR
         // 编辑器辅助功能
 

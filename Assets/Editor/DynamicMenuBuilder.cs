@@ -376,6 +376,7 @@ namespace FadedDreams.Editor
             manager.spotlightManager = spotlightManager;
             manager.newGameScene = "STORY0";
             manager.firstCheckpointId = "101";
+            manager.assignSpotlightsToButtons = true; // 开局时让聚光灯锁定对应按钮
 
             // 添加AudioSource
             AudioSource audioSource = managerGo.AddComponent<AudioSource>();

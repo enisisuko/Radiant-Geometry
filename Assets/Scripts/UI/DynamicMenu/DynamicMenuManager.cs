@@ -48,16 +48,47 @@ namespace FadedDreams.UI
         [Tooltip("背景音乐")]
         public AudioClip backgroundMusic;
 
+        [Header("开局设置")]
+        [Tooltip("开局时让每个聚光灯锁定对应的按钮")]
+        public bool assignSpotlightsToButtons = true;
+
         [Header("调试")]
         [Tooltip("显示调试信息")]
         public bool showDebugInfo = false;
 
         // 私有状态
         private bool isTransitioning = false;
+        private bool isHoveringAnyButton = false;
 
         private void Start()
         {
             InitializeMenu();
+        }
+
+        private void Update()
+        {
+            // 如果开局分配了聚光灯，且没有悬停任何按键，持续更新聚光灯位置（因为按键会移动）
+            if (assignSpotlightsToButtons && !isHoveringAnyButton && spotlightManager != null)
+            {
+                UpdateSpotlightsToButtons();
+            }
+        }
+
+        /// <summary>
+        /// 更新聚光灯位置（跟随移动的按键）
+        /// </summary>
+        private void UpdateSpotlightsToButtons()
+        {
+            int count = Mathf.Min(menuButtons.Count, spotlightManager.GetSpotlightCount());
+            
+            for (int i = 0; i < count; i++)
+            {
+                if (menuButtons[i] != null)
+                {
+                    Vector2 buttonPos = menuButtons[i].GetPosition();
+                    spotlightManager.SetSpotlightTarget(i, buttonPos);
+                }
+            }
         }
 
         /// <summary>
@@ -105,9 +136,39 @@ namespace FadedDreams.UI
             // 检查存档状态
             CheckSaveState();
 
+            // 开局时让每个聚光灯锁定对应的按钮
+            if (assignSpotlightsToButtons)
+            {
+                AssignSpotlightsToButtons();
+            }
+
             if (showDebugInfo)
             {
                 Debug.Log($"[DynamicMenuManager] 菜单初始化完成，{menuButtons.Count} 个按键");
+            }
+        }
+
+        /// <summary>
+        /// 开局时让每个聚光灯锁定对应的按钮（一对一）
+        /// </summary>
+        private void AssignSpotlightsToButtons()
+        {
+            if (spotlightManager == null) return;
+
+            int count = Mathf.Min(menuButtons.Count, spotlightManager.GetSpotlightCount());
+            
+            for (int i = 0; i < count; i++)
+            {
+                if (menuButtons[i] != null)
+                {
+                    Vector2 buttonPos = menuButtons[i].GetPosition();
+                    spotlightManager.SetSpotlightTarget(i, buttonPos);
+                }
+            }
+
+            if (showDebugInfo)
+            {
+                Debug.Log($"[DynamicMenuManager] 已分配 {count} 个聚光灯到对应按键");
             }
         }
 
@@ -116,7 +177,9 @@ namespace FadedDreams.UI
         /// </summary>
         private void OnButtonHoverEnter(FloatingMenuButton button)
         {
-            // 通知聚光灯管理器
+            isHoveringAnyButton = true;
+
+            // 通知聚光灯管理器（所有聚光灯转向这个按键）
             if (spotlightManager != null)
             {
                 spotlightManager.SetTarget(button);
@@ -136,8 +199,13 @@ namespace FadedDreams.UI
         /// </summary>
         private void OnButtonHoverExit(FloatingMenuButton button)
         {
-            // 可以在这里添加退出悬停的逻辑
-            // 例如：如果没有其他按键被悬停，清除聚光灯目标
+            isHoveringAnyButton = false;
+
+            // 退出悬停后，恢复聚光灯到对应的按键（一对一）
+            if (assignSpotlightsToButtons && spotlightManager != null)
+            {
+                AssignSpotlightsToButtons();
+            }
             
             if (showDebugInfo)
             {

@@ -220,8 +220,11 @@ namespace FadedDreams.UI
             {
                 Vector2 canvasSize = canvasRect.sizeDelta;
                 // 将像素距离转换为归一化距离
+                // 注意：需要确保距离足够大，否则光束会很短或看不见
                 float normalizedDistance = distanceToTarget / Mathf.Max(canvasSize.x, canvasSize.y);
-                maxDistance = normalizedDistance;
+                
+                // 增加一些余量，确保光束能完全到达目标
+                maxDistance = Mathf.Max(normalizedDistance * 1.2f, 0.5f); // 至少0.5，防止太短
             }
         }
 
