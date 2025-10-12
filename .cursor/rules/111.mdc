@@ -1,0 +1,34 @@
+---
+alwaysApply: true
+---
+
+# Unity开发场景111专用规则
+
+## Unity MCP工具路径
+`C:\Users\エニシスコ\AppData\Local\UnityMCP\UnityMcpServer\src\tools` 
+这是unity的MCP的使用详情，如果你需要可以打开看。
+
+## 工作流程要求
+
+### 代码编辑后的加载方式
+完成代码编辑后，使用以下**优先级顺序**来触发 Unity 加载：
+
+1. **MCP 刷新服务（推荐）** - 无需切换窗口
+   ```powershell
+   Invoke-WebRequest http://127.0.0.1:5588/refresh | Out-Null
+   ```
+   - 优点：速度快、不打断工作流程、不需要切换窗口
+   - 适用：修改资源、添加新文件、修改脚本等所有情况
+   - 如需强制重编译，使用：
+     ```powershell
+     Invoke-WebRequest http://127.0.0.1:5588/recompile | Out-Null
+     ```
+
+2. **聚焦 Unity 窗口（备选）** - 服务不可用时使用
+   - 使用 `mcp_MCPControl_focus_window` 工具聚焦 Unity
+   - 仅在 MCP 刷新服务未启动时使用此方式
+
+### 验证要点
+- 确保 Unity 能正确识别和编译新添加的脚本
+- 检查 Unity 控制台是否有编译错误
+- 使用 `unity-ping.bat` 可快速检测刷新服务状态
