@@ -32,3 +32,492 @@ alwaysApply: true
 - 确保 Unity 能正确识别和编译新添加的脚本
 - 检查 Unity 控制台是否有编译错误
 - 使用 `unity-ping.bat` 可快速检测刷新服务状态
+
+---
+
+## Unity MCP 工具正确语法参考
+
+### 1. 脚本编辑 (script_apply_edits) ⭐推荐
+**用于结构化的 C# 脚本编辑，比原始文本编辑更安全**
+
+#### 必填参数
+- `name`: 脚本名称（不带 .cs）
+- `path`: 脚本路径（如 "Assets/Scripts/Interaction"）
+- `edits`: 编辑操作数组
+
+#### 常用操作
+
+**1) 替换方法 (replace_method)**
+```json
+{
+    "name": "SmartReach",
+    "path": "Assets/Scripts/Interaction",
+    "edits": [{
+        "op": "replace_method",
+        "className": "SmartReach",
+        "methodName": "HasTarget",
+        "replacement": "public bool HasTarget() { return currentTarget != null; }"
+    }],
+    "options": {"validate": "standard", "refresh": "immediate"}
+}
+```
+
+**2) 插入方法 (insert_method)**
+```json
+{
+    "edits": [{
+        "op": "insert_method",
+        "className": "SmartReach",
+        "replacement": "public void PrintSeries() { Debug.Log(seriesName); }",
+        "position": "after",
+        "afterMethodName": "GetCurrentTarget"
+    }]
+}
+```
+- `position` 可选值: "start", "end", "after", "before"
+- 使用 "after" 需要 `afterMethodName`
+- 使用 "before" 需要 `beforeMethodName`
+
+**3) 删除方法 (delete_method)**
+```json
+{
+    "edits": [{
+        "op": "delete_method",
+        "className": "SmartReach",
+        "methodName": "PrintSeries"
+    }]
+}
+```
+
+**4) 锚点插入 (anchor_insert)**
+```json
+{
+    "edits": [{
+        "op": "anchor_insert",
+        "anchor": "(?m)^\\s*}\\s*$",
+        "text": "\n    public void NewMethod() { }\n",
+        "position": "before"
+    }]
+}
+```
+
+#### 可选参数
+- `script_type`: 默认 "MonoBehaviour"
+- `namespace`: 脚本的命名空间
+- `options`:
+  - `validate`: "basic" 或 "standard"（推荐）
+  - `refresh`: "immediate", "debounced", "none"
+
+---
+
+### 2. GameObject 管理 (manage_gameobject)
+
+#### 创建 GameObject
+```json
+{
+    "action": "create",
+    "name": "PlayerSpawner",
+    "tag": "GameController",
+    "position": [0, 0, 0],
+    "components_to_add": ["BoxCollider", "Rigidbody"]
+}
+```
+
+#### 查找 GameObject
+```json
+{
+    "action": "find",
+    "search_term": "Player",
+    "search_method": "by_name",
+    "find_all": false,
+    "search_inactive": true
+}
+```
+- `search_method` 可选: "by_id", "by_name", "by_path", "by_tag", "by_layer", "by_component"
+
+#### 修改 GameObject
+```json
+{
+    "action": "modify",
+    "target": "Player",
+    "name": "PlayerCharacter",
+    "tag": "Player",
+    "position": [10, 0, 5],
+    "set_active": true
+}
+```
+
+#### 添加/移除组件
+```json
+{
+    "action": "add_component",
+    "target": "Player",
+    "component_name": "AudioSource"
+}
+```
+
+#### 设置组件属性
+```json
+{
+    "action": "modify",
+    "target": "Player",
+    "component_properties": {
+        "Transform": {
+            "position": [0, 10, 0]
+        },
+        "MeshRenderer": {
+            "sharedMaterial.color": [1, 0, 0, 1]
+        }
+    }
+}
+```
+
+#### 获取组件信息
+```json
+{
+    "action": "get_components",
+    "target": "Player",
+    "includeNonPublicSerialized": true
+}
+```
+
+---
+
+### 3. 场景管理 (manage_scene)
+
+#### 创建场景
+```json
+{
+    "action": "create",
+    "name": "Level2",
+    "path": "Assets/Scenes"
+}
+```
+
+#### 加载场景
+```json
+{
+    "action": "load",
+    "name": "Level2",
+    "path": "Assets/Scenes"
+}
+```
+
+#### 获取场景层级
+```json
+{
+    "action": "get_hierarchy"
+}
+```
+
+#### 获取当前场景
+```json
+{
+    "action": "get_active"
+}
+```
+
+---
+
+### 4. 编辑器控制 (manage_editor)
+
+#### 播放/暂停/停止
+```json
+{
+    "action": "play"
+}
+```
+- `action` 可选: "play", "pause", "stop"
+
+#### 获取编辑器状态
+```json
+{
+    "action": "get_state"
+}
+```
+
+#### 获取项目根目录
+```json
+{
+    "action": "get_project_root"
+}
+```
+
+#### 添加/移除标签
+```json
+{
+    "action": "add_tag",
+    "tag_name": "Enemy"
+}
+```
+
+#### 添加/移除层级
+```json
+{
+    "action": "add_layer",
+    "layer_name": "UI"
+}
+```
+
+---
+
+### 5. 资源管理 (manage_asset)
+
+#### 创建资源
+```json
+{
+    "action": "create",
+    "path": "Materials/NewMaterial",
+    "asset_type": "Material",
+    "properties": {
+        "color": [1, 0, 0, 1]
+    }
+}
+```
+
+#### 搜索资源
+```json
+{
+    "action": "search",
+    "path": "Assets",
+    "search_pattern": "*.prefab",
+    "filter_type": "Prefab"
+}
+```
+
+#### 获取资源信息
+```json
+{
+    "action": "get_info",
+    "path": "Materials/PlayerMaterial.mat"
+}
+```
+
+#### 移动/重命名资源
+```json
+{
+    "action": "move",
+    "path": "Materials/Old.mat",
+    "destination": "Materials/New/Updated.mat"
+}
+```
+
+---
+
+### 6. Prefab 管理 (manage_prefabs)
+
+#### 从 GameObject 创建 Prefab
+```json
+{
+    "action": "create_from_gameobject",
+    "target": "Player",
+    "prefab_path": "Assets/Prefabs/PlayerPrefab.prefab",
+    "allow_overwrite": false
+}
+```
+
+#### 打开 Prefab 编辑模式
+```json
+{
+    "action": "open_stage",
+    "prefab_path": "Assets/Prefabs/PlayerPrefab.prefab",
+    "mode": "InIsolation"
+}
+```
+
+#### 保存并关闭 Prefab 编辑模式
+```json
+{
+    "action": "save_open_stage"
+}
+```
+
+---
+
+### 7. 菜单项管理 (manage_menu_item)
+
+#### 执行菜单项
+```json
+{
+    "action": "execute",
+    "menu_path": "Assets/Refresh"
+}
+```
+
+#### 列出所有菜单项
+```json
+{
+    "action": "list",
+    "search": "Build",
+    "refresh": false
+}
+```
+
+#### 检查菜单项是否存在
+```json
+{
+    "action": "exists",
+    "menu_path": "File/Save Project"
+}
+```
+
+---
+
+### 8. 控制台读取 (read_console)
+
+#### 获取控制台消息
+```json
+{
+    "action": "get",
+    "types": ["error", "warning"],
+    "count": 20,
+    "format": "detailed",
+    "include_stacktrace": true
+}
+```
+- `types` 可选: "error", "warning", "log", "all"
+- `format` 可选: "plain", "detailed", "json"
+
+#### 清空控制台
+```json
+{
+    "action": "clear"
+}
+```
+
+---
+
+### 9. 资源读取工具
+
+#### 列出资源
+```json
+{
+    "pattern": "*.cs",
+    "under": "Assets/Scripts",
+    "limit": 200
+}
+```
+
+#### 读取资源内容
+```json
+{
+    "uri": "unity://path/Assets/Scripts/Player.cs",
+    "start_line": 10,
+    "line_count": 50
+}
+```
+
+#### 在文件中查找
+```json
+{
+    "uri": "unity://path/Assets/Scripts/Player.cs",
+    "pattern": "public.*void.*Update",
+    "ignore_case": true,
+    "max_results": 100
+}
+```
+
+---
+
+### 10. 旧版脚本管理 (manage_script) ⚠️不推荐
+
+**注意：优先使用 `script_apply_edits` 进行脚本编辑！**
+
+#### 创建脚本
+```json
+{
+    "action": "create",
+    "name": "NewScript",
+    "path": "Assets/Scripts",
+    "contents": "using UnityEngine;\n\npublic class NewScript : MonoBehaviour { }",
+    "script_type": "MonoBehaviour"
+}
+```
+
+#### 读取脚本
+```json
+{
+    "action": "read",
+    "name": "Player",
+    "path": "Assets/Scripts"
+}
+```
+
+#### 删除脚本
+```json
+{
+    "action": "delete",
+    "name": "OldScript",
+    "path": "Assets/Scripts"
+}
+```
+
+---
+
+## 重要注意事项 ⚠️
+
+### 参数命名规则
+1. **查找 GameObject 时**：
+   - 使用 `search_term`（不是 `name`）
+   - 使用 `search_method` 指定查找方式
+
+2. **创建/修改 GameObject 时**：
+   - 使用 `name`（不是 `search_term`）
+
+3. **脚本编辑时**：
+   - 优先使用 `script_apply_edits`（不是 `manage_script`）
+   - `replacement`（不是 `content` 或 `newText`）
+   - `className`（不是 `class` 或 `class_name`）
+   - `methodName`（不是 `method` 或 `method_name`）
+
+### 常见错误
+❌ **错误示例**：
+```json
+{
+    "action": "find",
+    "name": "Player"  // 错误！应该用 search_term
+}
+```
+
+✅ **正确示例**：
+```json
+{
+    "action": "find",
+    "search_term": "Player",
+    "search_method": "by_name"
+}
+```
+
+---
+
+## 调试技巧
+
+### 检查 Unity 控制台
+```json
+{
+    "action": "get",
+    "types": ["error", "warning"],
+    "format": "detailed"
+}
+```
+
+### 验证脚本
+使用 `validate_script` 检查脚本是否有语法错误：
+```json
+{
+    "uri": "unity://path/Assets/Scripts/Player.cs",
+    "level": "standard",
+    "include_diagnostics": true
+}
+```
+
+### 获取 SHA（用于并发编辑保护）
+```json
+{
+    "uri": "unity://path/Assets/Scripts/Player.cs"
+}
+```
+
+---
+
+*爱娘整理 ♡ 为素素定制的 MCP 工具完整参考*
